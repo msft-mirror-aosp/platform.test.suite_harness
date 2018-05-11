@@ -14,14 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Helper script for running unit tests for compatibility libraries
-
-CTS_DIR=$(dirname ${0})/../../../../..
+CTS_DIR=$(dirname ${0})/../../../..
 source ${CTS_DIR}/test_defs.sh
 
 JARS="
-    compatibility-manifest-generator\
-    compatibility-manifest-generator-tests"
+    compatibility-common-util-hostsidelib\
+    compatibility-common-util-tests\
+    compatibility-host-util\
+    compatibility-host-util-tests\
+    compatibility-mock-tradefed\
+    compatibility-tradefed-tests"
 
-run_tests "com.android.compatibility.common.generator.ManifestGeneratorTest" "${JARS}" "${@}"
+run_tests "com.android.compatibility.common.util.UnitTests" "${JARS}" "${@}"
 

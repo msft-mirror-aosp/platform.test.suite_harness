@@ -1,12 +1,10 @@
-#!/bin/bash
-
 # Copyright (C) 2015 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Helper script for running unit tests for compatibility libraries
+LOCAL_PATH:= $(call my-dir)
 
-CTS_DIR=$(dirname ${0})/../../../../..
-source ${CTS_DIR}/test_defs.sh
+include $(CLEAR_VARS)
 
-JARS="
-    compatibility-manifest-generator\
-    compatibility-manifest-generator-tests"
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-run_tests "com.android.compatibility.common.generator.ManifestGeneratorTest" "${JARS}" "${@}"
+LOCAL_JAVA_LIBRARIES := junit-host kxml2-2.3.0 tradefed compatibility-common-util-hostsidelib
 
+LOCAL_MODULE := compatibility-common-util-tests
+
+LOCAL_MODULE_TAGS := optional
+include cts/error_prone_rules.mk
+include $(BUILD_HOST_JAVA_LIBRARY)
