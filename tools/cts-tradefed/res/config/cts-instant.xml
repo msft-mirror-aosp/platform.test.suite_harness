@@ -26,6 +26,20 @@
     <!-- Exclude tests applicable only to full mode -->
     <option name="compatibility:test-arg" value="com.android.tradefed.testtype.AndroidJUnitTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
 
+    <!-- CtsSystemUiTestCases -->
+    <option name="compatibility:module-arg" value="CtsSystemUiTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsSystemUiTestCases" />
+
+    <!-- CtsSampleHostTestCases -->
+    <!-- This is just a sample how to write host side tests. -->
+
+    <!-- CtsDeviceIdleHostTestCases -->
+    <!-- These are tests for the shell command to manage device idle whitelist. -->
+
+    <!-- CtsAppWidgetTestCases -->
+    <option name="compatibility:module-arg" value="CtsAppWidgetTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsAppWidgetTestCases" />
+
     <!-- CtsAccessibilityTestCases -->
     <option name="compatibility:module-arg" value="CtsAccessibilityTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsAccessibilityTestCases" />
@@ -124,6 +138,13 @@
     <option name="compatibility:module-arg" value="CtsDpiTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsDpiTestCases" />
 
+    <!-- CtsUidIsolationTestCases -->
+    <option name="compatibility:module-arg" value="CtsUidIsolationTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsUidIsolationTestCases" />
+
+    <!-- CtsBackupHostTestCases, CtsBackupTestCases -->
+    <!-- Backup of instant apps is not supported. -->
+
     <!-- CtsDpiTestCases2 -->
     <!-- These target Cupcake not applicable to instant apps which target Oreo+ -->
 
@@ -144,6 +165,10 @@
     <option name="compatibility:include-filter" value="CtsPermission2TestCases" />
 
     <!-- CtsUsbTests -->
-    <option name="compatibility:module-arg" value="CtsUsbTests:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUsbTests" />
+
+    <!-- CtsWindowManagerDeviceTestCases -->
+    <option name="compatibility:module-arg" value="CtsWindowManagerDeviceTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases" />
+
 </configuration>
