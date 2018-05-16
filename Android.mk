@@ -18,4 +18,4 @@
 # So that when this directory is copied over to the new
 # repo test/suite_harness, things won't break. Uncomment after
 # the migration is done.
-# include $(call all-subdir-makefiles)
+include $(call all-subdir-makefiles)
