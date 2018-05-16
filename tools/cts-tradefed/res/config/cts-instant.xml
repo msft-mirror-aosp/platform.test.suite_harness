@@ -171,4 +171,8 @@
     <option name="compatibility:module-arg" value="CtsWindowManagerDeviceTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases" />
 
+    <!-- CtsLocation2TestCases -->
+    <option name="compatibility:module-arg" value="CtsLocation2TestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsLocation2TestCases" />
+
 </configuration>
