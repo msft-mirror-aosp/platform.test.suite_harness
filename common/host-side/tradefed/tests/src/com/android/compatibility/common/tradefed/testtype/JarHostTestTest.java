@@ -31,6 +31,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 import com.android.tradefed.testtype.HostTest;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
 import org.easymock.EasyMock;
 import org.junit.After;
@@ -295,7 +296,8 @@ public class JarHostTestTest {
         mListener.testStarted(EasyMock.eq(tid), EasyMock.anyLong());
         Map<String, String> metrics = new HashMap<>();
         metrics.put("key", "value");
-        mListener.testEnded(EasyMock.eq(tid), EasyMock.anyLong(), EasyMock.eq(metrics));
+        mListener.testEnded(EasyMock.eq(tid), EasyMock.anyLong(),
+                EasyMock.eq(TfMetricProtoUtil.upgradeConvert(metrics)));
         mListener.testRunEnded(EasyMock.anyLong(), (HashMap<String, Metric>) EasyMock.anyObject());
         EasyMock.replay(mListener);
         mTest.run(mListener);
