@@ -175,4 +175,8 @@
     <option name="compatibility:module-arg" value="CtsLocation2TestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsLocation2TestCases" />
 
+    <!-- CtsUiAutomationTestCases -->
+    <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
+    
 </configuration>
