@@ -182,4 +182,7 @@
     <!-- CtsAdminPackageInstallerTestCases -->
     <!-- Device Owner-specific tests are not applicable to instant apps. -->
     
+    <!-- CtsExternalServiceTestCases -->
+    <!-- This module tries to bind to services in another package, which is not valid for Instant-->
+
 </configuration>
