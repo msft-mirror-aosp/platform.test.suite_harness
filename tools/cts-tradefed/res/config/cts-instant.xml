@@ -152,6 +152,10 @@
     <option name="compatibility:module-arg" value="CtsFileSystemTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsFileSystemTestCases" />
 
+    <!-- CtsExternalSourcesTestCases -->
+    <option name="compatibility:module-arg" value="CtsExternalSourcesTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsExternalSourcesTestCases" />
+
     <!-- CtsTextTestCases -->
     <option name="compatibility:module-arg" value="CtsTextTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsTextTestCases" />
