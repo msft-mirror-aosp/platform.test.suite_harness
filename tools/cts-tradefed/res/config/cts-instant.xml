@@ -183,6 +183,10 @@
     <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
 
+    <!-- CtsCameraTestCases -->
+    <option name="compatibility:module-arg" value="CtsCameraTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsCameraTestCases" />
+
     <!-- CtsAdminPackageInstallerTestCases -->
     <!-- Device Owner-specific tests are not applicable to instant apps. -->
     
