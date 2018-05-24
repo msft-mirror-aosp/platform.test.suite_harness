@@ -40,6 +40,8 @@ public class ConsoleReporter implements IShardableListener {
 
     private String mDeviceSerial = UNKNOWN_DEVICE;
     private boolean mTestFailed;
+    private boolean mTestSkipped;
+
     private String mModuleId;
     private int mCurrentTestNum;
     private int mTotalTestsInModule;
@@ -86,6 +88,7 @@ public class ConsoleReporter implements IShardableListener {
     @Override
     public void testStarted(TestDescription test) {
         mTestFailed = false;
+        mTestSkipped = false;
         mCurrentTestNum++;
     }
 
@@ -105,6 +108,7 @@ public class ConsoleReporter implements IShardableListener {
     @Override
     public void testIgnored(TestDescription test) {
         logProgress("%s ignore", test);
+        mTestSkipped = true;
     }
 
     /**
@@ -113,6 +117,7 @@ public class ConsoleReporter implements IShardableListener {
     @Override
     public void testAssumptionFailure(TestDescription test, String trace) {
         logProgress("%s skip", test);
+        mTestSkipped = true;
     }
 
     /**
@@ -120,7 +125,7 @@ public class ConsoleReporter implements IShardableListener {
      */
     @Override
     public void testEnded(TestDescription test, Map<String, String> testMetrics) {
-        if (!mTestFailed) {
+        if (!mTestFailed || !mTestSkipped) {
             logProgress("%s pass", test);
             mPassedTests++;
         }
