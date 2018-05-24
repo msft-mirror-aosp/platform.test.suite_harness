@@ -118,7 +118,7 @@ public abstract class LogcatInspector {
         return stringIndex;
     }
 
-    private static void drainAndClose(BufferedReader reader) {
+    public static void drainAndClose(BufferedReader reader) {
         try {
             while (reader.read() >= 0) {
                 // do nothing.
