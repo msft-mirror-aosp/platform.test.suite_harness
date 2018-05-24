@@ -193,4 +193,8 @@
     <!-- CtsExternalServiceTestCases -->
     <!-- This module tries to bind to services in another package, which is not valid for Instant-->
 
+    <!-- CtsLocationTestCases -->
+    <option name="compatibility:module-arg" value="CtsLocationTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsLocationTestCases" />
+
 </configuration>
