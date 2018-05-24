@@ -193,6 +193,13 @@
     <!-- CtsExternalServiceTestCases -->
     <!-- This module tries to bind to services in another package, which is not valid for Instant-->
 
+    <!-- CtsUsageStatsTestCases -->
+    <option name="compatibility:module-arg" value="CtsUsageStatsTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsUsageStatsTestCases" />
+
+    <!-- CtsActivityManagerDeviceTestCases -->
+    <!-- This module needs a permission not available to instant apps -->
+
     <!-- CtsLocationTestCases -->
     <option name="compatibility:module-arg" value="CtsLocationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsLocationTestCases" />
