@@ -63,6 +63,10 @@
     <!-- CtsContactsProviderWipe -->
     <!-- This is a test for apps with READ/WRITE_CONTACTS, which instant apps don't have -->
 
+    <!-- CtsInputMethodTestCases -->
+    <option name="compatibility:module-arg" value="CtsInputMethodTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsInputMethodTestCases" />
+
     <!-- CtsPdfTestCases -->
     <option name="compatibility:module-arg" value="CtsPdfTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsPdfTestCases" />
@@ -152,6 +156,10 @@
     <option name="compatibility:module-arg" value="CtsFileSystemTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsFileSystemTestCases" />
 
+    <!-- CtsExternalSourcesTestCases -->
+    <option name="compatibility:module-arg" value="CtsExternalSourcesTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsExternalSourcesTestCases" />
+
     <!-- CtsTextTestCases -->
     <option name="compatibility:module-arg" value="CtsTextTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsTextTestCases" />
@@ -178,5 +186,29 @@
     <!-- CtsUiAutomationTestCases -->
     <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
+
+    <!-- CtsCameraTestCases -->
+    <option name="compatibility:module-arg" value="CtsCameraTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsCameraTestCases" />
+
+    <!-- CtsAdminPackageInstallerTestCases -->
+    <!-- Device Owner-specific tests are not applicable to instant apps. -->
     
+    <!-- CtsExternalServiceTestCases -->
+    <!-- This module tries to bind to services in another package, which is not valid for Instant-->
+
+    <!-- CtsUsageStatsTestCases -->
+    <option name="compatibility:module-arg" value="CtsUsageStatsTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsUsageStatsTestCases" />
+
+    <!-- CtsActivityManagerDeviceTestCases -->
+    <!-- This module needs a permission not available to instant apps -->
+
+    <!-- CtsLocationTestCases -->
+    <option name="compatibility:module-arg" value="CtsLocationTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsLocationTestCases" />
+
+    <!-- CtsSyncContentHostTestCases -->
+    <!-- This is a test for account data sync and READ_SYNC_SETTINGS/WRITE_SYNC_SETTINGS are required, which instant apps don't have -->
+
 </configuration>
