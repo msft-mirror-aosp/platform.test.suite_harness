@@ -63,6 +63,10 @@
     <!-- CtsContactsProviderWipe -->
     <!-- This is a test for apps with READ/WRITE_CONTACTS, which instant apps don't have -->
 
+    <!-- CtsInputMethodTestCases -->
+    <option name="compatibility:module-arg" value="CtsInputMethodTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsInputMethodTestCases" />
+
     <!-- CtsPdfTestCases -->
     <option name="compatibility:module-arg" value="CtsPdfTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsPdfTestCases" />
