@@ -197,4 +197,7 @@
     <option name="compatibility:module-arg" value="CtsLocationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsLocationTestCases" />
 
+    <!-- CtsSyncContentHostTestCases -->
+    <!-- This is a test for account data sync and READ_SYNC_SETTINGS/WRITE_SYNC_SETTINGS are required, which instant apps don't have -->
+
 </configuration>
