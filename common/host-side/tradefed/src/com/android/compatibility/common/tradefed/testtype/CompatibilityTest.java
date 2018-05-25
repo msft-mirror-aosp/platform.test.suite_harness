@@ -46,6 +46,8 @@ import com.android.tradefed.result.InputStreamSource;
 import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
 import com.android.tradefed.suite.checker.ISystemStatusCheckerReceiver;
+import com.android.tradefed.suite.checker.StatusCheckerResult;
+import com.android.tradefed.suite.checker.StatusCheckerResult.CheckStatus;
 import com.android.tradefed.testtype.Abi;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IBuildReceiver;
@@ -668,8 +670,8 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
         CLog.i("Running system status checker before module execution: %s", moduleName);
         List<String> failures = new ArrayList<>();
         for (ISystemStatusChecker checker : checkers) {
-            boolean result = checker.preExecutionCheck(device);
-            if (!result) {
+            StatusCheckerResult result = checker.preExecutionCheck(device);
+            if (!CheckStatus.SUCCESS.equals(result.getStatus())) {
                 failures.add(checker.getClass().getCanonicalName());
                 CLog.w("System status checker [%s] failed", checker.getClass().getCanonicalName());
             }
@@ -690,8 +692,8 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
         CLog.i("Running system status checker after module execution: %s", moduleName);
         List<String> failures = new ArrayList<>();
         for (ISystemStatusChecker checker : checkers) {
-            boolean result = checker.postExecutionCheck(device);
-            if (!result) {
+            StatusCheckerResult result = checker.postExecutionCheck(device);
+            if (!CheckStatus.SUCCESS.equals(result.getStatus())) {
                 failures.add(checker.getClass().getCanonicalName());
                 CLog.w("System status checker [%s] failed", checker.getClass().getCanonicalName());
             }

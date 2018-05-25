@@ -24,6 +24,8 @@ import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.InputStreamSource;
 import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
+import com.android.tradefed.suite.checker.StatusCheckerResult;
+import com.android.tradefed.suite.checker.StatusCheckerResult.CheckStatus;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.util.AbiUtils;
 
@@ -218,9 +220,9 @@ public class CompatibilityTestTest extends TestCase {
         systemCheckers.add(new ISystemStatusChecker() {});
         systemCheckers.add(new ISystemStatusChecker() {
             @Override
-            public boolean preExecutionCheck(ITestDevice device) {
+            public StatusCheckerResult preExecutionCheck(ITestDevice device) {
                 // fails
-                return false;
+                return new StatusCheckerResult(CheckStatus.FAILED);
             }
         });
         InputStreamSource res = new ByteArrayInputStreamSource("fake bugreport".getBytes());
@@ -257,9 +259,9 @@ public class CompatibilityTestTest extends TestCase {
         systemCheckers.add(new ISystemStatusChecker() {});
         systemCheckers.add(new ISystemStatusChecker() {
             @Override
-            public boolean postExecutionCheck(ITestDevice device) {
+            public StatusCheckerResult postExecutionCheck(ITestDevice device) {
                 // fails
-                return false;
+                return new StatusCheckerResult(CheckStatus.FAILED);
             }
         });
         InputStreamSource res = new ByteArrayInputStreamSource("fake bugreport".getBytes());
