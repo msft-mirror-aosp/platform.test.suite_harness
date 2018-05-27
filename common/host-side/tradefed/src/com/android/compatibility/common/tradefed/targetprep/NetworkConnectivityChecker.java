@@ -21,6 +21,8 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
+import com.android.tradefed.suite.checker.StatusCheckerResult;
+import com.android.tradefed.suite.checker.StatusCheckerResult.CheckStatus;
 
 /**
  * Checks network connectivity status on device after module execution.
@@ -34,17 +36,17 @@ public class NetworkConnectivityChecker implements ISystemStatusChecker {
      * {@inheritDoc}
      */
     @Override
-    public boolean postExecutionCheck(ITestDevice device) throws DeviceNotAvailableException {
+    public StatusCheckerResult postExecutionCheck(ITestDevice device) throws DeviceNotAvailableException {
         if (!MonitoringUtils.checkDeviceConnectivity(device)) {
             if (mIsFailed) {
                 CLog.w("NetworkConnectivityChecker is still failing on %s.",
                         device.getSerialNumber());
-                return true;
+                return new StatusCheckerResult(CheckStatus.SUCCESS);
             }
             mIsFailed = true;
-            return false;
+            return new StatusCheckerResult(CheckStatus.FAILED);
         }
         mIsFailed = false;
-        return true;
+        return new StatusCheckerResult(CheckStatus.SUCCESS);
     }
 }
