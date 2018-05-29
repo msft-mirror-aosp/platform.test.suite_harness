@@ -25,6 +25,7 @@
 
     <!-- Exclude tests applicable only to full mode -->
     <option name="compatibility:test-arg" value="com.android.tradefed.testtype.AndroidJUnitTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
+    <option name="compatibility:test-arg" value="com.android.compatibility.common.tradefed.testtype.JarHostTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
 
     <!-- CtsSystemUiTestCases -->
     <option name="compatibility:module-arg" value="CtsSystemUiTestCases:install-arg:--instant" />
@@ -148,6 +149,9 @@
 
     <!-- CtsBackupHostTestCases, CtsBackupTestCases -->
     <!-- Backup of instant apps is not supported. -->
+
+    <!-- CtsMediaHostTestCases -->
+    <option name="compatibility:include-filter" value="CtsMediaHostTestCases" />
 
     <!-- CtsDpiTestCases2 -->
     <!-- These target Cupcake not applicable to instant apps which target Oreo+ -->
