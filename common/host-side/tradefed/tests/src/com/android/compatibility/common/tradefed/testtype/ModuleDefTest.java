@@ -18,6 +18,7 @@ package com.android.compatibility.common.tradefed.testtype;
 
 import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.Abi;
@@ -29,12 +30,12 @@ import com.android.tradefed.testtype.ITestCollector;
 import com.android.tradefed.testtype.ITestFilterReceiver;
 import com.android.tradefed.util.AbiUtils;
 
-import org.easymock.EasyMock;
-
 import junit.framework.TestCase;
 
+import org.easymock.EasyMock;
+
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -63,7 +64,7 @@ public class ModuleDefTest extends TestCase {
         // listener should receive testRunStarted/testRunEnded events even for no-op run() method
         mockListener.testRunStarted(ID, 0);
         EasyMock.expectLastCall().once();
-        mockListener.testRunEnded(0, Collections.emptyMap());
+        mockListener.testRunEnded(0, new HashMap<String, Metric>());
         EasyMock.expectLastCall().once();
         EasyMock.replay(mockListener);
         def.run(mockListener);

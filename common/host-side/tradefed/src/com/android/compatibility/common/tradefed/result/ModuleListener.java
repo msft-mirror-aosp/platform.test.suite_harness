@@ -18,12 +18,15 @@ package com.android.compatibility.common.tradefed.result;
 import com.android.compatibility.common.tradefed.testtype.IModuleDef;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.InputStreamSource;
 import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestSummary;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -121,9 +124,17 @@ public class ModuleListener implements IModuleListener {
      * {@inheritDoc}
      */
     @Override
-    public void testRunEnded(long elapsedTime, Map<String, String> metrics) {
+    public void testRunEnded(long elapsedTime, HashMap<String, Metric> metrics) {
         CLog.d("ModuleListener.testRunEnded(%d, %s)", elapsedTime, metrics.toString());
         mListener.testRunEnded(elapsedTime, metrics);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void testRunEnded(long elapsedTime, Map<String, String> metrics) {
+        testRunEnded(elapsedTime, TfMetricProtoUtil.upgradeConvert(metrics));
     }
 
     /**

@@ -23,8 +23,10 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionCopier;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.IShardableListener;
 import com.android.tradefed.result.TestDescription;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,6 +34,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -149,6 +152,14 @@ public class MetadataReporter implements IShardableListener {
      */
     @Override
     public void testRunEnded(long elapsedTime, Map<String, String> metrics) {
+        testRunEnded(elapsedTime, TfMetricProtoUtil.upgradeConvert(metrics));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void testRunEnded(long elapsedTime, HashMap<String, Metric> metrics) {
         if (!mTestMetadata.isEmpty()) {
             tryWriteToFile(mBuildHelper, mCurrentModule, mMetadataDir, mTestMetadata);
         }
