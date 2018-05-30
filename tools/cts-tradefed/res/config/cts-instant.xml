@@ -26,6 +26,7 @@
     <!-- Exclude tests applicable only to full mode -->
     <option name="compatibility:test-arg" value="com.android.tradefed.testtype.AndroidJUnitTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
     <option name="compatibility:test-arg" value="com.android.compatibility.common.tradefed.testtype.JarHostTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
+    <option name="compatibility:test-arg" value="com.android.tradefed.testtype.HostTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
 
     <!-- CtsSystemUiTestCases -->
     <option name="compatibility:module-arg" value="CtsSystemUiTestCases:install-arg:--instant" />
@@ -146,6 +147,9 @@
     <!-- CtsUidIsolationTestCases -->
     <option name="compatibility:module-arg" value="CtsUidIsolationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUidIsolationTestCases" />
+
+    <!-- CtsAppSecurityHostTestCases -->
+    <option name="compatibility:include-filter" value="CtsAppSecurityHostTestCases" />
 
     <!-- CtsBackupHostTestCases, CtsBackupTestCases -->
     <!-- Backup of instant apps is not supported. -->
