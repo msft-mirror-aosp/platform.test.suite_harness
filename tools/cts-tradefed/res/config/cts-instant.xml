@@ -223,6 +223,10 @@
     <!-- CtsSyncContentHostTestCases -->
     <!-- This is a test for account data sync and READ_SYNC_SETTINGS/WRITE_SYNC_SETTINGS are required, which instant apps don't have -->
 
+    <!-- CtsAccountManagerTestCases -->
+    <option name="compatibility:module-arg" value="CtsAccountManagerTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsAccountManagerTestCases" />
+
     <!-- CtsDevicePolicyManagerTestCases -->
     <!-- Instant apps can never be device admin / profile owner / device owner so positive tests
          here are not applicable -->
