@@ -199,6 +199,10 @@
     <!-- CtsActivityManagerDeviceSdk25TestCases -->
     <!-- These tests require targeting API 25 which does not support instant apps -->
 
+    <!-- CtsHostsideWebViewTests -->
+    <option name="compatibility:module-arg" value="CtsHostsideWebViewTests:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsHostsideWebViewTests" />
+
     <!-- CtsCameraTestCases -->
     <option name="compatibility:module-arg" value="CtsCameraTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsCameraTestCases" />
