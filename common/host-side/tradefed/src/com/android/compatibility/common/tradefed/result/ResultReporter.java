@@ -39,6 +39,7 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.config.OptionCopier;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.FileInputStreamSource;
 import com.android.tradefed.result.ILogSaver;
 import com.android.tradefed.result.ILogSaverListener;
@@ -56,6 +57,7 @@ import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
 import com.android.tradefed.util.TimeUtil;
 import com.android.tradefed.util.ZipUtil;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -403,6 +405,14 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     @Override
     public void testRunEnded(long elapsedTime, Map<String, String> metrics) {
+        testRunEnded(elapsedTime, TfMetricProtoUtil.upgradeConvert(metrics));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void testRunEnded(long elapsedTime, HashMap<String, Metric> metrics) {
         mCurrentModuleResult.inProgress(false);
         mCurrentModuleResult.addRuntime(elapsedTime);
         if (!mModuleWasDone && mCanMarkDone) {
