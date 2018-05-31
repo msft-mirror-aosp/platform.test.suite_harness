@@ -15,7 +15,8 @@
 -->
 <configuration description="Runs CTS-instant from a pre-existing CTS installation">
 
-    <include name="cts" />
+    <include name="cts-common" />
+    <include name="cts-exclude" />
 
     <!-- This plan is only for instant app specific tests. -->
     <option name="plan" value="cts-instant" />
