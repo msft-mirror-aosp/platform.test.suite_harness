@@ -22,10 +22,13 @@ import com.android.tradefed.config.OptionCopier;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.IShardableListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.util.TimeUtil;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -125,7 +128,7 @@ public class ConsoleReporter implements IShardableListener {
      */
     @Override
     public void testEnded(TestDescription test, Map<String, String> testMetrics) {
-        if (!mTestFailed || !mTestSkipped) {
+        if (!mTestFailed && !mTestSkipped) {
             logProgress("%s pass", test);
             mPassedTests++;
         }
@@ -139,12 +142,19 @@ public class ConsoleReporter implements IShardableListener {
         logMessage(errorMessage);
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public void testRunEnded(long elapsedTime, Map<String, String> metrics) {
+        testRunEnded(elapsedTime, TfMetricProtoUtil.upgradeConvert(metrics));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void testRunEnded(long elapsedTime, HashMap<String, Metric> metrics) {
         mNotExecutedTests = Math.max(mTotalTestsInModule - mCurrentTestNum, 0);
         String status = mNotExecutedTests > 0 ? "failed" : "completed";
         logMessage("%s %s in %s. %d passed, %d failed, %d not executed",

@@ -19,6 +19,7 @@ package com.android.compatibility.common.tradefed.result.suite;
 import static org.junit.Assert.assertTrue;
 
 import com.android.compatibility.common.util.ChecksumReporter.ChecksumValidationException;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
@@ -93,9 +94,9 @@ public class CertificationChecksumHelperTest {
         for (int i = 0; i < testCount; i++) {
             TestDescription test = new TestDescription("com.class.path", "testMethod" + i);
             results.testStarted(test);
-            results.testEnded(test, new HashMap<String, String>());
+            results.testEnded(test, new HashMap<String, Metric>());
         }
-        results.testRunEnded(500L, new HashMap<String, String>());
+        results.testRunEnded(500L, new HashMap<String, Metric>());
         return results;
     }
 }
