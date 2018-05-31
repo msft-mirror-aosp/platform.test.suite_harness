@@ -16,6 +16,8 @@
 
 package com.android.compatibility.common.util;
 
+import static org.junit.Assert.assertTrue;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -42,15 +44,19 @@ public class DynamicConfig {
     public static final String ENTRY_TAG = "entry";
     public static final String VALUE_TAG = "value";
     public static final String KEY_ATTR = "key";
-    public final static String CONFIG_FOLDER_ON_DEVICE = "/sdcard/dynamic-config-files/";
+
+    public static final String REMOTE_CONFIG_REQUIRED_KEY = "remote_config_required";
+    public static final String REMOTE_CONFIG_RETRIEVED_KEY = "remote_config_retrieved";
+    public static final String CONFIG_FOLDER_ON_DEVICE = "/sdcard/dynamic-config-files/";
 
     protected Map<String, List<String>> mDynamicConfigMap = new HashMap<String, List<String>>();
 
-    protected void initializeConfig(File file) throws XmlPullParserException, IOException {
+    public void initializeConfig(File file) throws XmlPullParserException, IOException {
         mDynamicConfigMap = createConfigMap(file);
     }
 
     public String getValue(String key) {
+        assertRemoteConfigRequirementMet();
         List<String> singleValue = mDynamicConfigMap.get(key);
         if (singleValue == null || singleValue.size() == 0 || singleValue.size() > 1) {
             // key must exist in the map, and map to a list containing exactly one string
@@ -60,11 +66,32 @@ public class DynamicConfig {
     }
 
     public List<String> getValues(String key) {
+        assertRemoteConfigRequirementMet();
         return mDynamicConfigMap.get(key);
     }
 
     public Set<String> keySet() {
+        assertRemoteConfigRequirementMet();
         return mDynamicConfigMap.keySet();
+    }
+
+    public boolean remoteConfigRequired() {
+        if (mDynamicConfigMap.containsKey(REMOTE_CONFIG_REQUIRED_KEY)) {
+            String val = mDynamicConfigMap.get(REMOTE_CONFIG_REQUIRED_KEY).get(0);
+            return Boolean.parseBoolean(val);
+        }
+        return false;
+    }
+
+    public boolean remoteConfigRetrieved() {
+        // assume config will always contain exactly one value, populated by DynamicConfigHandler
+        String val = mDynamicConfigMap.get(REMOTE_CONFIG_RETRIEVED_KEY).get(0);
+        return Boolean.parseBoolean(val);
+    }
+
+    public void assertRemoteConfigRequirementMet() {
+        assertTrue("Remote connection to DynamicConfigService required for this test",
+                !remoteConfigRequired() || remoteConfigRetrieved());
     }
 
     public static File getConfigFile(File configFolder, String moduleName)
