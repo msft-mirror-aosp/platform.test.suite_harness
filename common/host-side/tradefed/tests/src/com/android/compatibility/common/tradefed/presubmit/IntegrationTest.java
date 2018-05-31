@@ -32,6 +32,7 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.ShardListener;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.ResultForwarder;
 import com.android.tradefed.result.TestDescription;
@@ -250,7 +251,7 @@ public class IntegrationTest {
                 myContext = context;
             }
             @Override
-            public void testRunEnded(long elapsedTimeMillis, Map<String, String> runMetrics) {
+            public void testRunEnded(long elapsedTimeMillis, HashMap<String, Metric> runMetrics) {
                 receivedComponentsTestRunEnded.addAll(myContext.getModuleInvocationContext()
                         .getConfigurationDescriptor().getMetaData("component"));
                 receivedModuleNameTestRunEnded.addAll(myContext.getModuleInvocationContext()
