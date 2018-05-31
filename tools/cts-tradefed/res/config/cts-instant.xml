@@ -33,7 +33,7 @@
     <option name="compatibility:include-filter" value="CtsSystemUiTestCases" />
 
     <!-- CtsSampleHostTestCases -->
-    <!-- This is just a sample how to write host side tests. -->
+    <option name="compatibility:include-filter" value="CtsSampleHostTestCases" />
 
     <!-- CtsDeviceIdleHostTestCases -->
     <!-- These are tests for the shell command to manage device idle whitelist. -->
