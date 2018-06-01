@@ -33,6 +33,7 @@ import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.MultiMap;
+import com.android.tradefed.util.RunUtil;
 import com.android.tradefed.util.StreamUtil;
 import com.android.tradefed.util.net.HttpHelper;
 import com.android.tradefed.util.net.IHttpHelper;
@@ -75,7 +76,9 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     /* Extension of business logic files */
     private static final String FILE_EXT = ".bl";
     /* Default amount of time to attempt connection to the business logic service, in seconds */
-    private static final int DEFAULT_CONNECTION_TIME = 10;
+    private static final int DEFAULT_CONNECTION_TIME = 60;
+    /* Time to wait between connection attempts to the business logic service, in millis */
+    private static final long SLEEP_BETWEEN_CONNECTIONS_MS = 5000; // 5 seconds
     /* Dynamic config constants */
     private static final String DYNAMIC_CONFIG_FEATURES_KEY = "business_logic_device_features";
     private static final String DYNAMIC_CONFIG_PROPERTIES_KEY = "business_logic_device_properties";
@@ -140,7 +143,11 @@ public class BusinessLogicPreparer implements ITargetCleaner {
                 URL request = new URL(requestString);
                 businessLogicString = StreamUtil.getStringFromStream(request.openStream());
                 businessLogicString = addRuntimeConfig(businessLogicString, buildInfo);
-            } catch (IOException e) {} // ignore, re-attempt connection with remaining time
+            } catch (IOException e) {
+                // ignore, re-attempt connection with remaining time
+                CLog.d("BusinessLogic connection failure message: %s\nRetrying...", e.getMessage());
+                RunUtil.getDefault().sleep(SLEEP_BETWEEN_CONNECTIONS_MS);
+            }
         }
         if (businessLogicString == null) {
             if (mIgnoreFailure) {
