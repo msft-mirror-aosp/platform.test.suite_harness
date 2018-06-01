@@ -342,17 +342,17 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      * {@inheritDoc}
      */
     @Override
-    public void testEnded(TestDescription test, Map<String, String> metrics) {
+    public void testEnded(TestDescription test, HashMap<String, Metric> metrics) {
         if (mCurrentResult.getResultStatus() == TestStatus.FAIL) {
             // Test has previously failed.
             return;
         }
         // device test can have performance results in test metrics
-        String perfResult = metrics.get(RESULT_KEY);
+        Metric perfResult = metrics.get(RESULT_KEY);
         ReportLog report = null;
         if (perfResult != null) {
             try {
-                report = ReportLog.parse(perfResult);
+                report = ReportLog.parse(perfResult.getMeasurements().getSingleString());
             } catch (XmlPullParserException | IOException e) {
                 e.printStackTrace();
             }

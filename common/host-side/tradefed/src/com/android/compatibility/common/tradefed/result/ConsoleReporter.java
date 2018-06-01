@@ -127,7 +127,7 @@ public class ConsoleReporter implements IShardableListener {
      * {@inheritDoc}
      */
     @Override
-    public void testEnded(TestDescription test, Map<String, String> testMetrics) {
+    public void testEnded(TestDescription test, HashMap<String, Metric> testMetrics) {
         if (!mTestFailed && !mTestSkipped) {
             logProgress("%s pass", test);
             mPassedTests++;
