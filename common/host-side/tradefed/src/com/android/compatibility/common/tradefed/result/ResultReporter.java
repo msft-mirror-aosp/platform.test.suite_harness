@@ -272,7 +272,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
                     mResultDir.getAbsolutePath());
         }
 
-        debug("Results Directory: " + mResultDir.getAbsolutePath());
+        debug("Results Directory: %s", mResultDir.getAbsolutePath());
 
         mUploader = new ResultUploader(mResultServer, mBuildHelper.getSuiteName());
         try {
