@@ -15,7 +15,8 @@
 -->
 <configuration description="Runs CTS-instant from a pre-existing CTS installation">
 
-    <include name="cts" />
+    <include name="cts-common" />
+    <include name="cts-exclude" />
 
     <!-- This plan is only for instant app specific tests. -->
     <option name="plan" value="cts-instant" />
@@ -25,13 +26,15 @@
 
     <!-- Exclude tests applicable only to full mode -->
     <option name="compatibility:test-arg" value="com.android.tradefed.testtype.AndroidJUnitTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
+    <option name="compatibility:test-arg" value="com.android.compatibility.common.tradefed.testtype.JarHostTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
+    <option name="compatibility:test-arg" value="com.android.tradefed.testtype.HostTest:exclude-annotation:android.platform.test.annotations.AppModeFull" />
 
     <!-- CtsSystemUiTestCases -->
     <option name="compatibility:module-arg" value="CtsSystemUiTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsSystemUiTestCases" />
 
     <!-- CtsSampleHostTestCases -->
-    <!-- This is just a sample how to write host side tests. -->
+    <option name="compatibility:include-filter" value="CtsSampleHostTestCases" />
 
     <!-- CtsDeviceIdleHostTestCases -->
     <!-- These are tests for the shell command to manage device idle whitelist. -->
@@ -146,8 +149,14 @@
     <option name="compatibility:module-arg" value="CtsUidIsolationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUidIsolationTestCases" />
 
+    <!-- CtsAppSecurityHostTestCases -->
+    <option name="compatibility:include-filter" value="CtsAppSecurityHostTestCases" />
+
     <!-- CtsBackupHostTestCases, CtsBackupTestCases -->
     <!-- Backup of instant apps is not supported. -->
+
+    <!-- CtsMediaHostTestCases -->
+    <option name="compatibility:include-filter" value="CtsMediaHostTestCases" />
 
     <!-- CtsDpiTestCases2 -->
     <!-- These target Cupcake not applicable to instant apps which target Oreo+ -->
@@ -210,5 +219,9 @@
 
     <!-- CtsSyncContentHostTestCases -->
     <!-- This is a test for account data sync and READ_SYNC_SETTINGS/WRITE_SYNC_SETTINGS are required, which instant apps don't have -->
+
+    <!-- CtsDevicePolicyManagerTestCases -->
+    <!-- Instant apps can never be device admin / profile owner / device owner so positive tests
+         here are not applicable -->
 
 </configuration>

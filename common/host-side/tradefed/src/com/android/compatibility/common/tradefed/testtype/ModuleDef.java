@@ -28,6 +28,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.ResultForwarder;
 import com.android.tradefed.targetprep.BuildError;
@@ -47,6 +48,7 @@ import com.android.tradefed.util.AbiUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -406,7 +408,7 @@ public class ModuleDef implements IModuleDef {
         public void finish() {
             if (!mFinished) {
                 mListener.testRunStarted(mId, 0);
-                mListener.testRunEnded(0, Collections.emptyMap());
+                mListener.testRunEnded(0, new HashMap<String, Metric>());
             }
         }
     }
