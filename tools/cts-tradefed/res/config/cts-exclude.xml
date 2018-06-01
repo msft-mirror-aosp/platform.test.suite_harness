@@ -18,10 +18,4 @@
     <option name="compatibility:exclude-filter" value="CtsSecurityHostTestCases android.security.cts.SELinuxHostTest#testNoExemptionsForBinderInVendorBan" />
     <option name="compatibility:exclude-filter" value="CtsSecurityHostTestCases android.security.cts.SELinuxHostTest#testNoExemptionsForSocketsBetweenCoreAndVendorBan" />
     <option name="compatibility:exclude-filter" value="CtsSecurityHostTestCases android.security.cts.SELinuxHostTest#testNoExemptionsForVendorExecutingCore" />
-
-    <!-- Exclude tests applicable only to instant mode -->
-    <option name="compatibility:test-arg" value="com.android.tradefed.testtype.AndroidJUnitTest:exclude-annotation:android.platform.test.annotations.AppModeInstant" />
-    <option name="compatibility:test-arg" value="com.android.compatibility.common.tradefed.testtype.JarHostTest:exclude-annotation:android.platform.test.annotations.AppModeInstant" />
-    <option name="compatibility:test-arg" value="com.android.tradefed.testtype.HostTest:exclude-annotation:android.platform.test.annotations.AppModeInstant" />
-
 </configuration>
