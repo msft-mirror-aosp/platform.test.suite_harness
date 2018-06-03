@@ -15,7 +15,8 @@
 -->
 <configuration description="Runs CTS-instant from a pre-existing CTS installation">
 
-    <include name="cts" />
+    <include name="cts-common" />
+    <include name="cts-exclude" />
 
     <!-- This plan is only for instant app specific tests. -->
     <option name="plan" value="cts-instant" />
@@ -33,7 +34,7 @@
     <option name="compatibility:include-filter" value="CtsSystemUiTestCases" />
 
     <!-- CtsSampleHostTestCases -->
-    <!-- This is just a sample how to write host side tests. -->
+    <option name="compatibility:include-filter" value="CtsSampleHostTestCases" />
 
     <!-- CtsDeviceIdleHostTestCases -->
     <!-- These are tests for the shell command to manage device idle whitelist. -->
@@ -194,6 +195,9 @@
     <!-- CtsUiAutomationTestCases -->
     <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
+
+    <!-- CtsActivityManagerDeviceSdk25TestCases -->
+    <!-- These tests require targeting API 25 which does not support instant apps -->
 
     <!-- CtsCameraTestCases -->
     <option name="compatibility:module-arg" value="CtsCameraTestCases:install-arg:--instant" />

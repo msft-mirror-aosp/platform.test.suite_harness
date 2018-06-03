@@ -17,6 +17,7 @@ package com.android.compatibility.common.tradefed.testtype;
 
 import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.testtype.IAbi;
@@ -26,7 +27,7 @@ import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.ITestCollector;
 import com.android.tradefed.testtype.ITestFilterReceiver;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Set;
 
 /**
@@ -54,8 +55,8 @@ public class SimpleTestStub implements IRemoteTest, IAbiReceiver, IRuntimeHintPr
         listener.testRunStarted("module-run", 1);
         TestDescription tid = new TestDescription("TestStub", "test1");
         listener.testStarted(tid);
-        listener.testEnded(tid, Collections.emptyMap());
-        listener.testRunEnded(0, Collections.emptyMap());
+        listener.testEnded(tid, new HashMap<String, Metric>());
+        listener.testRunEnded(0, new HashMap<String, Metric>());
     }
 
     @Override

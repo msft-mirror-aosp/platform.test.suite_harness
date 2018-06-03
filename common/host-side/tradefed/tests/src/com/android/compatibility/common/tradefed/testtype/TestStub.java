@@ -17,6 +17,7 @@ package com.android.compatibility.common.tradefed.testtype;
 
 import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.testtype.IAbi;
@@ -26,7 +27,7 @@ import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.ITestCollector;
 import com.android.tradefed.testtype.ITestFilterReceiver;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -62,13 +63,13 @@ public class TestStub implements IRemoteTest, IAbiReceiver, IRuntimeHintProvider
         listener.testRunStarted("module-run", 3);
         TestDescription tid = new TestDescription("TestStub", "test1");
         listener.testStarted(tid);
-        listener.testEnded(tid, Collections.emptyMap());
+        listener.testEnded(tid, new HashMap<String, Metric>());
 
         if (mIsComplete) {
             // possibly skip this one to create some not_executed case.
             TestDescription tid2 = new TestDescription("TestStub", "test2");
             listener.testStarted(tid2);
-            listener.testEnded(tid2, Collections.emptyMap());
+            listener.testEnded(tid2, new HashMap<String, Metric>());
         }
 
         TestDescription tid3 = new TestDescription("TestStub", "test3");
@@ -76,9 +77,9 @@ public class TestStub implements IRemoteTest, IAbiReceiver, IRuntimeHintProvider
         if (mDoesOneTestFail) {
             listener.testFailed(tid3, "ouch this is bad.");
         }
-        listener.testEnded(tid3, Collections.emptyMap());
+        listener.testEnded(tid3, new HashMap<String, Metric>());
 
-        listener.testRunEnded(0, Collections.emptyMap());
+        listener.testRunEnded(0, new HashMap<String, Metric>());
     }
 
     /**
@@ -93,7 +94,7 @@ public class TestStub implements IRemoteTest, IAbiReceiver, IRuntimeHintProvider
                 } else {
                     // We fake an internal retry by calling testRunStart/Ended again.
                     listener.testRunStarted("module-run", 3);
-                    listener.testRunEnded(0, Collections.emptyMap());
+                    listener.testRunEnded(0, new HashMap<String, Metric>());
                     testAttempt(listener);
                 }
             } else {
@@ -107,21 +108,21 @@ public class TestStub implements IRemoteTest, IAbiReceiver, IRuntimeHintProvider
                 if (mIsComplete) {
                     for (TestDescription tid : mShardedTestToRun) {
                         listener.testStarted(tid);
-                        listener.testEnded(tid, Collections.emptyMap());
+                        listener.testEnded(tid, new HashMap<String, Metric>());
                     }
                 } else {
                     TestDescription tid = mShardedTestToRun.get(0);
                     listener.testStarted(tid);
-                    listener.testEnded(tid, Collections.emptyMap());
+                    listener.testEnded(tid, new HashMap<String, Metric>());
                 }
 
                 if (mDoesOneTestFail) {
                     TestDescription tid = new TestDescription("TestStub", "failed" + mShardIndex);
                     listener.testStarted(tid);
                     listener.testFailed(tid, "shard failed this one.");
-                    listener.testEnded(tid, Collections.emptyMap());
+                    listener.testEnded(tid, new HashMap<String, Metric>());
                 }
-                listener.testRunEnded(0, Collections.emptyMap());
+                listener.testRunEnded(0, new HashMap<String, Metric>());
             }
         }
     }
