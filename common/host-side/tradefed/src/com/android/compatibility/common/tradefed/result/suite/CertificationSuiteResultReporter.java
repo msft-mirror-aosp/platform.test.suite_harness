@@ -246,7 +246,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                     mResultDir.getAbsolutePath());
         }
 
-        CLog.e("Results Directory: " + mResultDir.getAbsolutePath());
+        CLog.d("Results Directory: %s", mResultDir.getAbsolutePath());
 
         mUploader = new ResultUploader(mResultServer, mBuildHelper.getSuiteName());
         try {
