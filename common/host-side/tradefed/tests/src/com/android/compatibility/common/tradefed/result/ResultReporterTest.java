@@ -28,6 +28,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ByteArrayInputStreamSource;
 import com.android.tradefed.result.InputStreamSource;
 import com.android.tradefed.result.LogDataType;
@@ -146,15 +147,15 @@ public class ResultReporterTest extends TestCase {
         mReporter.testRunStarted(ID, 2);
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
         mReporter.testStarted(test1);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
         mReporter.testStarted(test2);
         mReporter.testFailed(test2, STACK_TRACE);
         TestDescription test3 = new TestDescription(CLASS, METHOD_3);
         mReporter.testStarted(test3);
         mReporter.testFailed(test3, STACK_TRACE);
-        mReporter.testEnded(test3, new HashMap<String, String>());
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testEnded(test3, new HashMap<String, Metric>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
         mReporter.invocationEnded(10);
         IInvocationResult result = mReporter.getResult();
         assertEquals("Expected 1 pass", 1, result.countResults(TestStatus.PASS));
@@ -192,10 +193,10 @@ public class ResultReporterTest extends TestCase {
             if (!passes[i]) {
                 mReporter.testFailed(test, STACK_TRACE);
             }
-            mReporter.testEnded(test, new HashMap<String, String>());
+            mReporter.testEnded(test, new HashMap<String, Metric>());
         }
 
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
     }
 
     public void testRepeatedExecutions() throws Exception {
@@ -266,12 +267,12 @@ public class ResultReporterTest extends TestCase {
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
         mReporter.testStarted(test1);
         mReporter.testFailed(test1, STACK_TRACE);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
         mReporter.testStarted(test2);
-        mReporter.testEnded(test2, new HashMap<String, String>());
+        mReporter.testEnded(test2, new HashMap<String, Metric>());
 
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
         mReporter.invocationEnded(10);
 
         // Verification that results have been overwritten.
@@ -325,9 +326,9 @@ public class ResultReporterTest extends TestCase {
 
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
         mReporter.testStarted(test2);
-        mReporter.testEnded(test2, new HashMap<String, String>());
+        mReporter.testEnded(test2, new HashMap<String, Metric>());
 
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
         mReporter.invocationEnded(10);
 
         // Verification that results have been overwritten.
@@ -364,9 +365,9 @@ public class ResultReporterTest extends TestCase {
 
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
         mReporter.testStarted(test2);
-        mReporter.testEnded(test2, new HashMap<String, String>());
+        mReporter.testEnded(test2, new HashMap<String, Metric>());
 
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
         mReporter.invocationEnded(10);
 
         // Verification that results have been overwritten.
@@ -384,9 +385,9 @@ public class ResultReporterTest extends TestCase {
         mReporter.testRunStarted(ID, 2);
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
         mReporter.testStarted(test1);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
         mReporter.testRunFailed("error");
-        mReporter.testRunEnded(10, new HashMap<String, String>());
+        mReporter.testRunEnded(10, new HashMap<String, Metric>());
         mReporter.invocationEnded(10);
         IInvocationResult result = mReporter.getResult();
         assertEquals("Expected 1 pass", 1, result.countResults(TestStatus.PASS));

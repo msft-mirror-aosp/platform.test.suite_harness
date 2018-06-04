@@ -16,10 +16,13 @@
 
 package com.android.compatibility.common.tradefed.result;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.util.AbiUtils;
 
@@ -105,7 +108,7 @@ public class ConsoleReporterTest {
     private void runTests() {
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
         mReporter.testStarted(test1);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
         assertFalse(mReporter.getTestFailed());
 
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);

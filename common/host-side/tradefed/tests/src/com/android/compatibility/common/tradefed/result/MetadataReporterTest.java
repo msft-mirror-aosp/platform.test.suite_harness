@@ -23,6 +23,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.RunUtil;
@@ -118,23 +119,23 @@ public class MetadataReporterTest extends TestCase {
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
         mReporter.testStarted(test1);
         RunUtil.getDefault().sleep(waitTime);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
 
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
         mReporter.testStarted(test2);
         RunUtil.getDefault().sleep(waitTime);
-        mReporter.testEnded(test1, new HashMap<String, String>());
+        mReporter.testEnded(test1, new HashMap<String, Metric>());
 
         TestDescription test3 = new TestDescription(CLASS, METHOD_3);
         mReporter.testStarted(test3);
         RunUtil.getDefault().sleep(waitTime);
         mReporter.testFailed(test3, STACK_TRACE);
-        mReporter.testEnded(test3, new HashMap<String, String>());
+        mReporter.testEnded(test3, new HashMap<String, Metric>());
 
         TestDescription test4 = new TestDescription(CLASS, METHOD_3);
         mReporter.testStarted(test4);
         RunUtil.getDefault().sleep(waitTime);
         mReporter.testIgnored(test4);
-        mReporter.testEnded(test4, new HashMap<String, String>());
+        mReporter.testEnded(test4, new HashMap<String, Metric>());
     }
 }

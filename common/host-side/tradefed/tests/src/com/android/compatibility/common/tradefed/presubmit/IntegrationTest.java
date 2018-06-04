@@ -261,7 +261,7 @@ public class IntegrationTest {
             }
             @Override
             public void testEnded(TestDescription test, long endTime,
-                    Map<String, String> testMetrics) {
+                    HashMap<String, Metric> testMetrics) {
                 receivedComponentsTestEnded.addAll(myContext.getModuleInvocationContext()
                         .getConfigurationDescriptor().getMetaData("component"));
                 receivedModuleNameTestEnded.addAll(myContext.getModuleInvocationContext()
