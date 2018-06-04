@@ -132,7 +132,7 @@ public class MetadataReporter implements IShardableListener {
      * {@inheritDoc}
      */
     @Override
-    public void testEnded(TestDescription test, Map<String, String> testMetrics) {
+    public void testEnded(TestDescription test, HashMap<String, Metric> testMetrics) {
         long duration = System.currentTimeMillis() - mStartTime;
         if (mTestFailed && !mIncludeFailures) {
             return;

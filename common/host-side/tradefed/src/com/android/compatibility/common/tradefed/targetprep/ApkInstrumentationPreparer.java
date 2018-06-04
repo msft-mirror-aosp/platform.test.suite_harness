@@ -23,15 +23,18 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetCleaner;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
+import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -143,8 +146,8 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
     private class TargetPreparerListener implements ITestInvocationListener {
 
         @Override
-        public void testEnded(TestDescription test, Map<String, String> metrics) {
-            testMetrics.put(test, metrics);
+        public void testEnded(TestDescription test, HashMap<String, Metric> metrics) {
+            testMetrics.put(test, TfMetricProtoUtil.compatibleConvert(metrics));
         }
 
         @Override
