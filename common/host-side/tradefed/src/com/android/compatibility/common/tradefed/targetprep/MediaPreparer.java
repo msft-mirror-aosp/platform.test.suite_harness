@@ -25,6 +25,7 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil;
+import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.targetprep.BuildError;
@@ -41,7 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
@@ -388,10 +389,10 @@ public class MediaPreparer extends PreconditionPreparer {
     private class MediaPreparerListener implements ITestInvocationListener {
 
         @Override
-        public void testEnded(TestDescription test, Map<String, String> metrics) {
-            String resString = metrics.get(RESOLUTION_STRING_KEY);
-            if (resString != null) {
-                mMaxRes = new Resolution(resString);
+        public void testEnded(TestDescription test, HashMap<String, Metric> metrics) {
+            Metric resMetric = metrics.get(RESOLUTION_STRING_KEY);
+            if (resMetric != null) {
+                mMaxRes = new Resolution(resMetric.getMeasurements().getSingleString());
             }
         }
 

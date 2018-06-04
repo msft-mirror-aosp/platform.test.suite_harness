@@ -79,7 +79,7 @@ public class ModuleListener implements IModuleListener {
      * {@inheritDoc}
      */
     @Override
-    public void testEnded(TestDescription test, Map<String, String> metrics) {
+    public void testEnded(TestDescription test, HashMap<String, Metric> metrics) {
         CLog.d("ModuleListener.testEnded(%s, %s)", test.toString(), metrics.toString());
         mListener.testEnded(test, metrics);
     }
