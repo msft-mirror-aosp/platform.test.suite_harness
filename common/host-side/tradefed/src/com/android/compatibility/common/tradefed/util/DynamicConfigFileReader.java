@@ -42,13 +42,9 @@ public class DynamicConfigFileReader {
      */
     public static String getValueFromConfig(File file, String key)
             throws XmlPullParserException, IOException {
-        Map<String, List<String>> configMap = DynamicConfig.createConfigMap(file);
-        List<String> singleValue = configMap.get(key);
-        if (singleValue == null || singleValue.size() == 0 || singleValue.size() > 1) {
-            // key must exist in the map, and map to a list containing exactly one string
-            return null;
-        }
-        return singleValue.get(0);
+        DynamicConfig config = new DynamicConfig();
+        config.initializeConfig(file);
+        return config.getValue(key);
     }
 
     /**
@@ -61,7 +57,9 @@ public class DynamicConfigFileReader {
      */
     public static List<String> getValuesFromConfig(File file, String key)
             throws XmlPullParserException, IOException {
-        return DynamicConfig.createConfigMap(file).get(key);
+        DynamicConfig config = new DynamicConfig();
+        config.initializeConfig(file);
+        return config.getValues(key);
     }
 
     /**

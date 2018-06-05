@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,14 @@ public class DynamicConfigHandler {
         Map<String, List<String>> localConfig = DynamicConfig.createConfigMap(localConfigFile);
         Map<String, List<String>> apbsConfig = parseJsonToConfigMap(apbsConfigJson);
         localConfig.putAll(apbsConfig);
+        setRemoteConfigRetrieved(localConfig, apbsConfigJson != null);
         return storeMergedConfigFile(localConfig, moduleName);
+    }
+
+    private static void setRemoteConfigRetrieved(Map<String, List<String>> config,
+            boolean retrieved) {
+        List<String> val = Collections.singletonList(Boolean.toString(retrieved));
+        config.put(DynamicConfig.REMOTE_CONFIG_RETRIEVED_KEY, val);
     }
 
     private static Map<String, List<String>> parseJsonToConfigMap(String apbsConfigJson)
@@ -59,7 +67,13 @@ public class DynamicConfigHandler {
         }
 
         JSONObject rootObj  = new JSONObject(new JSONTokener(apbsConfigJson));
-        JSONObject configObject = rootObj.getJSONObject("dynamicConfigEntries");
+        JSONObject configObject  = null;
+        try {
+            configObject = rootObj.getJSONObject("dynamicConfigEntries");
+        } catch (JSONException e) {
+            // no config key-value(s) pairs have been defined remotely, return empty map
+            return configMap;
+        }
         JSONArray keys = configObject.names();
         for (int i = 0; i < keys.length(); i++) {
             String key = keys.getString(i);
