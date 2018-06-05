@@ -84,6 +84,9 @@
     <option name="compatibility:module-arg" value="CtsFragmentTestCasesSdk26:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsFragmentTestCasesSdk26" />
 
+    <!-- CtsInputMethodServiceHostTestCases -->
+    <option name="compatibility:include-filter" value="CtsInputMethodServiceHostTestCases" />
+
     <!-- CtsPermissionTestCases -->
     <option name="compatibility:module-arg" value="CtsPermissionTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsPermissionTestCases" />
@@ -196,6 +199,9 @@
     <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
 
+    <!-- CtsActivityManagerDeviceSdk25TestCases -->
+    <!-- These tests require targeting API 25 which does not support instant apps -->
+
     <!-- CtsCameraTestCases -->
     <option name="compatibility:module-arg" value="CtsCameraTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsCameraTestCases" />
@@ -219,6 +225,10 @@
 
     <!-- CtsSyncContentHostTestCases -->
     <!-- This is a test for account data sync and READ_SYNC_SETTINGS/WRITE_SYNC_SETTINGS are required, which instant apps don't have -->
+
+    <!-- CtsAccountManagerTestCases -->
+    <option name="compatibility:module-arg" value="CtsAccountManagerTestCases:install-arg:--instant" />
+    <option name="compatibility:include-filter" value="CtsAccountManagerTestCases" />
 
     <!-- CtsDevicePolicyManagerTestCases -->
     <!-- Instant apps can never be device admin / profile owner / device owner so positive tests
