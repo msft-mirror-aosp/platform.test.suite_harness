@@ -133,6 +133,9 @@
     <option name="compatibility:module-arg" value="CtsSampleDeviceTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsSampleDeviceTestCases" />
 
+    <!-- CtsShortcutManagerTestCases, CtsShortcutHostTestCases -->
+    <!-- Instant apps can't access ShortcutManager -->
+
     <!-- CtsToastTestCases -->
     <option name="compatibility:module-arg" value="CtsToastTestCases:install-arg:--instant" />
     <option name="compatibility:include-filter" value="CtsToastTestCases" />
