@@ -56,7 +56,7 @@ To run a specific test:
 'run cts --module <module_name> --test <test_name>'
 
 To shard a plan test run on multiple devices
-'run cts --shards <number of shards>
+'run cts --shard-count <number of shards>
 note: all connected devices must be running the same build
 
 For more options:
