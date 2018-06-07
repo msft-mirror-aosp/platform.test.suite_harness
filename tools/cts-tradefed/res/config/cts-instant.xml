@@ -234,4 +234,7 @@
     <!-- Instant apps can never be device admin / profile owner / device owner so positive tests
          here are not applicable -->
 
+    <!-- CtsProviderTestCases -->
+    <!-- Instant apps cannot expose content providers and don't have access to most system ones used in the test -->
+    
 </configuration>
