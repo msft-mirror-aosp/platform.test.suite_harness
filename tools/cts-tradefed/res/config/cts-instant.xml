@@ -244,4 +244,8 @@
     <!-- CtsProviderTestCases -->
     <!-- Instant apps cannot expose content providers and don't have access to most system ones used in the test -->
     
+    <!-- CtsOsHostTestCases -->
+    <option name="compatibility:module-arg" value="CtsOsHostTestCases:instant-mode:true" />
+    <option name="compatibility:include-filter" value="CtsOsHostTestCases" />
+
 </configuration>
