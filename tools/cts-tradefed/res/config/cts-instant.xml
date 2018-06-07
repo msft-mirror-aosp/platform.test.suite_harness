@@ -48,7 +48,7 @@
     <option name="compatibility:include-filter" value="CtsAccessibilityTestCases" />
 
     <!-- CtsAccessibilityServiceTestCases -->
-    <option name="compatibility:module-arg" value="CtsAccessibilityServiceTestCases:install-mode:true" />
+    <option name="compatibility:module-arg" value="CtsAccessibilityServiceTestCases:instant-mode:true" />
     <option name="compatibility:include-filter" value="CtsAccessibilityServiceTestCases" />
 
     <!-- CtsAnimationTestCases -->
@@ -163,6 +163,11 @@
 
     <!-- CtsMediaHostTestCases -->
     <option name="compatibility:include-filter" value="CtsMediaHostTestCases" />
+
+    <!-- CtsMediaTestCases -->
+    <option name="compatibility:module-arg" value="CtsMediaTestCases:instant-mode:true" />
+    <option name="compatibility:module-arg" value="CtsMediaTestCases:skip-media-download:true" />
+    <option name="compatibility:include-filter" value="CtsMediaTestCases" />
 
     <!-- CtsDpiTestCases2 -->
     <!-- These target Cupcake not applicable to instant apps which target Oreo+ -->
