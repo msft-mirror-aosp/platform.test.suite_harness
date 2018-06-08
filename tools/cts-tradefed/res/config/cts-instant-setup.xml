@@ -211,7 +211,7 @@
 
     <!-- CtsAdminPackageInstallerTestCases -->
     <!-- Device Owner-specific tests are not applicable to instant apps. -->
-    
+
     <!-- CtsExternalServiceTestCases -->
     <!-- This module tries to bind to services in another package, which is not valid for Instant-->
 
@@ -239,7 +239,7 @@
 
     <!-- CtsProviderTestCases -->
     <!-- Instant apps cannot expose content providers and don't have access to most system ones used in the test -->
-    
+
     <!-- CtsOsHostTestCases -->
     <option name="compatibility:module-arg" value="CtsOsHostTestCases:instant-mode:true" />
     <option name="compatibility:include-filter" value="CtsOsHostTestCases" />
