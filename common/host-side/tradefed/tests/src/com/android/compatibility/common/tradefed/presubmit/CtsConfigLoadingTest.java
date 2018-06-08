@@ -31,6 +31,8 @@ import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.testtype.HostTest;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.ITestFilterReceiver;
+import com.android.tradefed.testtype.suite.ITestSuite;
+import com.android.tradefed.testtype.suite.params.ModuleParameters;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -218,6 +220,9 @@ public class CtsConfigLoadingTest {
                     + "field \"%s\", supported ones are: %s\nconfig: %s",
                     cmp, KNOWN_COMPONENTS, config), KNOWN_COMPONENTS.contains(cmp));
 
+            // Check that specified parameters are expected
+            checkModuleParameters(config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+
             // Ensure each CTS module is tagged with <option name="test-suite-tag" value="cts" />
             Assert.assertTrue(String.format(
                     "Module config %s does not contains "
@@ -234,6 +239,25 @@ public class CtsConfigLoadingTest {
                                     + "not-shardable option.", config.getName()));
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Test that all parameter metadata can be resolved.
+     */
+    private void checkModuleParameters(String configName, List<String> parameters)
+            throws ConfigurationException {
+        if (parameters == null) {
+            return;
+        }
+        for (String param : parameters) {
+            try {
+                ModuleParameters.valueOf(param.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ConfigurationException(
+                        String.format("Config: %s includes an unknown parameter '%s'.",
+                                configName, param));
             }
         }
     }
