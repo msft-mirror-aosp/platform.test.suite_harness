@@ -110,6 +110,15 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
             importance = Importance.IF_UNSET)
     protected String mTestName = null;
 
+    @Option(
+        name = "module-arg",
+        description =
+                "the arguments to pass to a module. The expected format is"
+                        + "\"<module-name>:<arg-name>:[<arg-key>:=]<arg-value>\"",
+        importance = Importance.ALWAYS
+    )
+    private List<String> mModuleArgs = new ArrayList<>();
+
     @Option(name = CompatibilityTestSuite.TEST_ARG_OPTION,
             description = "the arguments to pass to a test. The expected format is "
                     + "\"<test-class>:<arg-name>:[<arg-key>:=]<arg-value>\"",
@@ -199,6 +208,9 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
 
         try {
             OptionSetter setter = new OptionSetter(test);
+            for (String moduleArg : mModuleArgs) {
+                setter.setOptionValue("compatibility:module-arg", moduleArg);
+            }
             for (String testArg : mTestArgs) {
                 setter.setOptionValue("compatibility:test-arg", testArg);
             }
