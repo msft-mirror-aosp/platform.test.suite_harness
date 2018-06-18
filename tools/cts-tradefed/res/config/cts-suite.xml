@@ -13,7 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Runs CTS as a suite">
+<configuration description="Runs CTS as a suite. Configuration for testing new changes.">
     <!-- running config -->
     <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
     <test class="com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite">
@@ -65,10 +65,5 @@
     <template-include name="metadata-reporters" default="empty" />
 
     <result_reporter class="com.android.compatibility.common.tradefed.result.ConsoleReporter" />
-    <result_reporter class="com.android.compatibility.common.tradefed.result.ResultReporter" />
-    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter">
-        <!-- Avoid double posting from this reporter until ResultReporter is removed -->
-        <option name="disable-result-posting" value="true" />
-    </result_reporter>
-
+    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter" />
 </configuration>
