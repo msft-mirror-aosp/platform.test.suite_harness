@@ -24,7 +24,6 @@ import com.android.compatibility.common.util.IInvocationResult;
 import com.android.compatibility.common.util.LightInvocationResult;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.TestFilter;
-import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.ArgsOptionParser;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.device.DeviceNotAvailableException;
@@ -159,16 +158,6 @@ public class RetryFilterHelper {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    /**
-     * Set the retry command line args on the {@link IBuildInfo} to carry the original command
-     * across retries.
-     */
-    public void setBuildInfoRetryCommand(IBuildInfo info) {
-        IInvocationResult result = new LightInvocationResult(getResult());
-        String retryCommandLineArgs = result.getCommandLineArgs();
-        new CompatibilityBuildHelper(info).setRetryCommandLineArgs(retryCommandLineArgs);
     }
 
     /**
