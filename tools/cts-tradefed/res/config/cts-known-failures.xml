@@ -209,4 +209,7 @@
 
     <!-- b/80309889 -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testCpuActiveTime" />
+
+    <!-- b/110268476 -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTestApi25#testResetPasswordFbe" />
 </configuration>
