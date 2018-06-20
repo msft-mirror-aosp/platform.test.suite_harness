@@ -25,6 +25,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for backup and restore.
@@ -33,6 +36,14 @@ public abstract class BackupUtils {
     public static final String LOCAL_TRANSPORT =
             "android/com.android.internal.backup.LocalTransport";
     public static final String LOCAL_TRANSPORT_TOKEN = "1";
+
+    private static final int BACKUP_PROVISIONING_TIMEOUT_SECONDS = 30;
+    private static final int BACKUP_PROVISIONING_POLL_INTERVAL_SECONDS = 1;
+
+    private static final Pattern BACKUP_MANAGER_CURRENTLY_ENABLE_STATUS_PATTERN =
+            Pattern.compile("^Backup Manager currently (enabled|disabled)$");
+    private static final String MATCH_LINE_BACKUP_MANAGER_IS_NOT_PENDING_INIT =
+            "(?s)" + "^Backup Manager is .* not pending init.*";  // DOTALL
 
     private static final String BACKUP_DUMPSYS_CURRENT_TOKEN_FIELD = "Current:";
 
@@ -215,7 +226,50 @@ public abstract class BackupUtils {
         }
         return out.toString();
     }
+
+    // Copied over from BackupQuotaTest
+    public boolean enableBackup(boolean enable) throws Exception {
+        boolean previouslyEnabled;
+        String output = getLineString(executeShellCommand("bmgr enabled"));
+        Matcher matcher = BACKUP_MANAGER_CURRENTLY_ENABLE_STATUS_PATTERN.matcher(output.trim());
+        if (matcher.find()) {
+            previouslyEnabled = "enabled".equals(matcher.group(1));
+        } else {
+            throw new RuntimeException("non-parsable output setting bmgr enabled: " + output);
+        }
+
+        executeShellCommand("bmgr enable " + enable);
+        return previouslyEnabled;
+    }
+
+    private String getLineString(InputStream inputStream) throws IOException {
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        String str;
+        try {
+            str = reader.readLine();
+        } finally {
+            StreamUtil.drainAndClose(reader);
+        }
+        return str;
+    }
+
+    public void waitForBackupInitialization() throws IOException {
+        long tryUntilNanos = System.nanoTime()
+                + TimeUnit.SECONDS.toNanos(BACKUP_PROVISIONING_TIMEOUT_SECONDS);
+        while (System.nanoTime() < tryUntilNanos) {
+            String output = getLineString(executeShellCommand("dumpsys backup"));
+            if (output.matches(MATCH_LINE_BACKUP_MANAGER_IS_NOT_PENDING_INIT)) {
+                return;
+            }
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(BACKUP_PROVISIONING_POLL_INTERVAL_SECONDS));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        throw new IOException("Timed out waiting for backup initialization");
+    }
 }
-
-
 
