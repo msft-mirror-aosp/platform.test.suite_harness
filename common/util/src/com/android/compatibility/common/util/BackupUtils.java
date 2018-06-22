@@ -200,4 +200,22 @@ public abstract class BackupUtils {
             StreamUtil.drainAndClose(reader);
         }
     }
+
+    /**
+     * Execute shell command and return output from this command.
+     */
+    public String executeShellCommandAndReturnOutput(String command) throws IOException {
+        InputStream in = executeShellCommand(command);
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(in, StandardCharsets.UTF_8));
+        String str;
+        StringBuilder out = new StringBuilder();
+        while ((str = br.readLine()) != null) {
+            out.append(str).append("\n");
+        }
+        return out.toString();
+    }
 }
+
+
+
