@@ -26,10 +26,6 @@
     <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerPinnedStackTests#testAlwaysFocusablePipActivity" />
     <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerPinnedStackTests#testLaunchIntoPinnedStack" />
 
-    <!-- b/17595050 -->
-    <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilityTextTraversalTest#testActionNextAndPreviousAtGranularityPageOverText" />
-    <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilityTextTraversalTest#testActionNextAndPreviousAtGranularityPageOverTextExtend" />
-
     <!-- b/17989532 -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.SurfaceViewPreviewTest#testPreparePerformance" />
 
