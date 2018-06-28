@@ -48,6 +48,11 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     private String mLogUrl;
 
     /**
+     * Empty version of the constructor when loading results.
+     */
+    public CertificationResultXml() {}
+
+    /**
      * Create an XML report specialized for the Compatibility Test cases.
      */
     public CertificationResultXml(String suiteName,

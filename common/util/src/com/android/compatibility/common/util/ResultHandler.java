@@ -544,8 +544,9 @@ public class ResultHandler {
         }
         List<File> allResultDirs = getResultDirectories(resultsDir);
         if (sessionId >= allResultDirs.size()) {
-            throw new IllegalArgumentException(String.format("Invalid session id [%d], results" +
-                    "directory contains only %d results", sessionId, allResultDirs.size()));
+            throw new IllegalArgumentException(String.format("Invalid session id [%d], results " +
+                    "directory (%s) contains only %d results",
+                    sessionId, resultsDir.getAbsolutePath(), allResultDirs.size()));
         }
         return allResultDirs.get(sessionId);
     }
