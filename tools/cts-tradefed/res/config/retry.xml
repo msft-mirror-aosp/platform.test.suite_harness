@@ -52,6 +52,7 @@
 
     <result_reporter class="com.android.compatibility.common.tradefed.result.ConsoleReporter" />
     <result_reporter class="com.android.compatibility.common.tradefed.result.ResultReporter" />
+    <result_reporter class="com.android.tradefed.result.suite.SuiteResultReporter" />
 
     <template-include name="reporters" default="basic-reporters" />
 
