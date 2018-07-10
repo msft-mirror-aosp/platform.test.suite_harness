@@ -66,6 +66,8 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
 
     private static final String PREFIX_TAG = "cts:build_";
 
+    private static final String DEVICE_INFO_DIR = "device_info_dir";
+
     @Option(name = CompatibilityTest.SKIP_DEVICE_INFO_OPTION,
             shortName = 'd',
             description = "Whether device info collection should be skipped")
@@ -82,6 +84,7 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     private String mTempDir;
 
     private ITestLogger mLogger;
+    private File deviceInfoDir = null;
 
     public DeviceInfoCollector() {
         mWhen = When.BEFORE;
@@ -105,7 +108,6 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             return;
         }
         run(device, buildInfo);
-        File deviceInfoDir = null;
         try {
             deviceInfoDir = FileUtil.createTempDir(DeviceInfo.RESULT_DIR_NAME);
             if (device.pullDir(mSrcDir, deviceInfoDir)) {
@@ -114,15 +116,21 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
                         mLogger.testLog(deviceInfoFile.getName(), LogDataType.TEXT, source);
                     }
                 }
+                buildInfo.addBuildAttribute(DEVICE_INFO_DIR, deviceInfoDir.getAbsolutePath());
             } else {
                 CLog.e("Failed to pull device-info files from device %s", device.getSerialNumber());
             }
         } catch (IOException e) {
             CLog.e("Failed to pull device-info files from device %s", device.getSerialNumber());
             CLog.e(e);
-        } finally {
-            FileUtil.recursiveDelete(deviceInfoDir);
         }
+    }
+
+    @Override
+    public void tearDown(ITestDevice device, IBuildInfo buildInfo, Throwable e)
+            throws DeviceNotAvailableException {
+        FileUtil.recursiveDelete(deviceInfoDir);
+        super.tearDown(device, buildInfo, e);
     }
 
     @Override
