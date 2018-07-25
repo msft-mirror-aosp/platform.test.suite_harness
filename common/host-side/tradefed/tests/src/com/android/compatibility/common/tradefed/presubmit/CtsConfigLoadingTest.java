@@ -112,8 +112,11 @@ public class CtsConfigLoadingTest {
      * features required (filtering, sharding, etc.). We do not typically expect people to need a
      * different runner.
      */
-    private static final String INSTRUMENTATION_RUNNER_NAME =
-            "android.support.test.runner.AndroidJUnitRunner";
+    private static final Set<String> ALLOWED_INSTRUMENTATION_RUNNER_NAME = new HashSet<>();
+    static {
+        ALLOWED_INSTRUMENTATION_RUNNER_NAME.add("android.support.test.runner.AndroidJUnitRunner");
+        ALLOWED_INSTRUMENTATION_RUNNER_NAME.add("androidx.test.runner.AndroidJUnitRunner");
+    }
     private static final Set<String> RUNNER_EXCEPTION = new HashSet<>();
     static {
         // Used for a bunch of system-api cts tests
@@ -192,13 +195,13 @@ public class CtsConfigLoadingTest {
                 // Ensure that the device runner is the AJUR one
                 if (test instanceof AndroidJUnitTest) {
                     AndroidJUnitTest instru = (AndroidJUnitTest) test;
-                    if (!INSTRUMENTATION_RUNNER_NAME.equals(instru.getRunnerName())) {
+                    if (!ALLOWED_INSTRUMENTATION_RUNNER_NAME.contains(instru.getRunnerName())) {
                         // Some runner are exempt
                         if (!RUNNER_EXCEPTION.contains(instru.getRunnerName())) {
                             throw new ConfigurationException(
-                                    String.format("%s: uses '%s' instead of the '%s' that is "
+                                    String.format("%s: uses '%s' instead of on of '%s' that are "
                                             + "expected", config.getName(), instru.getRunnerName(),
-                                            INSTRUMENTATION_RUNNER_NAME));
+                                            ALLOWED_INSTRUMENTATION_RUNNER_NAME));
                         }
                     }
                 }
