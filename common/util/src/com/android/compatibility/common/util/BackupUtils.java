@@ -100,6 +100,11 @@ public abstract class BackupUtils {
         return getShellCommandOutput("bmgr enabled").contains("currently enabled");
     }
 
+    public void wakeAndUnlockDevice() throws IOException {
+        executeShellCommandSync("input keyevent KEYCODE_WAKEUP");
+        executeShellCommandSync("wm dismiss-keyguard");
+    }
+
     /** Executes "bmgr backupnow <package>" and returns an {@link InputStream} for its output. */
     private InputStream backupNow(String packageName) throws IOException {
         return executeShellCommand("bmgr backupnow " + packageName);
