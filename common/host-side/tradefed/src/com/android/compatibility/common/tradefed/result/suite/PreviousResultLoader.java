@@ -21,11 +21,18 @@ import com.android.compatibility.common.util.ResultHandler;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
-import com.android.tradefed.result.suite.SuiteResultHolder;
+import com.android.tradefed.invoker.proto.InvocationContext.Context;
+import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -41,27 +48,35 @@ public class PreviousResultLoader implements ITestSuiteResultLoader {
             mandatory = true)
     private Integer mRetrySessionId = null;
 
-    private SuiteResultHolder mPreviousResults;
+    private TestRecord mTestRecord;
 
     @Override
     public void init(IInvocationContext context) {
         IBuildInfo info = context.getBuildInfos().get(0);
         CompatibilityBuildHelper helperBuild = new CompatibilityBuildHelper(info);
-        CertificationResultXml loader = new CertificationResultXml();
         try {
-            mPreviousResults = loader.parseResults(
-                    ResultHandler.getResultDirectory(helperBuild.getResultsDir(), mRetrySessionId));
+            File resultDir = ResultHandler.getResultDirectory(
+                    helperBuild.getResultsDir(), mRetrySessionId);
+            try (InputStream stream = new FileInputStream(
+                    new File(resultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME))) {
+                mTestRecord = TestRecord.parseDelimitedFrom(stream);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        if (mPreviousResults == null) {
-            throw new RuntimeException("Failed to load the previous results.");
         }
     }
 
     @Override
     public String getCommandLine() {
-        List<String> command = mPreviousResults.context.getAttributes().get(
+        Context context = null;
+        try {
+            context = mTestRecord.getDescription().unpack(Context.class);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+        IInvocationContext invocContext = InvocationContext.fromProto(context);
+        
+        List<String> command = invocContext.getAttributes().get(
                 TestInvocation.COMMAND_ARGS_KEY);
         if (command == null) {
             throw new RuntimeException("Couldn't find the command line arg.");
@@ -70,7 +85,7 @@ public class PreviousResultLoader implements ITestSuiteResultLoader {
     }
 
     @Override
-    public SuiteResultHolder loadPreviousResults() {
-        return mPreviousResults;
+    public TestRecord loadPreviousRecord() {
+        return mTestRecord;
     }
 }

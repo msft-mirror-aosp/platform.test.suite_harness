@@ -65,5 +65,6 @@
     <template-include name="metadata-reporters" default="empty" />
 
     <result_reporter class="com.android.compatibility.common.tradefed.result.ConsoleReporter" />
+    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CompatibilityProtoResultReporter" />
     <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter" />
 </configuration>
