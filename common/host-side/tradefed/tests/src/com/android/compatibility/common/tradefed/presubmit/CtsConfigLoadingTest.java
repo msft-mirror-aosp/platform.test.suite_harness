@@ -192,10 +192,11 @@ public class CtsConfigLoadingTest {
                             "Test in module %s must implement ITestFilterReceiver.",
                             config.getName()));
                 }
-                // Ensure that the device runner is the AJUR one
+                // Ensure that the device runner is the AJUR one if explicitly specified.
                 if (test instanceof AndroidJUnitTest) {
                     AndroidJUnitTest instru = (AndroidJUnitTest) test;
-                    if (!ALLOWED_INSTRUMENTATION_RUNNER_NAME.contains(instru.getRunnerName())) {
+                    if (instru.getRunnerName() != null &&
+                            !ALLOWED_INSTRUMENTATION_RUNNER_NAME.contains(instru.getRunnerName())) {
                         // Some runner are exempt
                         if (!RUNNER_EXCEPTION.contains(instru.getRunnerName())) {
                             throw new ConfigurationException(
