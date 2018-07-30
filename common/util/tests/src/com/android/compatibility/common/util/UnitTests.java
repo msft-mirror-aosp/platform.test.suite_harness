@@ -26,6 +26,7 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(Suite.class)
 @SuiteClasses({
+    BackupUtilsTest.class,
     BusinessLogicTest.class,
     CaseResultTest.class,
     DynamicConfigTest.class,
