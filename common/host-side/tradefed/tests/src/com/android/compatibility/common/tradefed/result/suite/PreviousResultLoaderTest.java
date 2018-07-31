@@ -22,11 +22,15 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.ConfigurationDef;
+import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
-import com.android.tradefed.result.suite.SuiteResultHolder;
+import com.android.tradefed.invoker.TestInvocation;
+import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.util.FileUtil;
+
+import com.google.protobuf.Any;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * Unit tests for {@link PreviousResultLoader}.
@@ -45,6 +50,7 @@ public class PreviousResultLoaderTest {
     private PreviousResultLoader mLoader;
     private IInvocationContext mContext;
     private File mRootDir;
+    private File mProtoFile;
 
     @Before
     public void setUp() throws Exception {
@@ -52,6 +58,9 @@ public class PreviousResultLoaderTest {
         OptionSetter setter = new OptionSetter(mLoader);
         setter.setOptionValue("retry", "0");
         mContext = new InvocationContext();
+        mContext.setConfigurationDescriptor(new ConfigurationDescriptor());
+        mContext.addInvocationAttribute(TestInvocation.COMMAND_ARGS_KEY,
+                "cts -m CtsGesture --skip-all-system-status-check");
     }
 
     @After
@@ -65,12 +74,16 @@ public class PreviousResultLoaderTest {
     @Test
     public void testReloadTests_failed() throws Exception {
         mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, createFakeBuild(""));
+        // Delete the proto file
+        mProtoFile.delete();
         try {
             mLoader.init(mContext);
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
-            assertEquals("Failed to load the previous results.", expected.getMessage());
+            assertEquals(
+                    String.format("java.io.FileNotFoundException: %s (No such file or directory)",
+                            mProtoFile.getAbsolutePath()), expected.getMessage());
         }
     }
 
@@ -83,8 +96,7 @@ public class PreviousResultLoaderTest {
                 createFakeBuild(createBasicResults()));
         mLoader.init(mContext);
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
-        SuiteResultHolder results = mLoader.loadPreviousResults();
-        assertEquals(2, results.totalModules);
+        mLoader.loadPreviousRecord();
     }
 
     private IBuildInfo createFakeBuild(String resultContent) throws Exception {
@@ -101,6 +113,12 @@ public class PreviousResultLoaderTest {
         File testResult = new File(new CompatibilityBuildHelper(build).getResultDir(),
                 "test_result.xml");
         testResult.createNewFile();
+        // Populate a proto result
+        mProtoFile = new File(new CompatibilityBuildHelper(build).getResultDir(),
+                CompatibilityProtoResultReporter.PROTO_FILE_NAME);
+        TestRecord.Builder builder = TestRecord.newBuilder();
+        builder.setDescription(Any.pack(mContext.toProto()));
+        builder.build().writeDelimitedTo(new FileOutputStream(mProtoFile));
         FileUtil.writeToFile(resultContent, testResult);
         return build;
     }
