@@ -32,15 +32,13 @@ import java.io.FileNotFoundException;
  * Pushes specified testing artifacts from Compatibility repository.
  */
 @OptionClass(alias="file-pusher")
-public class FilePusher extends PushFilePreparer implements IAbiReceiver {
+public class FilePusher extends PushFilePreparer {
 
     @Option(name = "append-bitness",
             description = "Append the ABI's bitness to the filename.")
     private boolean mAppendBitness = false;
 
     private CompatibilityBuildHelper mBuildHelper = null;
-
-    private IAbi mAbi;
 
     private void setBuildHelper(IBuildInfo buildInfo) {
         if (mBuildHelper == null) {
@@ -55,23 +53,7 @@ public class FilePusher extends PushFilePreparer implements IAbiReceiver {
 
     protected File getTestFile(IBuildInfo buildInfo, String filename) throws FileNotFoundException {
         setBuildHelper(buildInfo);
-        return mBuildHelper.getTestFile(filename);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setAbi(IAbi abi) {
-        mAbi = abi;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IAbi getAbi() {
-        return mAbi;
+        return mBuildHelper.getTestFile(filename, getAbi());
     }
 
     /**
@@ -81,7 +63,7 @@ public class FilePusher extends PushFilePreparer implements IAbiReceiver {
     public File resolveRelativeFilePath(IBuildInfo buildInfo, String fileName) {
         try {
             File f = getTestFile(buildInfo,
-                    String.format("%s%s", fileName, mAppendBitness ? mAbi.getBitness() : ""));
+                    String.format("%s%s", fileName, mAppendBitness ? getAbi().getBitness() : ""));
             CLog.logAndDisplay(LogLevel.INFO, "Copying from %s", f.getAbsolutePath());
             return f;
         } catch (FileNotFoundException e) {
