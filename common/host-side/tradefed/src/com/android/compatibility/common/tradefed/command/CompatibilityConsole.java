@@ -19,26 +19,35 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.result.SubPlanHelper;
 import com.android.compatibility.common.tradefed.testtype.ModuleRepo;
+import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
 import com.android.compatibility.common.util.IInvocationResult;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.TestStatus;
 import com.android.tradefed.build.BuildRetrievalError;
+import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.command.Console;
 import com.android.tradefed.config.ArgsOptionParser;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.ConfigurationFactory;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.IConfigurationFactory;
+import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.testtype.Abi;
+import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
+import com.android.tradefed.util.AbiUtils;
 import com.android.tradefed.util.ArrayUtil;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.Pair;
 import com.android.tradefed.util.RegexTrie;
 import com.android.tradefed.util.TableFormatter;
 import com.android.tradefed.util.TimeUtil;
+
+import com.google.common.base.Joiner;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,6 +58,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +79,7 @@ public class CompatibilityConsole extends Console {
     }
     private final static String ADD_PATTERN = "a(?:dd)?";
     private CompatibilityBuildHelper mBuildHelper;
+    private IBuildInfo mBuildInfo;
 
     /**
      * {@inheritDoc}
@@ -225,24 +237,25 @@ public class CompatibilityConsole extends Console {
     }
 
     private void listModules() {
-        File[] files = null;
-        try {
-            files = getBuildHelper().getTestsDir().listFiles(new ModuleRepo.ConfigFilter());
-        } catch (FileNotFoundException e) {
-            printLine(e.getMessage());
-            e.printStackTrace();
-        }
-        if (files != null && files.length > 0) {
-            List<String> modules = new ArrayList<>();
-            for (File moduleFile : files) {
-                modules.add(FileUtil.getBaseName(moduleFile.getName()));
+        CompatibilityTestSuite test = new CompatibilityTestSuite() {
+            @Override
+            public Set<IAbi> getAbis(ITestDevice device) throws DeviceNotAvailableException {
+                Set<String> abiStrings = getAbisForBuildTargetArch();
+                Set<IAbi> abis = new LinkedHashSet<>();
+                for (String abi : abiStrings) {
+                    if (AbiUtils.isAbiSupportedByCompatibility(abi)) {
+                        abis.add(new Abi(abi, AbiUtils.getBitness(abi)));
+                    }
+                }
+                return abis;
             }
-            Collections.sort(modules);
-            for (String module : modules) {
-                printLine(module);
-            }
+        };
+        if (getBuild() != null) {
+            test.setBuild(getBuild());
+            LinkedHashMap<String, IConfiguration> configs = test.loadTests();
+            printLine(String.format("%s", Joiner.on("\n").join(configs.keySet())));
         } else {
-            printLine("No modules found");
+            printLine("Error fetching information about modules.");
         }
     }
 
@@ -427,14 +440,25 @@ public class CompatibilityConsole extends Console {
 
     private CompatibilityBuildHelper getBuildHelper() {
         if (mBuildHelper == null) {
+            IBuildInfo build = getBuild();
+            if (build == null) {
+                return null;
+            }
+            mBuildHelper = new CompatibilityBuildHelper(build);
+        }
+        return mBuildHelper;
+    }
+
+    private IBuildInfo getBuild() {
+        if (mBuildInfo == null) {
             try {
                 CompatibilityBuildProvider buildProvider = new CompatibilityBuildProvider();
-                mBuildHelper = new CompatibilityBuildHelper(buildProvider.getBuild());
+                mBuildInfo = buildProvider.getBuild();
             } catch (BuildRetrievalError e) {
                 e.printStackTrace();
             }
         }
-        return mBuildHelper;
+        return mBuildInfo;
     }
 
     public static void main(String[] args) throws InterruptedException, ConfigurationException {

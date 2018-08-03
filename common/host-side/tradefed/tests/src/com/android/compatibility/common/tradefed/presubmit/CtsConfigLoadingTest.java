@@ -31,6 +31,8 @@ import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.testtype.HostTest;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.ITestFilterReceiver;
+import com.android.tradefed.testtype.suite.ITestSuite;
+import com.android.tradefed.testtype.suite.params.ModuleParameters;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,6 +64,7 @@ public class CtsConfigLoadingTest {
             "bionic",
             "bluetooth",
             "camera",
+            "deviceinfo",
             "deqp",
             "devtools",
             "framework",
@@ -109,8 +112,11 @@ public class CtsConfigLoadingTest {
      * features required (filtering, sharding, etc.). We do not typically expect people to need a
      * different runner.
      */
-    private static final String INSTRUMENTATION_RUNNER_NAME =
-            "android.support.test.runner.AndroidJUnitRunner";
+    private static final Set<String> ALLOWED_INSTRUMENTATION_RUNNER_NAME = new HashSet<>();
+    static {
+        ALLOWED_INSTRUMENTATION_RUNNER_NAME.add("android.support.test.runner.AndroidJUnitRunner");
+        ALLOWED_INSTRUMENTATION_RUNNER_NAME.add("androidx.test.runner.AndroidJUnitRunner");
+    }
     private static final Set<String> RUNNER_EXCEPTION = new HashSet<>();
     static {
         // Used for a bunch of system-api cts tests
@@ -186,16 +192,17 @@ public class CtsConfigLoadingTest {
                             "Test in module %s must implement ITestFilterReceiver.",
                             config.getName()));
                 }
-                // Ensure that the device runner is the AJUR one
+                // Ensure that the device runner is the AJUR one if explicitly specified.
                 if (test instanceof AndroidJUnitTest) {
                     AndroidJUnitTest instru = (AndroidJUnitTest) test;
-                    if (!INSTRUMENTATION_RUNNER_NAME.equals(instru.getRunnerName())) {
+                    if (instru.getRunnerName() != null &&
+                            !ALLOWED_INSTRUMENTATION_RUNNER_NAME.contains(instru.getRunnerName())) {
                         // Some runner are exempt
                         if (!RUNNER_EXCEPTION.contains(instru.getRunnerName())) {
                             throw new ConfigurationException(
-                                    String.format("%s: uses '%s' instead of the '%s' that is "
+                                    String.format("%s: uses '%s' instead of on of '%s' that are "
                                             + "expected", config.getName(), instru.getRunnerName(),
-                                            INSTRUMENTATION_RUNNER_NAME));
+                                            ALLOWED_INSTRUMENTATION_RUNNER_NAME));
                         }
                     }
                 }
@@ -217,6 +224,9 @@ public class CtsConfigLoadingTest {
                     + "field \"%s\", supported ones are: %s\nconfig: %s",
                     cmp, KNOWN_COMPONENTS, config), KNOWN_COMPONENTS.contains(cmp));
 
+            // Check that specified parameters are expected
+            checkModuleParameters(config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+
             // Ensure each CTS module is tagged with <option name="test-suite-tag" value="cts" />
             Assert.assertTrue(String.format(
                     "Module config %s does not contains "
@@ -233,6 +243,25 @@ public class CtsConfigLoadingTest {
                                     + "not-shardable option.", config.getName()));
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Test that all parameter metadata can be resolved.
+     */
+    private void checkModuleParameters(String configName, List<String> parameters)
+            throws ConfigurationException {
+        if (parameters == null) {
+            return;
+        }
+        for (String param : parameters) {
+            try {
+                ModuleParameters.valueOf(param.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ConfigurationException(
+                        String.format("Config: %s includes an unknown parameter '%s'.",
+                                configName, param));
             }
         }
     }
