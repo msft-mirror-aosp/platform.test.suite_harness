@@ -262,8 +262,10 @@ public class ResultHandler {
                             } else if (parser.getName().equals(SCREENSHOT_TAG)) {
                                 test.setScreenshot(parser.nextText());
                                 parser.require(XmlPullParser.END_TAG, NS, SCREENSHOT_TAG);
-                            } else {
+                            } else if (SUMMARY_TAG.equals(parser.getName())) {
                                 test.setReportLog(ReportLog.parse(parser));
+                            } else {
+                                parser.nextTag();
                             }
                         }
                         parser.require(XmlPullParser.END_TAG, NS, TEST_TAG);
@@ -544,8 +546,9 @@ public class ResultHandler {
         }
         List<File> allResultDirs = getResultDirectories(resultsDir);
         if (sessionId >= allResultDirs.size()) {
-            throw new IllegalArgumentException(String.format("Invalid session id [%d], results" +
-                    "directory contains only %d results", sessionId, allResultDirs.size()));
+            throw new IllegalArgumentException(String.format("Invalid session id [%d], results " +
+                    "directory (%s) contains only %d results",
+                    sessionId, resultsDir.getAbsolutePath(), allResultDirs.size()));
         }
         return allResultDirs.get(sessionId);
     }
