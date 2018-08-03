@@ -19,7 +19,9 @@ package com.android.compatibility.common.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,13 +40,19 @@ public class ReadElf implements AutoCloseable {
     private static final int EI_CLASS = 4;
     private static final int EI_DATA = 5;
 
-    private static final int EM_386 = 3;
-    private static final int EM_MIPS = 8;
-    private static final int EM_ARM = 40;
-    private static final int EM_X86_64 = 62;
+    public static final int ET_DYN = 3;
+    public static final int EM_386 = 3;
+    public static final int EM_MIPS = 8;
+    public static final int EM_ARM = 40;
+    public static final int EM_X86_64 = 62;
     // http://en.wikipedia.org/wiki/Qualcomm_Hexagon
-    private static final int EM_QDSP6 = 164;
-    private static final int EM_AARCH64 = 183;
+    public static final int EM_QDSP6 = 164;
+    public static final int EM_AARCH64 = 183;
+
+    public static final String ARCH_ARM = "arm";
+    public static final String ARCH_X86 = "x86";
+    public static final String ARCH_MIPS = "mips";
+    public static final String ARCH_UNKNOWN = "unknown";
 
     private static final int ELFCLASS32 = 1;
     private static final int ELFCLASS64 = 2;
@@ -411,6 +419,36 @@ public class ReadElf implements AutoCloseable {
         }
     }
 
+    // Dynamic Section Entry
+    public static class DynamicEntry {
+        private static final int DT_NEEDED = 1;
+        public final long mTag;
+        public final long mValue;
+
+        DynamicEntry(long tag, long value) {
+            mTag = tag;
+            mValue = value;
+        }
+
+        public boolean isNeeded() {
+            if (mTag == DT_NEEDED) {
+                return true;
+            } else {
+                // System.err.println(String.format("Not Needed: %d, %d", mTag, mValue));
+                return false;
+            }
+        }
+
+        public long getValue() {
+            return mValue;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%d, %d", this.mTag, this.mValue);
+        }
+    }
+
     private final String mPath;
     private final RandomAccessFile mFile;
     private final byte[] mBuffer = new byte[512];
@@ -419,6 +457,7 @@ public class ReadElf implements AutoCloseable {
     private boolean mIsPIE;
     private int mType;
     private int mAddrSize;
+    private int mMachine;
 
     /** Symbol Table offset */
     private long mSymTabOffset;
@@ -456,10 +495,10 @@ public class ReadElf implements AutoCloseable {
     /** Dynamic String Table size */
     private long mDynStrSize;
 
-    /** Dynamic String Table offset */
+    /** Dynamic Table offset */
     private long mDynamicTabOffset;
 
-    /** Dynamic String Table size */
+    /** Dynamic Table size */
     private long mDynamicTabSize;
 
     /** Version Symbols Table offset */
@@ -505,26 +544,29 @@ public class ReadElf implements AutoCloseable {
     /** Version Definition Table */
     private VerDef[] mVerDefArr;
 
+    /** Dynamic Table */
+    private List<DynamicEntry> mDynamicArr;
+
     public static ReadElf read(File file) throws IOException {
         return new ReadElf(file);
     }
 
     public static void main(String[] args) throws IOException {
         for (String arg : args) {
-            ReadElf re = ReadElf.read(new File(arg));
-            re.getDynamicSymbol("x");
-            re.getSymbol("x");
+            ReadElf elf = ReadElf.read(new File(arg));
+            elf.getDynamicSymbol("x");
+            elf.getSymbol("x");
 
             Symbol[] symArr;
             System.out.println("===Symbol===");
-            symArr = re.getSymArr();
+            symArr = elf.getSymArr();
             for (int i = 0; i < symArr.length; i++) {
                 System.out.println(String.format("%8x: %s", i, symArr[i].toString()));
             }
             System.out.println("===Dynamic Symbol===");
-            symArr = re.getDynSymArr();
+            symArr = elf.getDynSymArr();
             for (int i = 0; i < symArr.length; i++) {
-                if (re.mVerNeedEntryCnt > 0) {
+                if (elf.mVerNeedEntryCnt > 0) {
                     System.out.println(
                             String.format(
                                     "%8x: %s, %s, %s - %d",
@@ -543,7 +585,63 @@ public class ReadElf implements AutoCloseable {
                                     symArr[i].getVerDefVersion()));
                 }
             }
-            re.close();
+
+            System.out.println("===Dynamic Dependencies===");
+            for (String DynDepEntry : elf.getDynamicDependencies()) {
+                System.out.println(DynDepEntry);
+            }
+
+            elf.close();
+        }
+    }
+
+    public static boolean isElf(File file) {
+        try {
+            if (file.length() < EI_NIDENT) {
+                throw new IllegalArgumentException(
+                        "Too small to be an ELF file: " + file.getCanonicalPath());
+            }
+
+            RandomAccessFile raFile = new RandomAccessFile(file, "r");
+            byte[] buffer = new byte[512];
+            raFile.seek(0);
+            raFile.readFully(buffer, 0, EI_NIDENT);
+            if (buffer[0] != ELFMAG[0]
+                    || buffer[1] != ELFMAG[1]
+                    || buffer[2] != ELFMAG[2]
+                    || buffer[3] != ELFMAG[3]) {
+                throw new IllegalArgumentException("Invalid ELF file: " + file.getCanonicalPath());
+            }
+            raFile.close();
+            ;
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public int getBits() {
+        if (mMachine == EM_386
+                || mMachine == EM_MIPS
+                || mMachine == EM_ARM
+                || mMachine == EM_QDSP6) {
+            return 32;
+        } else if (mMachine == EM_AARCH64 || mMachine == EM_X86_64) {
+            return 64;
+        } else {
+            return -1;
+        }
+    }
+
+    public String getArchitecture() {
+        if (mMachine == EM_ARM || mMachine == EM_AARCH64) {
+            return ARCH_ARM;
+        } else if (mMachine == EM_386 || mMachine == EM_X86_64) {
+            return ARCH_X86;
+        } else if (mMachine == EM_MIPS) {
+            return ARCH_MIPS;
+        } else {
+            return ARCH_UNKNOWN;
         }
     }
 
@@ -670,6 +768,7 @@ public class ReadElf implements AutoCloseable {
                             + mPath);
         }
 
+        mMachine = e_machine;
         long e_version = readWord();
         if (e_version != EV_CURRENT) {
             throw new IOException("Invalid e_version: " + e_version + ": " + mPath);
@@ -753,6 +852,10 @@ public class ReadElf implements AutoCloseable {
                 if (".strtab".equals(strTabName)) {
                     mStrTabOffset = sh_offset;
                     mStrTabSize = sh_size;
+                    System.out.println(
+                            String.format(
+                                    "%s, %d, %d, %d, %d",
+                                    strTabName, sh_offset, sh_size, sh_link, sh_info));
                 } else if (".dynstr".equals(strTabName)) {
                     mDynStrOffset = sh_offset;
                     mDynStrSize = sh_size;
@@ -1107,5 +1210,51 @@ public class ReadElf implements AutoCloseable {
             }
         }
         return mDynamicSymbols.get(name);
+    }
+
+    // Get Dynamic Linking Dependency List
+    public List<String> getDynamicDependencies() throws IOException {
+        List<String> result = new ArrayList<>();
+        for (DynamicEntry entry : getDynamicList()) {
+            if (entry.isNeeded()) {
+                result.add(readDynStr(entry.getValue()));
+            }
+        }
+        return result;
+    }
+
+    private List<DynamicEntry> getDynamicList() throws IOException {
+        if (mDynamicArr == null) {
+            int entryNo = 0;
+            mDynamicArr = new ArrayList<>();
+            mFile.seek(mDynamicTabOffset);
+            System.out.println(
+                    String.format(
+                            "mDynamicTabOffset 0x%x, mDynamicTabSize %d",
+                            mDynamicTabOffset, mDynamicTabSize));
+            while (true) {
+                long tag = readX(mAddrSize);
+                long value = readX(mAddrSize);
+                // System.out.println(String.format("%d: 0x%x, %d", entryNo, tag, value));
+                mDynamicArr.add(new DynamicEntry(tag, value));
+                if (tag == 0) {
+                    break;
+                }
+                entryNo++;
+            }
+        }
+        return mDynamicArr;
+    }
+
+    private String readDynStr(long strOffset) throws IOException {
+        int offset = (int) (strOffset & 0xFFFFFFFF);
+        if (mDynStrOffset == 0 || offset < 0 || offset >= mDynStrSize) {
+            System.err.println(
+                    String.format(
+                            "err mDynStrOffset: %d,  mDynStrSize: %d, offset: %d",
+                            mDynStrOffset, mDynStrSize, offset));
+            return String.format("%d", offset);
+        }
+        return readString(mDynStrOffset + offset);
     }
 }

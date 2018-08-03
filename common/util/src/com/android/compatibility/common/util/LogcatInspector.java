@@ -105,7 +105,7 @@ public abstract class LogcatInspector {
                 if (line.contains(logcatStrings[stringIndex])) {
                     stringIndex++;
                     if (stringIndex >= logcatStrings.length) {
-                        drainAndClose(logcat);
+                        StreamUtil.drainAndClose(logcat);
                         return stringIndex;
                     }
                 }
@@ -116,15 +116,5 @@ public abstract class LogcatInspector {
             Thread.sleep(SMALL_LOGCAT_DELAY);
         }
         return stringIndex;
-    }
-
-    private static void drainAndClose(BufferedReader reader) {
-        try {
-            while (reader.read() >= 0) {
-                // do nothing.
-            }
-        } catch (IOException ignored) {
-        }
-        Closeables.closeQuietly(reader);
     }
 }

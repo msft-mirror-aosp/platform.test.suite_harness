@@ -107,9 +107,12 @@ OPTIONAL_JARS="
   google-tradefed-tests
   google-tf-prod-tests"
 
+STANDALONE_JAR_DIR=${ANDROID_HOST_OUT}/framework
 for JAR in $OPTIONAL_JARS; do
     if [ -f "${JAR_DIR}/${JAR}.jar" ]; then
         JAR_PATH=${JAR_PATH}:${JAR_DIR}/${JAR}.jar
+    elif [ -f "${STANDALONE_JAR_DIR}/${JAR}.jar" ]; then
+        JAR_PATH=${JAR_PATH}:${STANDALONE_JAR_DIR}/${JAR}.jar
     fi;
 done
 

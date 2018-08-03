@@ -13,18 +13,12 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Runs CTS-instant from a pre-existing CTS installation">
+<configuration description="Runs a retry of a previous CTS session.">
+    <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
+    <object type="previous_loader" class="com.android.compatibility.common.tradefed.result.suite.PreviousResultLoader" />
+    <test class="com.android.tradefed.testtype.suite.retry.RetryRescheduler" />
 
-    <include name="cts-common" />
-    <include name="cts-exclude" />
-
-    <!-- This plan is only for instant app specific tests. -->
-    <option name="plan" value="cts-instant" />
-
-    <!-- Test instant apps only for the primary API -->
-    <option name="compatibility:primary-abi-only" value="true" />
-
-    <!-- Include cts-instant setup -->
-    <include name="cts-instant-setup" />
-
+    <logger class="com.android.tradefed.log.FileLogger">
+        <option name="log-level-display" value="WARN" />
+    </logger>
 </configuration>

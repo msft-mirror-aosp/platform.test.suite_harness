@@ -21,6 +21,7 @@ import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
+import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.ILogSaver;
@@ -65,6 +66,7 @@ import javax.xml.transform.stream.StreamSource;
  * Extension of {@link XmlFormattedGeneratorReporter} and {@link SuiteResultReporter} to handle
  * Compatibility specific format and operations.
  */
+@OptionClass(alias="result-reporter")
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
         implements ILogSaverListener, ITestSummaryListener {
 
@@ -78,7 +80,10 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Option(name = "result-server", description = "Server to publish test results.")
     private String mResultServer;
 
-    @Option(name = "disable-result-posting", description = "Disable result posting into report server.")
+    @Option(
+            name = "disable-result-posting",
+            description ="Disable result posting into report server."
+    )
     private boolean mDisableResultPosting = false;
 
     @Option(name = "include-test-log-tags", description = "Include test log tags in report.")

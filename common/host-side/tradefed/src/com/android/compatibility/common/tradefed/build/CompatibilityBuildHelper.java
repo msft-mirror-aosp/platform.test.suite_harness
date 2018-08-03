@@ -19,10 +19,12 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IDeviceBuildInfo;
 import com.android.tradefed.build.IFolderBuildInfo;
 import com.android.tradefed.build.VersionedFile;
+import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.util.FileUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -285,6 +287,14 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the test file cannot be found
      */
     public File getTestFile(String filename) throws FileNotFoundException {
+        return getTestFile(filename, null);
+    }
+
+    /**
+     * @return a {@link File} representing the test file in the test modules directory.
+     * @throws FileNotFoundException if the test file cannot be found
+     */
+    public File getTestFile(String filename, IAbi abi) throws FileNotFoundException {
         // We have a lot of places to check for the test file.
         //   1. ../android-*ts/testcases/
         //   2. ALT_HOST_TESTCASE_DIR/
@@ -299,17 +309,18 @@ public class CompatibilityBuildHelper {
         if (altTargetTestDir == null) {
             altTargetTestDir = "";
         }
-        String[] testDirs = {getTestsDir().toString(), altTargetTestDir};
+        File[] testDirs = {getTestsDir(), new File(altTargetTestDir)};
 
-        File testFile;
-        for (String testDir: testDirs) {
-            testFile = new File(testDir, filename);
-            if (testFile.exists()) {
-                return testFile;
+        // The file may be in a subdirectory so do a more through search
+        // if it did not exist.
+        File testFile = null;
+        for (File testDir: testDirs) {
+            try {
+                testFile = FileUtil.findFile(filename, abi, testDir);
+            } catch (IOException e) {
+                throw new FileNotFoundException(String.format(
+                        "Failure in finding compatibility test file %s due to %s", filename, e));
             }
-            // The file may be in a subdirectory so do a more through search
-            // if it did not exist.
-            testFile = FileUtil.findFile(new File(testDir), filename);
             if (testFile != null) {
                 return testFile;
             }

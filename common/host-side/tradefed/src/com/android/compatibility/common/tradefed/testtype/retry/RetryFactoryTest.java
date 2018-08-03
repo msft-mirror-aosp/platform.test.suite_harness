@@ -110,6 +110,15 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
             importance = Importance.IF_UNSET)
     protected String mTestName = null;
 
+    @Option(
+        name = "module-arg",
+        description =
+                "the arguments to pass to a module. The expected format is"
+                        + "\"<module-name>:<arg-name>:[<arg-key>:=]<arg-value>\"",
+        importance = Importance.ALWAYS
+    )
+    private List<String> mModuleArgs = new ArrayList<>();
+
     @Option(name = CompatibilityTestSuite.TEST_ARG_OPTION,
             description = "the arguments to pass to a test. The expected format is "
                     + "\"<test-class>:<arg-name>:[<arg-key>:=]<arg-value>\"",
@@ -193,12 +202,17 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
         // TODO: we have access to the original command line, we should accommodate more re-run
         // scenario like when the original cts.xml config was not used.
         helper.validateBuildFingerprint(mDevice);
+        // ResultReporter when creating the xml will use the retry command line
+        helper.setBuildInfoRetryCommand(mBuildInfo);
         helper.setCommandLineOptionsFor(test);
         helper.setCommandLineOptionsFor(this);
         helper.populateRetryFilters();
 
         try {
             OptionSetter setter = new OptionSetter(test);
+            for (String moduleArg : mModuleArgs) {
+                setter.setOptionValue("compatibility:module-arg", moduleArg);
+            }
             for (String testArg : mTestArgs) {
                 setter.setOptionValue("compatibility:test-arg", testArg);
             }
@@ -217,7 +231,6 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
         test.setConfiguration(mMainConfiguration);
         // reset the retry id - Ensure that retry of retry does not throw
         test.resetRetryId();
-        test.isRetry();
         // clean the helper
         helper.tearDown();
         return test;
