@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -118,13 +117,18 @@ public class ReadElfTest {
         File elfOutputFile = getResrouceFile(elfOutputFileName);
         assertEquals("ReadElf.isElf() " + elfOutputFileName, false, ReadElf.isElf(elfOutputFile));
 
-        final Map<String, ReadElf.Symbol> dynSymbolMap = elf.getDynamicSymbols();
-        chkDynSymbol(targetFile, dynSymbolMap);
+        final ReadElf.Symbol[] dynSymbolArr = elf.getDynSymArr();
+        chkDynSymbol(elfOutputFile, dynSymbolArr);
 
         assertEquals(
                 "ReadElf.getDynamicDependencies() " + elfFileName,
                 getDynamicDependencies(elfOutputFile),
                 elf.getDynamicDependencies());
+
+        assertEquals(
+                "ReadElf.getRoStrings() " + elfFileName,
+                getRoStrings(elfOutputFile),
+                elf.getRoStrings());
     }
 
     /**
@@ -167,13 +171,12 @@ public class ReadElfTest {
     }
 
     /**
-     * Checks if all Dynamic Symbols in a golden sample file are also in the map
+     * Checks if all Dynamic Symbols in a golden sample file are in the symbol array
      *
      * @param targetFile a {@link File} object of an golden sample file
-     * @param dynSymbolMap a Dynamic Symbol Map to be validated
+     * @param dynSymbolArr a Dynamic Symbol array to be validated
      */
-    private void chkDynSymbol(File targetFile, Map<String, ReadElf.Symbol> dynSymbolMap)
-            throws IOException {
+    private void chkDynSymbol(File targetFile, ReadElf.Symbol[] dynSymbolArr) throws IOException {
         FileReader fileReader = new FileReader(targetFile);
         BufferedReader buffReader = new BufferedReader(fileReader);
 
@@ -181,11 +184,68 @@ public class ReadElfTest {
         boolean keepGoing = true;
         while ((line = buffReader.readLine()) != null && keepGoing) {
             // readelf output as: Symbol table '.dynsym' contains 44 entries:
-            if (line.startsWith("Symbol table")) {
+            if (line.startsWith("Symbol table '.dynsym'")) {
+                // Skip the header:   Num:    Value  Size Type    Bind   Vis      Ndx Name
+                buffReader.readLine();
+                // Skip the 1st line:     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND
+                buffReader.readLine();
+
+                int i = 1;
+
                 String dsLine;
-                // readelf output as: Num:    Value          Size Type    Bind   Vis      Ndx Name
-                //    20: 0000000000000ff8    24 FUNC    WEAK   DEFAULT    9
-                // android_init_anonymous_na@@LIBC_PLATFORM
+                while ((dsLine = buffReader.readLine()) != null) {
+                    // readelf output as:
+                    //    20: 0000000000000ff8    24 FUNC    WEAK   DEFAULT    9
+                    // android_init_anonymous_na@@LIBC_PLATFORM
+                    String trimLine = dsLine.trim();
+                    if (trimLine.isEmpty()) {
+                        // End of the block
+                        keepGoing = false;
+                        break;
+                    }
+
+                    // Removes tailing (x) for an executable
+                    //      1: 00000000     0 FUNC    GLOBAL DEFAULT  UND __cxa_atexit@LIBC (2)
+                    int idx = trimLine.indexOf("(");
+                    if (idx > 0) {
+                        trimLine = trimLine.substring(0, idx);
+                    }
+
+                    String phases[] = trimLine.split("\\s+");
+                    String symName = dynSymbolArr[i].name;
+                    String name = phases[phases.length - 1].split("@")[0];
+                    // readelf may truncate a long name
+                    assertTrue(
+                            String.format("chkDynSymbol name %d: %s vs %s", i, symName, name),
+                            symName.startsWith(name));
+                    assertEquals("chkDynSymbol type :", dynSymbolArr[i].toType(), phases[3]);
+                    assertEquals("chkDynSymbol bind :", dynSymbolArr[i].toBind(), phases[4]);
+                    assertEquals("chkDynSymbol ndx :", dynSymbolArr[i].toShndx(), phases[6]);
+                    i++;
+                }
+            }
+        }
+        fileReader.close();
+    }
+
+    /**
+     * Gets a list of Read Only Strings from a Linux readelf -p .rodata cmd output file
+     *
+     * @param elfOutputFileName a {@link File} object of an golden sample file
+     * @return a list of RO Strings
+     */
+    private List<String> getRoStrings(File elfOutputFile) throws IOException {
+        List<String> result = new ArrayList<>();
+
+        FileReader fileReader = new FileReader(elfOutputFile);
+        BufferedReader buffReader = new BufferedReader(fileReader);
+
+        String line;
+        boolean keepGoing = true;
+        while ((line = buffReader.readLine()) != null && keepGoing) {
+            // readelf output as: String dump of section '.rodata':
+            if (line.startsWith("String dump of section '.rodata':")) {
+                String dsLine;
                 while ((dsLine = buffReader.readLine()) != null) {
                     String trimLine = dsLine.trim();
                     if (trimLine.isEmpty()) {
@@ -193,21 +253,19 @@ public class ReadElfTest {
                         keepGoing = false;
                         break;
                     }
-                    // cares about FUNC only
-                    if (trimLine.contains("FUNC")) {
-                        String phases[] = trimLine.split(" ");
-                        String name = phases[phases.length].split("@")[0];
-                        ReadElf.Symbol symbol = dynSymbolMap.get(name);
-                        assertEquals("chkDynSymbol: name", name, symbol.name);
-                        int bind = Integer.parseInt(phases[6]);
-                        int shndx = Integer.parseInt(phases[4]);
-                        assertEquals("chkDynSymbol: bind", bind, symbol.bind);
-                        assertEquals("chkDynSymbol: shndx", shndx, symbol.shndx);
+
+                    //  [   108]  Error: no class name or --zygote supplied.^J
+                    if (trimLine.contains("[")) {
+                        result.add(
+                                trimLine.substring(trimLine.indexOf("]") + 1, trimLine.length())
+                                        .trim()
+                                        .replace("^J", "\n"));
                     }
                 }
             }
         }
         fileReader.close();
+        return result;
     }
 
     /**

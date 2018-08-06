@@ -53,6 +53,7 @@ public class ReadElf implements AutoCloseable {
     public static final String ARCH_X86 = "x86";
     public static final String ARCH_MIPS = "mips";
     public static final String ARCH_UNKNOWN = "unknown";
+    private static final String RODATA = ".rodata";
 
     private static final int ELFCLASS32 = 1;
     private static final int ELFCLASS64 = 2;
@@ -64,6 +65,8 @@ public class ReadElf implements AutoCloseable {
 
     private static final long PT_LOAD = 1;
 
+    // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
+    private static final int SHT_PROGBITS = 1;
     private static final int SHT_SYMTAB = 2;
     private static final int SHT_STRTAB = 3;
     private static final int SHT_DYNAMIC = 6;
@@ -88,6 +91,7 @@ public class ReadElf implements AutoCloseable {
         public static final int STT_TLS = 6;
 
         public static final int SHN_UNDEF = 0;
+        public static final int SHN_ABS = 0xfff1;
 
         public final String name;
         public final int bind;
@@ -122,7 +126,7 @@ public class ReadElf implements AutoCloseable {
                     getExternalLibName());
         }
 
-        private String toBind() {
+        public String toBind() {
             switch (bind) {
                 case STB_LOCAL:
                     return "LOCAL";
@@ -134,7 +138,7 @@ public class ReadElf implements AutoCloseable {
             return "STB_??? (" + bind + ")";
         }
 
-        private String toType() {
+        public String toType() {
             switch (type) {
                 case STT_NOTYPE:
                     return "NOTYPE";
@@ -154,9 +158,12 @@ public class ReadElf implements AutoCloseable {
             return "STT_??? (" + type + ")";
         }
 
-        private String toShndx() {
-            if (shndx == SHN_UNDEF) {
-                return "UNDEF";
+        public String toShndx() {
+            switch (shndx) {
+                case SHN_ABS:
+                    return "ABS";
+                case SHN_UNDEF:
+                    return "UND";
             }
             return String.valueOf(shndx);
         }
@@ -547,6 +554,18 @@ public class ReadElf implements AutoCloseable {
     /** Dynamic Table */
     private List<DynamicEntry> mDynamicArr;
 
+    /** Rodata offset */
+    private boolean mHasRodata;
+
+    /** Rodata offset */
+    private long mRodataOffset;
+
+    /** Rodata size */
+    private int mRodataSize;
+
+    /** Rodata String List */
+    private List<String> mRoStrings;
+
     public static ReadElf read(File file) throws IOException {
         return new ReadElf(file);
     }
@@ -589,6 +608,11 @@ public class ReadElf implements AutoCloseable {
             System.out.println("===Dynamic Dependencies===");
             for (String DynDepEntry : elf.getDynamicDependencies()) {
                 System.out.println(DynDepEntry);
+            }
+
+            System.out.println("===Strings in Read Only(.rodata) section===");
+            for (String roStr : elf.getRoStrings()) {
+                System.out.println(roStr);
             }
 
             elf.close();
@@ -686,6 +710,7 @@ public class ReadElf implements AutoCloseable {
     }
 
     private ReadElf(File file) throws IOException {
+        mHasRodata = false;
         mPath = file.getPath();
         mFile = new RandomAccessFile(file, "r");
 
@@ -905,6 +930,17 @@ public class ReadElf implements AutoCloseable {
                         String.format(
                                 "%s, %d, %d, %d, %d",
                                 strTabName, sh_offset, sh_size, sh_link, sh_info));
+            } else if (sh_type == SHT_PROGBITS) {
+                final String strTabName = readShStrTabEntry(sh_name);
+                if (".rodata".equals(strTabName)) {
+                    mHasRodata = true;
+                    mRodataOffset = sh_offset;
+                    mRodataSize = (int) sh_size;
+                }
+                System.out.println(
+                        String.format(
+                                "%s, %d, %d, %d, %d",
+                                strTabName, sh_offset, sh_size, sh_link, sh_info));
             }
         }
     }
@@ -970,7 +1006,7 @@ public class ReadElf implements AutoCloseable {
             }
 
             Symbol sym = new Symbol(symName, st_info, st_shndx, st_value, st_size, st_other);
-            if (symName.equals("")) {
+            if (!symName.equals("")) {
                 result.put(symName, sym);
             }
             if (isDynSym) {
@@ -1256,5 +1292,34 @@ public class ReadElf implements AutoCloseable {
             return String.format("%d", offset);
         }
         return readString(mDynStrOffset + offset);
+    }
+
+    /**
+     * Gets a list of string from .rodata section
+     *
+     * @return a String list .rodata section
+     */
+    public List<String> getRoStrings() throws IOException {
+        if (mRoStrings == null) {
+            mRoStrings = new ArrayList<>();
+            if (mHasRodata) {
+                byte[] byteArr = new byte[mRodataSize];
+                mFile.seek(mRodataOffset);
+                mFile.readFully(byteArr);
+
+                int strOffset = 0;
+                for (int i = 0; i < mRodataSize; i++) {
+                    if (byteArr[i] == 0) {
+                        // skip null string
+                        if (i != strOffset) {
+                            String str = new String(byteArr, strOffset, i - strOffset);
+                            mRoStrings.add(str);
+                        }
+                        strOffset = i + 1;
+                    }
+                }
+            }
+        }
+        return mRoStrings;
     }
 }
