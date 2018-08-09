@@ -244,4 +244,7 @@
     <option name="compatibility:module-arg" value="CtsOsHostTestCases:instant-mode:true" />
     <option name="compatibility:include-filter" value="CtsOsHostTestCases" />
 
+    <!-- CtsEdiHostTestCases -->
+    <!-- Included not for instant-app but to collect the required information for the run -->
+    <option name="compatibility:include-filter" value="CtsEdiHostTestCases" />
 </configuration>
