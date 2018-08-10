@@ -358,6 +358,54 @@ Version needs section '.gnu.version_r' contains 2 entries:
   0x0030: Version: 1  File: libdl.so  Cnt: 1
   0x0040:   Name: LIBC  Flags: none  Version: 4
 
+String dump of section '.rodata':
+  [     0]  -cp
+  [     4]  -classpath
+  [     f]  --zygote
+  [    18]  --start-system-server
+  [    2e]  --application
+  [    3c]  --nice-name=
+  [    49]  --
+  [    4c]  application
+  [    58]  tool
+  [    5d]  start-system-server
+  [    71]  appproc
+  [    79]  app_process: Unable to determine ABI list from property %s.
+  [    b5]  --abi-list=
+  [    c1]  com.android.internal.os.ZygoteInit
+  [    e4]  com.android.internal.os.RuntimeInit
+  [   108]  Error: no class name or --zygote supplied.^J
+  [   134]  app_process: no class name or --zygote supplied.
+  [   165]  ERROR: could not find class '%s'^J
+  [   187]  ANDROID_DATA
+  [   194]  androidRoot == NULL
+  [   1a8]  ANDROID_DATA environment variable unset
+  [   1d0]  %s/dalvik-cache/%s
+  [   1e3]  (numChars >= PATH_MAX || numChars < 0)
+  [   20a]  Error constructing dalvik cache : %s
+  [   22f]  (result < 0 && errno != EEXIST)
+  [   24f]  Error creating cache dir %s : %s
+  [   270]  (result < 0)
+  [   27d]  Error changing dalvik-cache ownership : %s
+  [   2a8]  Error changing dalvik-cache permissions : %s
+  [   2d5]  Usage: app_process [java-options] cmd-dir start-class-name [options]^J
+  [   31b]  exiting due to SIG_DFL handler for signal %d
+  [   348]  Invalid signal %d
+  [   35a]  Warning: Unexpected sigaction action found %p^J
+  [   389]  failed to create sigchain pthread key: %s
+  [   3b3]  libsigchain
+  [   3bf]  too many special signal handlers
+  [   3e0]  failed to find special handler to remove
+  [   409]  sigaction
+  [   413]  sigprocmask
+  [   41f]  sigaction64
+  [   42b]  sigprocmask64
+  [   439]  Unable to find next %s in signal chain
+  [   460]  zygote64
+  [   470]  ro.product.cpu.abilist64
+  [   489]  x86_64
+
+
 Displaying notes found in: .note.android.ident
   Owner                 Data size	Description
   Android              0x00000004	NT_VERSION (version)
