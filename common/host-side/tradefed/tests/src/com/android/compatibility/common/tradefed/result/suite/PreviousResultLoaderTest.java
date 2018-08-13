@@ -24,6 +24,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.ConfigurationDef;
 import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.OptionSetter;
+import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
@@ -32,6 +33,7 @@ import com.android.tradefed.util.FileUtil;
 
 import com.google.protobuf.Any;
 
+import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,8 @@ public class PreviousResultLoaderTest {
     private File mRootDir;
     private File mProtoFile;
 
+    private ITestDevice mMockDevice;
+
     @Before
     public void setUp() throws Exception {
         mLoader = new PreviousResultLoader();
@@ -61,6 +65,7 @@ public class PreviousResultLoaderTest {
         mContext.setConfigurationDescriptor(new ConfigurationDescriptor());
         mContext.addInvocationAttribute(TestInvocation.COMMAND_ARGS_KEY,
                 "cts -m CtsGesture --skip-all-system-status-check");
+        mMockDevice = EasyMock.createMock(ITestDevice.class);
     }
 
     @After
@@ -94,9 +99,39 @@ public class PreviousResultLoaderTest {
     public void testReloadTests() throws Exception {
         mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME,
                 createFakeBuild(createBasicResults()));
+        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
+
+        EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
+                .andReturn("testfingerprint");
+
+        EasyMock.replay(mMockDevice);
         mLoader.init(mContext);
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
         mLoader.loadPreviousRecord();
+        EasyMock.verify(mMockDevice);
+    }
+
+    /**
+     * Test that the loader fails to load if the fingerprint does not match.
+     */
+    @Test
+    public void testReloadTests_failedFingerprint() throws Exception {
+        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME,
+                createFakeBuild(createBasicResults()));
+        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
+
+        EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
+                .andReturn("new fingerprint");
+
+        EasyMock.replay(mMockDevice);
+        try {
+            mLoader.init(mContext);
+            fail("Should have thrown an exception.");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("Device build fingerprint must match testfingerprint to retry session 0",
+                    expected.getMessage());
+        }
+        EasyMock.verify(mMockDevice);
     }
 
     private IBuildInfo createFakeBuild(String resultContent) throws Exception {
@@ -135,7 +170,7 @@ public class PreviousResultLoaderTest {
                 + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
                 + "devices=\"HT6570300047\"  >\n");
         sb.append("  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
-                + " build_reference_fingerprint=\"\" />\n");
+                + " build_reference_fingerprint=\"\" build_fingerprint=\"testfingerprint\"/>\n");
         // Summary
         sb.append("  <Summary pass=\"0\" failed=\"0\" modules_done=\"2\" modules_total=\"2\" />\n");
         // Each module results
