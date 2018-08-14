@@ -18,11 +18,10 @@ package com.android.compatibility.common.tradefed.command;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.result.SubPlanHelper;
+import com.android.compatibility.common.tradefed.result.suite.CertificationResultXml;
 import com.android.compatibility.common.tradefed.testtype.ModuleRepo;
 import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
-import com.android.compatibility.common.util.IInvocationResult;
 import com.android.compatibility.common.util.ResultHandler;
-import com.android.compatibility.common.util.TestStatus;
 import com.android.tradefed.build.BuildRetrievalError;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.command.Console;
@@ -34,13 +33,13 @@ import com.android.tradefed.config.IConfigurationFactory;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.suite.SuiteResultHolder;
 import com.android.tradefed.testtype.Abi;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.AbiUtils;
-import com.android.tradefed.util.ArrayUtil;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.Pair;
 import com.android.tradefed.util.RegexTrie;
@@ -51,6 +50,7 @@ import com.google.common.base.Joiner;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,6 +78,7 @@ public class CompatibilityConsole extends Console {
         MODULE_SPLIT_EXCLUSIONS.add("CtsDeqpTestCases");
     }
     private final static String ADD_PATTERN = "a(?:dd)?";
+    private static final String LATEST_RESULT_DIR = "latest";
     private CompatibilityBuildHelper mBuildHelper;
     private IBuildInfo mBuildInfo;
 
@@ -359,48 +360,61 @@ public class CompatibilityConsole extends Console {
     private void listResults() {
         TableFormatter tableFormatter = new TableFormatter();
         List<List<String>> table = new ArrayList<>();
-        List<IInvocationResult> results = null;
+
+        List<File> resultDirs = null;
+        List<SuiteResultHolder> holders = new ArrayList<>();
         try {
-            results = ResultHandler.getLightResults(getBuildHelper().getResultsDir());
+            resultDirs = getResults(getBuildHelper().getResultsDir());
         } catch (FileNotFoundException e) {
             throw new RuntimeException("Error while parsing results directory", e);
         }
-        if (results.size() > 0) {
-            for (int i = 0; i < results.size(); i++) {
-                IInvocationResult result = results.get(i);
-                Map<String, String> invocationInfo = result.getInvocationInfo();
-
-                // invocation attributes are not always present (e.g. in the case of halted runs)
-                // replace null entries with the string "Unknown"
-                for (Map.Entry<String, String> entry : invocationInfo.entrySet()) {
-                    if (entry.getValue() == null) {
-                        invocationInfo.put(entry.getKey(), "Unknown");
-                    }
-                }
-
-                String moduleProgress = String.format("%d of %d",
-                        result.getModuleCompleteCount(), result.getModules().size());
-
-                table.add(Arrays.asList(
-                        Integer.toString(i),
-                        Integer.toString(result.countResults(TestStatus.PASS)),
-                        Integer.toString(result.countResults(TestStatus.FAIL)),
-                        moduleProgress,
-                        CompatibilityBuildHelper.getDirSuffix(result.getStartTime()),
-                        result.getTestPlan(),
-                        ArrayUtil.join(", ", result.getDeviceSerials()),
-                        invocationInfo.get("build_id"),
-                        invocationInfo.get("build_product")
-                        ));
+        CertificationResultXml xmlParser = new CertificationResultXml();
+        for (File resultDir : resultDirs) {
+            if (LATEST_RESULT_DIR.equals(resultDir.getName())) {
+                continue;
             }
-
-            // add the table header to the beginning of the list
-            table.add(0, Arrays.asList("Session", "Pass", "Fail", "Modules Complete",
-                "Result Directory", "Test Plan", "Device serial(s)", "Build ID", "Product"));
-            tableFormatter.displayTable(table, new PrintWriter(System.out, true));
-        } else {
-            printLine(String.format("No results found"));
+            try {
+                holders.add(xmlParser.parseResults(resultDir, true));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (holders.isEmpty()) {
+            printLine(String.format("No results found"));
+            return;
+        }
+
+        for (int i = 0; i < holders.size(); i++) {
+            SuiteResultHolder holder = holders.get(i);
+            String moduleProgress = String.format("%d of %d",
+                    holder.completeModules, holder.totalModules);
+
+            table.add(Arrays.asList(
+                    Integer.toString(i),
+                    Long.toString(holder.passedTests),
+                    Long.toString(holder.failedTests),
+                    moduleProgress,
+                    CompatibilityBuildHelper.getDirSuffix(holder.startTime),
+                    holder.context.getAttributes().get(
+                            CertificationResultXml.SUITE_PLAN_ATTR).get(0),
+                    Joiner.on(", ").join(holder.context.getShardsSerials().values()),
+                    holder.context.getAttributes().get("build_id").get(0),
+                    holder.context.getAttributes().get("build_product").get(0)
+                    ));
+        }
+
+        // add the table header to the beginning of the list
+        table.add(0, Arrays.asList("Session", "Pass", "Fail", "Modules Complete",
+                "Result Directory", "Test Plan", "Device serial(s)", "Build ID", "Product"));
+        tableFormatter.displayTable(table, new PrintWriter(System.out, true));
+    }
+
+    /**
+     * Returns the list of all results directories.
+     */
+    private List<File> getResults(File resultsDir) {
+        return ResultHandler.getResultDirectories(resultsDir);
     }
 
     private void listSubPlans() {
