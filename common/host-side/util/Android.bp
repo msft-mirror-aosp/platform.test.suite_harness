@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2015 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Build the common utility library for use device-side
-java_library_static {
-    name: "compatibility-common-util-devicesidelib",
-    sdk_version: "current",
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "guava",
-        "junit",
-    ],
-}
-
-// Build the common utility library for use host-side
 java_library_host {
-    name: "compatibility-common-util-hostsidelib",
+    name: "compatibility-host-util",
     defaults: ["cts_error_prone_rules"],
 
     srcs: ["src/**/*.java"],
 
     static_libs: [
-        "guava",
+        "compatibility-common-util-hostsidelib",
+        "json",
+    ],
+
+    libs: [
         "json-prebuilt",
-        "junit",
-        "kxml2-2.3.0",
-        "platform-test-annotations",
+        "tradefed",
     ],
 }
