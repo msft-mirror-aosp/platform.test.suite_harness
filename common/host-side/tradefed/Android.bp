@@ -12,31 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Build the common utility library for use device-side
-java_library_static {
-    name: "compatibility-common-util-devicesidelib",
-    sdk_version: "current",
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "guava",
-        "junit",
-    ],
-}
-
-// Build the common utility library for use host-side
 java_library_host {
-    name: "compatibility-common-util-hostsidelib",
-    defaults: ["cts_error_prone_rules"],
-
+    name: "compatibility-tradefed",
     srcs: ["src/**/*.java"],
-
+    java_resource_dirs: ["res"],
+    libs: [
+        "tradefed",
+        "compatibility-host-util",
+    ],
     static_libs: [
-        "guava",
-        "json-prebuilt",
-        "junit",
-        "kxml2-2.3.0",
-        "platform-test-annotations",
+        "google-api-java-client-min-repackaged",
     ],
 }
