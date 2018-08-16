@@ -24,19 +24,3 @@ java_library_static {
         "junit",
     ],
 }
-
-// Build the common utility library for use host-side
-java_library_host {
-    name: "compatibility-common-util-hostsidelib",
-    defaults: ["cts_error_prone_rules"],
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "guava",
-        "json-prebuilt",
-        "junit",
-        "kxml2-2.3.0",
-        "platform-test-annotations",
-    ],
-}
