@@ -14,7 +14,6 @@
      limitations under the License.
 -->
 <configuration description="Runs a retry of a previous CTS session.">
-    <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
     <object type="previous_loader" class="com.android.compatibility.common.tradefed.result.suite.PreviousResultLoader" />
     <test class="com.android.tradefed.testtype.suite.retry.RetryRescheduler" />
 
