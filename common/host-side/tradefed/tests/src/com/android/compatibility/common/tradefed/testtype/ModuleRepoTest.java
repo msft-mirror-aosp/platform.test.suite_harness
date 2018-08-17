@@ -459,6 +459,18 @@ public class ModuleRepoTest extends TestCase {
         public void setAbi(IAbi arg0) {}
         @Override
         public IAbi getAbi() {return null;}
+        @Override
+        public Set<String> getIncludeFilters() {
+            return null;
+        }
+        @Override
+        public Set<String> getExcludeFilters() {
+            return null;
+        }
+        @Override
+        public void clearIncludeFilters() {}
+        @Override
+        public void clearExcludeFilters() {}
     }
 
     /**
