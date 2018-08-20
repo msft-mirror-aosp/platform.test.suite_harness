@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.build.IBuildProvider;
 import com.android.tradefed.config.ConfigurationDef;
 import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.OptionSetter;
@@ -55,10 +56,13 @@ public class PreviousResultLoaderTest {
     private File mProtoFile;
 
     private ITestDevice mMockDevice;
+    private IBuildProvider mMockProvider;
 
     @Before
     public void setUp() throws Exception {
+        mMockProvider = EasyMock.createMock(IBuildProvider.class);
         mLoader = new PreviousResultLoader();
+        mLoader.setProvider(mMockProvider);
         OptionSetter setter = new OptionSetter(mLoader);
         setter.setOptionValue("retry", "0");
         mContext = new InvocationContext();
@@ -78,11 +82,12 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests_failed() throws Exception {
-        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, createFakeBuild(""));
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(""));
         // Delete the proto file
         mProtoFile.delete();
         try {
-            mLoader.init(mContext);
+            EasyMock.replay(mMockProvider);
+            mLoader.init(mContext.getDevices());
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
@@ -90,6 +95,7 @@ public class PreviousResultLoaderTest {
                     String.format("java.io.FileNotFoundException: %s (No such file or directory)",
                             mProtoFile.getAbsolutePath()), expected.getMessage());
         }
+        EasyMock.verify(mMockProvider);
     }
 
     /**
@@ -97,18 +103,17 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests() throws Exception {
-        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME,
-                createFakeBuild(createBasicResults()));
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
         EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
                 .andReturn("testfingerprint");
 
-        EasyMock.replay(mMockDevice);
-        mLoader.init(mContext);
+        EasyMock.replay(mMockDevice, mMockProvider);
+        mLoader.init(mContext.getDevices());
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
         mLoader.loadPreviousRecord();
-        EasyMock.verify(mMockDevice);
+        EasyMock.verify(mMockDevice, mMockProvider);
     }
 
     /**
@@ -116,22 +121,21 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests_failedFingerprint() throws Exception {
-        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME,
-                createFakeBuild(createBasicResults()));
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
         EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
                 .andReturn("new fingerprint");
 
-        EasyMock.replay(mMockDevice);
+        EasyMock.replay(mMockDevice, mMockProvider);
         try {
-            mLoader.init(mContext);
+            mLoader.init(mContext.getDevices());
             fail("Should have thrown an exception.");
         } catch (IllegalArgumentException expected) {
             assertEquals("Device build fingerprint must match testfingerprint to retry session 0",
                     expected.getMessage());
         }
-        EasyMock.verify(mMockDevice);
+        EasyMock.verify(mMockDevice, mMockProvider);
     }
 
     private IBuildInfo createFakeBuild(String resultContent) throws Exception {

@@ -15,10 +15,14 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
+import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.util.ResultHandler;
+import com.android.tradefed.build.BuildRetrievalError;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.build.IBuildProvider;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
@@ -54,9 +58,16 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
 
+    private IBuildProvider mProvider;
+
     @Override
-    public void init(IInvocationContext context) {
-        IBuildInfo info = context.getBuildInfos().get(0);
+    public void init(List<ITestDevice> devices) {
+        IBuildInfo info = null;
+        try {
+            info = getProvider().getBuild();
+        } catch (BuildRetrievalError e) {
+            throw new RuntimeException(e);
+        }
         CompatibilityBuildHelper helperBuild = new CompatibilityBuildHelper(info);
         File resultDir = null;
         try {
@@ -86,7 +97,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             SuiteResultHolder holder = xmlParser.parseResults(resultDir, true);
             String previousFingerprint = holder.context.getAttributes()
                     .getUniqueMap().get(BUILD_FINGERPRINT);
-            validateBuildFingerprint(previousFingerprint, context.getDevices().get(0));
+            validateBuildFingerprint(previousFingerprint, devices.get(0));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -105,6 +116,18 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     @Override
     public TestRecord loadPreviousRecord() {
         return mTestRecord;
+    }
+
+    @VisibleForTesting
+    protected void setProvider(IBuildProvider provider) {
+        mProvider = provider;
+    }
+
+    private IBuildProvider getProvider() {
+        if (mProvider == null) {
+            mProvider = new CompatibilityBuildProvider();
+        }
+        return mProvider;
     }
 
     private void validateBuildFingerprint(String previousFingerprint, ITestDevice device) {
