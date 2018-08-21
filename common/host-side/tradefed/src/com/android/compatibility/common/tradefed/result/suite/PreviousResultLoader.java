@@ -18,20 +18,21 @@ package com.android.compatibility.common.tradefed.result.suite;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
+import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.tradefed.build.BuildRetrievalError;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IBuildProvider;
+import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
 import com.android.tradefed.invoker.proto.InvocationContext.Context;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.result.suite.SuiteResultHolder;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -40,6 +41,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,11 +59,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
 
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
+    private String mExpectedFingerprint;
 
     private IBuildProvider mProvider;
 
     @Override
-    public void init(List<ITestDevice> devices) {
+    public void init() {
         IBuildInfo info = null;
         try {
             info = getProvider().getBuild();
@@ -95,9 +98,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         try {
             CertificationResultXml xmlParser = new CertificationResultXml();
             SuiteResultHolder holder = xmlParser.parseResults(resultDir, true);
-            String previousFingerprint = holder.context.getAttributes()
+            mExpectedFingerprint = holder.context.getAttributes()
                     .getUniqueMap().get(BUILD_FINGERPRINT);
-            validateBuildFingerprint(previousFingerprint, devices.get(0));
+            if (mExpectedFingerprint == null) {
+                throw new IllegalArgumentException(
+                        "Could not find the build_fingerprint field in the loaded result.");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -118,6 +124,19 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         return mTestRecord;
     }
 
+    @Override
+    public final void customizeConfiguration(IConfiguration config) {
+        // This is specific to Compatibility checking and does not work for multi-device.
+        List<ITargetPreparer> preparers = config.getTargetPreparers();
+        List<ITargetPreparer> newList = new ArrayList<>();
+        // Add the fingerprint checker first to ensure we check it before rerunning the config.
+        BuildFingerPrintPreparer fingerprintChecker = new BuildFingerPrintPreparer();
+        fingerprintChecker.setExpectedFingerprint(mExpectedFingerprint);
+        newList.add(fingerprintChecker);
+        newList.addAll(preparers);
+        config.setTargetPreparers(newList);
+    }
+
     @VisibleForTesting
     protected void setProvider(IBuildProvider provider) {
         mProvider = provider;
@@ -128,22 +147,5 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             mProvider = new CompatibilityBuildProvider();
         }
         return mProvider;
-    }
-
-    private void validateBuildFingerprint(String previousFingerprint, ITestDevice device) {
-        if (previousFingerprint == null) {
-            throw new IllegalArgumentException(
-                    "Could not find the build_fingerprint field in the loaded result.");
-        }
-        try {
-            String currentBuildFingerprint = device.getProperty("ro.build.fingerprint");
-            if (!previousFingerprint.equals(currentBuildFingerprint)) {
-                throw new IllegalArgumentException(String.format(
-                        "Device build fingerprint must match %s to retry session %d",
-                        previousFingerprint, mRetrySessionId));
-            }
-        } catch (DeviceNotAvailableException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

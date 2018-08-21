@@ -16,20 +16,25 @@
 package com.android.compatibility.common.tradefed.result.suite;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
+import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IBuildProvider;
+import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.ConfigurationDef;
 import com.android.tradefed.config.ConfigurationDescriptor;
+import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.util.FileUtil;
 
 import com.google.protobuf.Any;
@@ -87,7 +92,7 @@ public class PreviousResultLoaderTest {
         mProtoFile.delete();
         try {
             EasyMock.replay(mMockProvider);
-            mLoader.init(mContext.getDevices());
+            mLoader.init();
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
@@ -106,35 +111,19 @@ public class PreviousResultLoaderTest {
         EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
-        EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
-                .andReturn("testfingerprint");
-
         EasyMock.replay(mMockDevice, mMockProvider);
-        mLoader.init(mContext.getDevices());
+        mLoader.init();
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
         mLoader.loadPreviousRecord();
-        EasyMock.verify(mMockDevice, mMockProvider);
-    }
-
-    /**
-     * Test that the loader fails to load if the fingerprint does not match.
-     */
-    @Test
-    public void testReloadTests_failedFingerprint() throws Exception {
-        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
-        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
-
-        EasyMock.expect(mMockDevice.getProperty("ro.build.fingerprint"))
-                .andReturn("new fingerprint");
-
-        EasyMock.replay(mMockDevice, mMockProvider);
-        try {
-            mLoader.init(mContext.getDevices());
-            fail("Should have thrown an exception.");
-        } catch (IllegalArgumentException expected) {
-            assertEquals("Device build fingerprint must match testfingerprint to retry session 0",
-                    expected.getMessage());
-        }
+        IConfiguration config = new Configuration("name", "desc");
+        assertEquals(0, config.getTargetPreparers().size());
+        mLoader.customizeConfiguration(config);
+        // A special preparer was added for fingerprint
+        assertEquals(1, config.getTargetPreparers().size());
+        ITargetPreparer preparer = config.getTargetPreparers().get(0);
+        assertTrue(preparer instanceof BuildFingerPrintPreparer);
+        assertEquals("testfingerprint",
+                ((BuildFingerPrintPreparer) preparer).getExpectedFingerprint());
         EasyMock.verify(mMockDevice, mMockProvider);
     }
 
