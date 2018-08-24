@@ -211,4 +211,7 @@
 
     <!-- b/110354076 -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testCreateAndManageUser_DontSkipSetupWizard" />
+
+    <!-- b/112125308 -->
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerActivityVisibilityTests#testTurnScreenOnAttrNoLockScreen" />
 </configuration>
