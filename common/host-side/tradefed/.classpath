@@ -6,7 +6,6 @@
 	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="src" path="tests/src"/>
 	<classpathentry kind="lib" path="tests/res/testtype/testJar1.jar"/>
-	<classpathentry kind="lib" path="tests/res/testtype/testJar2.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/cts-common-util"/>
