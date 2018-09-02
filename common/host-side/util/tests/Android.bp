@@ -18,6 +18,11 @@ java_test_host {
 
     srcs: ["src/**/*.java"],
 
+    static_libs: [
+        "objenesis-host",
+        "mockito-host",
+    ],
+
     libs: [
         "compatibility-host-util",
         "easymock",
