@@ -40,8 +40,11 @@ import com.android.tradefed.util.net.IHttpHelper;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
@@ -82,6 +85,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     /* Dynamic config constants */
     private static final String DYNAMIC_CONFIG_FEATURES_KEY = "business_logic_device_features";
     private static final String DYNAMIC_CONFIG_PROPERTIES_KEY = "business_logic_device_properties";
+    private static final String DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY = "business_logic_extended_device_info";
     private static final String DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY =
             "conditional_business_logic_tests_enabled";
     /* Format used to append the enabled attribute to the serialized business logic string. */
@@ -191,7 +195,8 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     }
 
     /** Helper to populate the business logic service request with info about the device. */
-    private String buildRequestString(ITestDevice device, IBuildInfo buildInfo)
+    @VisibleForTesting
+    String buildRequestString(ITestDevice device, IBuildInfo buildInfo)
             throws DeviceNotAvailableException {
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
@@ -211,6 +216,13 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         for (String property : getBusinessLogicProperties(device, buildInfo)) {
             paramMap.put("properties", property);
         }
+        for (String pkg : device.getInstalledPackageNames()) {
+            paramMap.put("packages", pkg);
+        }
+        for (String deviceInfo : getExtendedDeviceInfo(buildInfo)) {
+            paramMap.put("device_info", deviceInfo);
+        }
+
         IHttpHelper helper = new HttpHelper();
         return helper.buildUrl(baseUrl, paramMap);
     }
@@ -252,6 +264,39 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             CLog.e("Failed to pull business logic features from dynamic config");
             return new ArrayList<>();
         }
+    }
+
+    /* Get extended device info*/
+    private List<String> getExtendedDeviceInfo(IBuildInfo buildInfo) {
+        File deviceInfoPath = new File(buildInfo.getBuildAttributes().get("device_info_dir"));
+        List<String> extendedDeviceInfo = new ArrayList<>();
+        List<String> requiredDeviceInfo = null;
+        try {
+            requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
+            buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
+        } catch (XmlPullParserException | IOException e) {
+            CLog.e("Failed to pull business logic Extended DeviceInfo from dynamic config. "
+                + "Error: %s", e);
+            return new ArrayList<>();
+        }
+        File ediFile = null;
+        try{
+            for (String ediEntry: requiredDeviceInfo) {
+                String[] fileAndKey = ediEntry.split(":");
+                ediFile = FileUtil
+                    .findFile(deviceInfoPath, fileAndKey[0] + ".deviceinfo.json");
+                String jsonString = FileUtil.readStringFromFile(ediFile);
+                JSONObject jsonObj = new JSONObject(jsonString);
+                String value = jsonObj.getString(fileAndKey[1]);
+                extendedDeviceInfo
+                    .add(String.format("%s:%s:%s", fileAndKey[0], fileAndKey[1], value));
+            }
+        }catch(JSONException | IOException e){
+                CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
+                    ediFile.getAbsolutePath(), e);
+                return new ArrayList<>();
+        }
+        return extendedDeviceInfo;
     }
 
     private boolean shouldReadCache() {
