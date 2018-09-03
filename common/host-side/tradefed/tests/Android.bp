@@ -19,7 +19,11 @@ java_test_host {
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
 
-    static_libs: ["easymock"],
+    static_libs: [
+        "easymock",
+        "objenesis-host",
+        "mockito-host",
+    ],
 
     libs: [
         "tradefed",
