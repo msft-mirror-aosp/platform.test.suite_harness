@@ -268,16 +268,21 @@ public class BusinessLogicPreparer implements ITargetCleaner {
 
     /* Get extended device info*/
     private List<String> getExtendedDeviceInfo(IBuildInfo buildInfo) {
-        File deviceInfoPath = new File(buildInfo.getBuildAttributes().get("device_info_dir"));
         List<String> extendedDeviceInfo = new ArrayList<>();
+        String deviceInfoDir = buildInfo.getBuildAttributes().get("device_info_dir");
+        if (deviceInfoDir == null) {
+            CLog.w("Device Info directory was not created. May be run <<cts|gts>>-dev ?");
+            return extendedDeviceInfo;
+        }
+        File deviceInfoPath = new File(deviceInfoDir);
         List<String> requiredDeviceInfo = null;
         try {
             requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
-            buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
+                buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
         } catch (XmlPullParserException | IOException e) {
             CLog.e("Failed to pull business logic Extended DeviceInfo from dynamic config. "
                 + "Error: %s", e);
-            return new ArrayList<>();
+            return extendedDeviceInfo;
         }
         File ediFile = null;
         try{
@@ -292,9 +297,9 @@ public class BusinessLogicPreparer implements ITargetCleaner {
                     .add(String.format("%s:%s:%s", fileAndKey[0], fileAndKey[1], value));
             }
         }catch(JSONException | IOException e){
-                CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
-                    ediFile.getAbsolutePath(), e);
-                return new ArrayList<>();
+            CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
+                ediFile.getAbsolutePath(), e);
+            return new ArrayList<>();
         }
         return extendedDeviceInfo;
     }
