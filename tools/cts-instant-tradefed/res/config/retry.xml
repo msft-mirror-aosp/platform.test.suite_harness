@@ -15,7 +15,6 @@
 -->
 <configuration description="Runs a retry of a previous CTS instant session.">
     <option name="dynamic-sharding" value="true" />
-    <option name="disable-strict-sharding" value="true" />
 
     <device_recovery class="com.android.tradefed.device.WaitDeviceRecovery" />
     <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
