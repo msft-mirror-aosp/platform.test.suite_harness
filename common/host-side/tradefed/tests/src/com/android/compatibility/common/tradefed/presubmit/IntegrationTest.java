@@ -555,7 +555,7 @@ public class IntegrationTest {
     @Test
     public void testSingleModuleRun_sharded() throws Exception {
         final String moduleName = "module_sharded";
-        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArch());
+        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArchs().get(0));
         Iterator<String> ite = abis.iterator();
         final String abi1 = ite.next();
         final String abi2 = ite.next();
@@ -605,7 +605,7 @@ public class IntegrationTest {
     @Test
     public void testSingleModuleRun_sharded_incomplete() throws Exception {
         final String moduleName = "module_sharded_incomplete";
-        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArch());
+        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArchs().get(0));
         Iterator<String> ite = abis.iterator();
         final String abi1 = ite.next();
         final String abi2 = ite.next();
@@ -656,7 +656,7 @@ public class IntegrationTest {
     @Test
     public void testSingleModuleRun_sharded_getTestShard() throws Exception {
         final String moduleName = "module_sharded_getTestShard";
-        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArch());
+        Set<String> abis = AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArchs().get(0));
         Iterator<String> ite = abis.iterator();
         final String abi1 = ite.next();
         final String abi2 = ite.next();
