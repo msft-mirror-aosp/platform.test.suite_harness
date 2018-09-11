@@ -620,7 +620,7 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
      * Exposed for testing.
      */
     protected Set<String> getAbisForBuildTargetArch() {
-        return AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArch());
+        return AbiUtils.getAbisForArch(TestSuiteInfo.getInstance().getTargetArchs().get(0));
     }
 
     /**
