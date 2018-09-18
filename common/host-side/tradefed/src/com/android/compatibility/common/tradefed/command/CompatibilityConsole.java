@@ -41,6 +41,7 @@ import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.AbiUtils;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.MultiMap;
 import com.android.tradefed.util.Pair;
 import com.android.tradefed.util.RegexTrie;
 import com.android.tradefed.util.TableFormatter;
@@ -399,8 +400,8 @@ public class CompatibilityConsole extends Console {
                     holder.context.getAttributes().get(
                             CertificationResultXml.SUITE_PLAN_ATTR).get(0),
                     Joiner.on(", ").join(holder.context.getShardsSerials().values()),
-                    holder.context.getAttributes().get("build_id").get(0),
-                    holder.context.getAttributes().get("build_product").get(0)
+                    printAttributes(holder.context.getAttributes(), "build_id"),
+                    printAttributes(holder.context.getAttributes(), "build_product")
                     ));
         }
 
@@ -408,6 +409,13 @@ public class CompatibilityConsole extends Console {
         table.add(0, Arrays.asList("Session", "Pass", "Fail", "Modules Complete",
                 "Result Directory", "Test Plan", "Device serial(s)", "Build ID", "Product"));
         tableFormatter.displayTable(table, new PrintWriter(System.out, true));
+    }
+
+    private String printAttributes(MultiMap<String, String> map, String key) {
+        if (map.get(key) == null) {
+            return "unknown";
+        }
+        return map.get(key).get(0);
     }
 
     /**
