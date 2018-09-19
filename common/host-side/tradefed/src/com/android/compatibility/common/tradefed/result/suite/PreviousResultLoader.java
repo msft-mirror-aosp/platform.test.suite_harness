@@ -34,13 +34,12 @@ import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.result.suite.SuiteResultHolder;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
+import com.android.tradefed.util.proto.TestRecordProtoUtil;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,10 +75,8 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         try {
             resultDir = ResultHandler.getResultDirectory(
                     helperBuild.getResultsDir(), mRetrySessionId);
-            try (InputStream stream = new FileInputStream(
-                    new File(resultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME))) {
-                mTestRecord = TestRecord.parseDelimitedFrom(stream);
-            }
+            mTestRecord = TestRecordProtoUtil.readFromFile(
+                    new File(resultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

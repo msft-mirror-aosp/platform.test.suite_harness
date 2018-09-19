@@ -55,7 +55,6 @@ import com.android.tradefed.testtype.IDeviceTest;
 import com.android.tradefed.testtype.IInvocationContextReceiver;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IShardableTest;
-import com.android.tradefed.testtype.IStrictShardableTest;
 import com.android.tradefed.testtype.ITestCollector;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.AbiFormatter;
@@ -88,7 +87,7 @@ import java.util.concurrent.TimeUnit;
 @Deprecated
 @OptionClass(alias = "compatibility")
 public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildReceiver,
-        IStrictShardableTest, ISystemStatusCheckerReceiver, ITestCollector,
+        ISystemStatusCheckerReceiver, ITestCollector,
         IInvocationContextReceiver {
 
     public static final String INCLUDE_FILTER_OPTION = "include-filter";
@@ -836,11 +835,7 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
         return shardQueue;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IRemoteTest getTestShard(int shardCount, int shardIndex) {
+    private IRemoteTest getTestShard(int shardCount, int shardIndex) {
         CompatibilityTest test = new CompatibilityTest(shardCount, mModuleRepo, shardIndex);
         OptionCopier.copyOptionsNoThrow(this, test);
         // Set the shard count because the copy option on the previous line

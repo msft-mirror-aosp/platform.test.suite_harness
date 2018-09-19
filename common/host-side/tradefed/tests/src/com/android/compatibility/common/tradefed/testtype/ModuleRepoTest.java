@@ -31,7 +31,6 @@ import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IAbiReceiver;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IRuntimeHintProvider;
-import com.android.tradefed.testtype.IStrictShardableTest;
 import com.android.tradefed.testtype.ITestCollector;
 import com.android.tradefed.testtype.ITestFilterReceiver;
 import com.android.tradefed.util.AbiUtils;
@@ -393,31 +392,6 @@ public class ModuleRepoTest extends TestCase {
         TestStub stub = (TestStub) test;
         assertEquals("Incorrect test arg", "bar", stub.mFoo);
         assertEquals("Incorrect module arg", "foobar", stub.mBlah);
-    }
-
-    public void testSplit() throws Exception {
-        createConfig(mTestsDir, "sharded_1", null, SHARDABLE_TEST_STUB);
-        createConfig(mTestsDir, "sharded_2", null, SHARDABLE_TEST_STUB);
-        createConfig(mTestsDir, "sharded_3", null, SHARDABLE_TEST_STUB);
-        Set<IAbi> abis = new HashSet<>();
-        abis.add(new Abi(ABI_64, "64"));
-        ArrayList<String> emptyList = new ArrayList<>();
-
-        mRepo.initialize(3, 0, mTestsDir, abis, DEVICE_TOKENS, emptyList, emptyList, INCLUDES,
-                         EXCLUDES, METADATA_INCLUDES, METADATA_EXCLUDES, mMockBuildInfo);
-
-        List<IModuleDef> modules = new ArrayList<>();
-        modules.addAll(mRepo.getNonTokenModules());
-        modules.addAll(mRepo.getTokenModules());
-
-        int shardableCount = 0;
-        for (IModuleDef def : modules) {
-            IRemoteTest test = def.getTest();
-            if (test instanceof IStrictShardableTest) {
-                shardableCount++;
-            }
-        }
-        assertEquals("Shards wrong", 9, shardableCount);
     }
 
     public void testGetModuleIds() {
