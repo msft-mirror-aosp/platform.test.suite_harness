@@ -21,6 +21,7 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvide
 import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.util.ResultHandler;
+import com.android.ddmlib.Log.LogLevel;
 import com.android.tradefed.build.BuildRetrievalError;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IBuildProvider;
@@ -30,6 +31,7 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
 import com.android.tradefed.invoker.proto.InvocationContext.Context;
+import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.result.suite.SuiteResultHolder;
 import com.android.tradefed.targetprep.ITargetPreparer;
@@ -73,10 +75,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         CompatibilityBuildHelper helperBuild = new CompatibilityBuildHelper(info);
         File resultDir = null;
         try {
+            CLog.logAndDisplay(LogLevel.DEBUG, "Start loading the record protobuf.");
             resultDir = ResultHandler.getResultDirectory(
                     helperBuild.getResultsDir(), mRetrySessionId);
             mTestRecord = TestRecordProtoUtil.readFromFile(
                     new File(resultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
+            CLog.logAndDisplay(LogLevel.DEBUG, "Done loading the record protobuf.");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -93,8 +97,10 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         // TODO: Use fingerprint argument from TestRecord but we have to deal with suite namespace
         // for example: cts:build_fingerprint instead of just build_fingerprint.
         try {
+            CLog.logAndDisplay(LogLevel.DEBUG, "Start parsing previous test_results.xml");
             CertificationResultXml xmlParser = new CertificationResultXml();
             SuiteResultHolder holder = xmlParser.parseResults(resultDir, true);
+            CLog.logAndDisplay(LogLevel.DEBUG, "Done parsing previous test_results.xml");
             mExpectedFingerprint = holder.context.getAttributes()
                     .getUniqueMap().get(BUILD_FINGERPRINT);
             if (mExpectedFingerprint == null) {
