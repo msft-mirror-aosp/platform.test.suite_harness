@@ -11,7 +11,7 @@
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/host/common/obj/JAVA_LIBRARIES/json-prebuilt_intermediates/javalib.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/cts-common-util"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/host/common/obj/JAVA_LIBRARIES/jsonlib_intermediates/classes.jar"/>
-	<classpathentry kind="var" path="TRADEFED_ROOT/external/mockito/lib/byte-buddy-1.7.9.jar"/>
-	<classpathentry kind="var" path="TRADEFED_ROOT/external/mockito/lib/byte-buddy-agent-1.7.9.jar"/>
+	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/external/mockito/mockito-byte-buddy-agent/linux_glibc_common/combined/mockito-byte-buddy-agent.jar"/>
+	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/external/mockito/mockito-byte-buddy/linux_glibc_common/combined/mockito-byte-buddy.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
