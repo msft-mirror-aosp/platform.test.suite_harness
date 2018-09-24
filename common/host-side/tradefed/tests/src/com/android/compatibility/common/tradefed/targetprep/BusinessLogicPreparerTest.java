@@ -16,30 +16,29 @@
 
 package com.android.compatibility.common.tradefed.targetprep;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
-
-import com.android.tradefed.log.LogUtil.CLog;
-import org.mockito.Mockito;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
+import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.build.VersionedFile;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.util.FileUtil;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,8 +57,8 @@ public class BusinessLogicPreparerTest {
     private ITestDevice mMockDevice;
     private IBuildInfo mMockBuildInfo;
     private BusinessLogicPreparer mPreparer;
-    private List<VersionedFile> mVersionedFiles;
     private Set<String> mPackages;
+    private File mTmpDir;
 
     private static final String MEMORY_DEVICE_INFO_JSON =
             "{\n" +
@@ -128,38 +127,58 @@ public class BusinessLogicPreparerTest {
 
     @Before
     public void setUp() throws Exception {
+        mTmpDir = FileUtil.createTempDir("business-logic-unit-tests");
         mMockDevice = Mockito.mock(ITestDevice.class);
-        mMockBuildInfo = Mockito.mock(IBuildInfo.class);
-        mPreparer = new BusinessLogicPreparer();
-        mVersionedFiles = new ArrayList<VersionedFile>();
+        mMockBuildInfo = new BuildInfo();
+        mPreparer = new BusinessLogicPreparer() {
+            @Override
+            String getSuiteName() {
+                return "cts";
+            }
+        };
 
         OptionSetter setter = new OptionSetter(mPreparer);
         setter.setOptionValue("business-logic-url", serviceUrl);
         setter.setOptionValue("business-logic-api-key", "fakeApiKey");
     }
 
+    @After
+    public void tearDown() throws Exception {
+        FileUtil.recursiveDelete(mTmpDir);
+    }
+
     @Test
-    public void testBuildRequestString() throws Exception {
+    public void testBuildRequestString_success() throws Exception {
         Map<String, String> attributes = new HashMap<>();
         // Create a memory device info JSON file for test.
-        String jsonPath = createTestDeviceInfoJSONFile("MemoryDeviceInfo",
-            MEMORY_DEVICE_INFO_JSON);
+        File jsonPath = createTestDeviceInfoJSONFile("MemoryDeviceInfo", MEMORY_DEVICE_INFO_JSON);
+        mMockBuildInfo.setFile(DeviceInfoCollector.DEVICE_INFO_DIR, jsonPath, "v1");
         // Setup BuildInfo attributes.
-        attributes.put("device_info_dir", jsonPath);
+        mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
+        testBuildRequestString(17, attributes);
+    }
+
+    @Test
+    public void testBuildRequestString_deviceDirDoesntExists() throws Exception {
+        Map<String, String> attributes = new HashMap<>();
+        // Setup BuildInfo attributes.
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        when(mMockBuildInfo.getBuildAttributes()).thenReturn(attributes);
+        testBuildRequestString(15, attributes);
+    }
+
+    private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
+        for (String key: attributes.keySet()) {
+            mMockBuildInfo.addBuildAttribute(key, attributes.get(key));
+        }
         when(mMockDevice.getProperty(MANUFACTURER_PROPERTY)).thenReturn("MANUFACTURER_NAME");
         // In getBusinessLogicFeatures
         File configFile = createFileFromStr(CONFIG_FILE_CONTENT);
         // BusinessLogicPreparer.getSuiteName() calls TestSuiteInfo.getName()
         // That returns "tests" on local machine.
         // That returns "gts" in presumit.
-        mVersionedFiles.add(new VersionedFile(configFile, CONFIG_VERSION + "tests"));
-        mVersionedFiles.add(new VersionedFile(configFile, CONFIG_VERSION + "gts"));
-        mVersionedFiles.add(new VersionedFile(configFile, CONFIG_VERSION + "cts"));
-        // Return fake version files from CompatibilityBuildHelper.getDynamicFiles
-        // which called from DynamicConfigFileReader.getValuesFromConfig
-        when(mMockBuildInfo.getFiles()).thenReturn(mVersionedFiles);
+        mMockBuildInfo.setFile(CONFIG_VERSION + "tests", configFile, CONFIG_VERSION + "tests");
+        mMockBuildInfo.setFile(CONFIG_VERSION + "gts", configFile, CONFIG_VERSION + "gts");
+        mMockBuildInfo.setFile(CONFIG_VERSION + "cts", configFile, CONFIG_VERSION + "cts");
         when(mMockDevice.executeShellCommand(LIST_FEATURE_QUERY)).thenReturn(FEATURES);
         // In getBusinessLogicProperties.
         when(mMockDevice.executeShellCommand(GOOGLE_SETTINGS_QUERY)).thenReturn(PARTNER_CONTENT);
@@ -193,7 +212,7 @@ public class BusinessLogicPreparerTest {
 
         String parts[]= url.split("\\?");
         String params[]= parts[2].split("&");
-        assertEquals(17, params.length);
+        assertEquals(expectedParams, params.length);
 
         for (String param: params){
             String keyVal[] = param.split("=");
@@ -236,17 +255,14 @@ public class BusinessLogicPreparerTest {
         assertTrue(expectPackages.size() == 0);
     }
 
-    private String createTestDeviceInfoJSONFile(String DeviceInfoClassName, String jsonStr)
+    private File createTestDeviceInfoJSONFile(String DeviceInfoClassName, String jsonStr)
         throws IOException {
-        Path tempDir = Files.createTempDirectory("testBuildRequestString");
-        File file = new File(tempDir + "/" + DeviceInfoClassName + ".deviceinfo.json");
-        file.deleteOnExit();
-        tempDir.toFile().deleteOnExit();
+        File file = new File(mTmpDir, DeviceInfoClassName + ".deviceinfo.json");
         FileOutputStream stream = new FileOutputStream(file);
         stream.write(jsonStr.getBytes());
         stream.flush();
         stream.close();
-        return tempDir.toString();
+        return mTmpDir;
     }
 
     private File createFileFromStr(String configStr) throws IOException {
