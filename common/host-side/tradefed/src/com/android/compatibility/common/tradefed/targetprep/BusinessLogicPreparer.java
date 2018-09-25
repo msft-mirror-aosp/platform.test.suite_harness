@@ -215,6 +215,11 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         return helper.buildUrl(baseUrl, paramMap);
     }
 
+    @VisibleForTesting
+    String getSuiteName() {
+        return TestSuiteInfo.getInstance().getName().toLowerCase();
+    }
+
     /* Get device properties list, with element format "<property_name>:<property_value>" */
     private List<String> getBusinessLogicProperties(ITestDevice device, IBuildInfo buildInfo)
             throws DeviceNotAvailableException {
@@ -254,16 +259,49 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         }
     }
 
+    /* Get extended device info*/
+    private List<String> getExtendedDeviceInfo(IBuildInfo buildInfo) {
+        List<String> extendedDeviceInfo = new ArrayList<>();
+        File deviceInfoPath = buildInfo.getFile(DeviceInfoCollector.DEVICE_INFO_DIR);
+        if (deviceInfoPath == null || !deviceInfoPath.exists()) {
+            CLog.w("Device Info directory was not created. May be run <<cts|gts>>-dev ?");
+            return extendedDeviceInfo;
+        }
+        List<String> requiredDeviceInfo = null;
+        try {
+            requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
+                buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
+        } catch (XmlPullParserException | IOException e) {
+            CLog.e("Failed to pull business logic Extended DeviceInfo from dynamic config. "
+                + "Error: %s", e);
+            return extendedDeviceInfo;
+        }
+        File ediFile = null;
+        try{
+            for (String ediEntry: requiredDeviceInfo) {
+                String[] fileAndKey = ediEntry.split(":");
+                ediFile = FileUtil
+                    .findFile(deviceInfoPath, fileAndKey[0] + ".deviceinfo.json");
+                String jsonString = FileUtil.readStringFromFile(ediFile);
+                JSONObject jsonObj = new JSONObject(jsonString);
+                String value = jsonObj.getString(fileAndKey[1]);
+                extendedDeviceInfo
+                    .add(String.format("%s:%s:%s", fileAndKey[0], fileAndKey[1], value));
+            }
+        }catch(JSONException | IOException e){
+            CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
+                ediFile.getAbsolutePath(), e);
+            return new ArrayList<>();
+        }
+        return extendedDeviceInfo;
+    }
+
     private boolean shouldReadCache() {
         return mCache && !mCleanCache;
     }
 
     private boolean shouldWriteCache() {
         return mCache || mCleanCache;
-    }
-
-    private String getSuiteName() {
-        return TestSuiteInfo.getInstance().getName().toLowerCase();
     }
 
     /**
@@ -308,7 +346,6 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     private static synchronized String readFromCache(String url) {
         // url hashCode makes file unique, in case host runs invocations for different
         // device builds and/or test suites using business logic
-        String cachedString = null;
         File cachedFile = getCachedFile(url);
         if (!cachedFile.exists()) {
             CLog.i("No cached business logic found");
@@ -319,7 +356,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             Date cachedDate = cachedLogic.getTimestamp();
             if (System.currentTimeMillis() - cachedDate.getTime() < BL_CACHE_MILLIS) {
                 CLog.i("Using cached business logic from: %s", cachedDate.toString());
-                return cachedString = FileUtil.readStringFromFile(cachedFile);
+                return FileUtil.readStringFromFile(cachedFile);
             } else {
                 CLog.i("Cached business logic out-of-date, deleting cached file");
                 FileUtil.deleteFile(cachedFile);
