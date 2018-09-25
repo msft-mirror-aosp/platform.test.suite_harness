@@ -78,6 +78,9 @@
     <option name="compatibility:exclude-filter" value="CtsOpenGlPerfTestCases android.openglperf.cts.GlAppSwitchTest#testGlActivitySwitchingFast" />
     <option name="compatibility:exclude-filter" value="CtsOpenGlPerfTestCases android.openglperf.cts.GlAppSwitchTest#testGlActivitySwitchingSlow" />
 
+    <!-- b/113071420-->
+    <option name="compatibility:exclude-filter" value="x86 CtsPerfettoTestCases PerfettoTest#TestFtraceProducer" />
+
     <!-- b/18461670 -->
     <option name="compatibility:exclude-filter" value="CtsSecurityTestCases android.security.cts.AudioPolicyBinderTest#test_getStreamVolumeLeak" />
     <option name="compatibility:exclude-filter" value="CtsSecurityTestCases android.security.cts.AudioPolicyBinderTest#test_isStreamActive" />
