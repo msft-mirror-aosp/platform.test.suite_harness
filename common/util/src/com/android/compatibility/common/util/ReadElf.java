@@ -566,6 +566,9 @@ public class ReadElf implements AutoCloseable {
     /** Rodata String List */
     private List<String> mRoStrings;
 
+    /** Rodata byte[] */
+    private byte[] mRoData;
+
     public static ReadElf read(File file) throws IOException {
         return new ReadElf(file);
     }
@@ -711,6 +714,7 @@ public class ReadElf implements AutoCloseable {
 
     private ReadElf(File file) throws IOException {
         mHasRodata = false;
+        mRoData = null;
         mPath = file.getPath();
         mFile = new RandomAccessFile(file, "r");
 
@@ -1302,11 +1306,8 @@ public class ReadElf implements AutoCloseable {
     public List<String> getRoStrings() throws IOException {
         if (mRoStrings == null) {
             mRoStrings = new ArrayList<>();
-            if (mHasRodata) {
-                byte[] byteArr = new byte[mRodataSize];
-                mFile.seek(mRodataOffset);
-                mFile.readFully(byteArr);
-
+            byte[] byteArr = getRoData();
+            if (byteArr != null) {
                 int strOffset = 0;
                 for (int i = 0; i < mRodataSize; i++) {
                     if (byteArr[i] == 0) {
@@ -1321,5 +1322,20 @@ public class ReadElf implements AutoCloseable {
             }
         }
         return mRoStrings;
+    }
+
+    /**
+     * Gets .rodata section
+     *
+     * @return byte [] of .rodata or null if there is none
+     */
+    public byte[] getRoData() throws IOException {
+        if (mHasRodata && mRoData == null) {
+            mRoData = new byte[mRodataSize];
+            mFile.seek(mRodataOffset);
+            mFile.readFully(mRoData);
+        }
+
+        return mRoData;
     }
 }
