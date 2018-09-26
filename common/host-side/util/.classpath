@@ -3,6 +3,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="easymock"/>
+	<classpathentry kind="src" path="objenesis"/>
+	<classpathentry kind="src" path="mockito"/>
 	<classpathentry kind="src" path="tests/src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>

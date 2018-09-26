@@ -84,6 +84,7 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     private String mTempDir;
 
     private ITestLogger mLogger;
+    private File deviceInfoDir = null;
 
     public DeviceInfoCollector() {
         mWhen = When.BEFORE;
@@ -107,7 +108,6 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             return;
         }
         run(device, buildInfo);
-        File deviceInfoDir = null;
         try {
             deviceInfoDir = FileUtil.createTempDir(DeviceInfo.RESULT_DIR_NAME);
             if (device.pullDir(mSrcDir, deviceInfoDir)) {
@@ -123,9 +123,14 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
         } catch (IOException e) {
             CLog.e("Failed to pull device-info files from device %s", device.getSerialNumber());
             CLog.e(e);
-        } finally {
-            FileUtil.recursiveDelete(deviceInfoDir);
         }
+    }
+
+    @Override
+    public void tearDown(ITestDevice device, IBuildInfo buildInfo, Throwable e)
+            throws DeviceNotAvailableException {
+        FileUtil.recursiveDelete(deviceInfoDir);
+        super.tearDown(device, buildInfo, e);
     }
 
     @Override

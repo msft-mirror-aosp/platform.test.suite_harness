@@ -40,8 +40,11 @@ import com.android.tradefed.util.net.IHttpHelper;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
@@ -82,6 +85,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     /* Dynamic config constants */
     private static final String DYNAMIC_CONFIG_FEATURES_KEY = "business_logic_device_features";
     private static final String DYNAMIC_CONFIG_PROPERTIES_KEY = "business_logic_device_properties";
+    private static final String DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY = "business_logic_extended_device_info";
     private static final String DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY =
             "conditional_business_logic_tests_enabled";
     /* Format used to append the enabled attribute to the serialized business logic string. */
@@ -191,7 +195,8 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     }
 
     /** Helper to populate the business logic service request with info about the device. */
-    private String buildRequestString(ITestDevice device, IBuildInfo buildInfo)
+    @VisibleForTesting
+    String buildRequestString(ITestDevice device, IBuildInfo buildInfo)
             throws DeviceNotAvailableException {
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
@@ -211,6 +216,13 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         for (String property : getBusinessLogicProperties(device, buildInfo)) {
             paramMap.put("properties", property);
         }
+        for (String pkg : device.getInstalledPackageNames()) {
+            paramMap.put("packages", pkg);
+        }
+        for (String deviceInfo : getExtendedDeviceInfo(buildInfo)) {
+            paramMap.put("device_info", deviceInfo);
+        }
+
         IHttpHelper helper = new HttpHelper();
         return helper.buildUrl(baseUrl, paramMap);
     }
