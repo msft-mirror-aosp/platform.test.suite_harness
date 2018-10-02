@@ -227,6 +227,11 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         return helper.buildUrl(baseUrl, paramMap);
     }
 
+    @VisibleForTesting
+    String getSuiteName() {
+        return TestSuiteInfo.getInstance().getName().toLowerCase();
+    }
+
     /* Get device properties list, with element format "<property_name>:<property_value>" */
     private List<String> getBusinessLogicProperties(ITestDevice device, IBuildInfo buildInfo)
             throws DeviceNotAvailableException {
@@ -269,12 +274,11 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     /* Get extended device info*/
     private List<String> getExtendedDeviceInfo(IBuildInfo buildInfo) {
         List<String> extendedDeviceInfo = new ArrayList<>();
-        String deviceInfoDir = buildInfo.getBuildAttributes().get("device_info_dir");
-        if (deviceInfoDir == null) {
+        File deviceInfoPath = buildInfo.getFile(DeviceInfoCollector.DEVICE_INFO_DIR);
+        if (deviceInfoPath == null || !deviceInfoPath.exists()) {
             CLog.w("Device Info directory was not created. May be run <<cts|gts>>-dev ?");
             return extendedDeviceInfo;
         }
-        File deviceInfoPath = new File(deviceInfoDir);
         List<String> requiredDeviceInfo = null;
         try {
             requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
@@ -310,10 +314,6 @@ public class BusinessLogicPreparer implements ITargetCleaner {
 
     private boolean shouldWriteCache() {
         return mCache || mCleanCache;
-    }
-
-    private String getSuiteName() {
-        return TestSuiteInfo.getInstance().getName().toLowerCase();
     }
 
     /**
@@ -358,7 +358,6 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     private static synchronized String readFromCache(String url) {
         // url hashCode makes file unique, in case host runs invocations for different
         // device builds and/or test suites using business logic
-        String cachedString = null;
         File cachedFile = getCachedFile(url);
         if (!cachedFile.exists()) {
             CLog.i("No cached business logic found");
@@ -369,7 +368,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             Date cachedDate = cachedLogic.getTimestamp();
             if (System.currentTimeMillis() - cachedDate.getTime() < BL_CACHE_MILLIS) {
                 CLog.i("Using cached business logic from: %s", cachedDate.toString());
-                return cachedString = FileUtil.readStringFromFile(cachedFile);
+                return FileUtil.readStringFromFile(cachedFile);
             } else {
                 CLog.i("Cached business logic out-of-date, deleting cached file");
                 FileUtil.deleteFile(cachedFile);
