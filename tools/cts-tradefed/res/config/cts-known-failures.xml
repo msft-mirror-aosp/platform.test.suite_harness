@@ -78,6 +78,9 @@
     <option name="compatibility:exclude-filter" value="CtsOpenGlPerfTestCases android.openglperf.cts.GlAppSwitchTest#testGlActivitySwitchingFast" />
     <option name="compatibility:exclude-filter" value="CtsOpenGlPerfTestCases android.openglperf.cts.GlAppSwitchTest#testGlActivitySwitchingSlow" />
 
+    <!-- b/113071420-->
+    <option name="compatibility:exclude-filter" value="x86 CtsPerfettoTestCases PerfettoTest#TestFtraceProducer" />
+
     <!-- b/18461670 -->
     <option name="compatibility:exclude-filter" value="CtsSecurityTestCases android.security.cts.AudioPolicyBinderTest#test_getStreamVolumeLeak" />
     <option name="compatibility:exclude-filter" value="CtsSecurityTestCases android.security.cts.AudioPolicyBinderTest#test_isStreamActive" />
@@ -212,6 +215,15 @@
     <!-- b/110354076 -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testCreateAndManageUser_DontSkipSetupWizard" />
 
+    <!-- b/112450846 -->
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testCache" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testVerifyAppStats" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testVerifyStats" />
+
     <!-- b/112125308 -->
     <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerActivityVisibilityTests#testTurnScreenOnAttrNoLockScreen" />
+
+    <!-- b/112688380 -->
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testAppOrientationRequestConfigClears" />
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
 </configuration>
