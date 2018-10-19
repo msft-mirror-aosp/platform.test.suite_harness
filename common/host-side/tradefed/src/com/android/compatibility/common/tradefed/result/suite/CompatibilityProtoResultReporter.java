@@ -41,12 +41,8 @@ public class CompatibilityProtoResultReporter extends ProtoResultReporter {
     @Override
     public void processStartInvocation(
             TestRecord invocationStartRecord, IInvocationContext invocationContext) {
-
         if (mBuildHelper == null) {
             mBuildHelper = new CompatibilityBuildHelper(invocationContext.getBuildInfos().get(0));
-        }
-        if (mResultDir == null) {
-            initializeResultDirectories();
         }
     }
 
@@ -54,6 +50,7 @@ public class CompatibilityProtoResultReporter extends ProtoResultReporter {
     public void processFinalProto(TestRecord finalRecord) {
         super.processFinalProto(finalRecord);
 
+        mResultDir = getResultDirectory();
         File protoFile = new File(mResultDir, PROTO_FILE_NAME);
         try {
             finalRecord.writeDelimitedTo(new FileOutputStream(protoFile));
@@ -63,9 +60,7 @@ public class CompatibilityProtoResultReporter extends ProtoResultReporter {
         }
     }
 
-    private void initializeResultDirectories() {
-        CLog.d("Initializing result directory");
-
+    private File getResultDirectory() {
         try {
             mResultDir = mBuildHelper.getResultDir();
             if (mResultDir != null) {
@@ -74,7 +69,6 @@ public class CompatibilityProtoResultReporter extends ProtoResultReporter {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-
         if (mResultDir == null) {
             throw new RuntimeException("Result Directory was not created");
         }
@@ -82,7 +76,7 @@ public class CompatibilityProtoResultReporter extends ProtoResultReporter {
             throw new RuntimeException("Result Directory was not created: " +
                     mResultDir.getAbsolutePath());
         }
-
         CLog.d("Results Directory: %s", mResultDir.getAbsolutePath());
+        return mResultDir;
     }
 }
