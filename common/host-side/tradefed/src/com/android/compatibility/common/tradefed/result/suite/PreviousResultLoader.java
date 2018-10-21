@@ -32,6 +32,7 @@ import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
 import com.android.tradefed.invoker.proto.InvocationContext.Context;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.result.suite.SuiteResultHolder;
 import com.android.tradefed.targetprep.ITargetPreparer;
@@ -61,6 +62,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
     private String mExpectedFingerprint;
+    private File mResultDir;
 
     private IBuildProvider mProvider;
 
@@ -73,13 +75,14 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             throw new RuntimeException(e);
         }
         CompatibilityBuildHelper helperBuild = new CompatibilityBuildHelper(info);
-        File resultDir = null;
+        mResultDir = null;
         try {
             CLog.logAndDisplay(LogLevel.DEBUG, "Start loading the record protobuf.");
-            resultDir = ResultHandler.getResultDirectory(
-                    helperBuild.getResultsDir(), mRetrySessionId);
-            mTestRecord = TestRecordProtoUtil.readFromFile(
-                    new File(resultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
+            mResultDir =
+                    ResultHandler.getResultDirectory(helperBuild.getResultsDir(), mRetrySessionId);
+            mTestRecord =
+                    TestRecordProtoUtil.readFromFile(
+                            new File(mResultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
             CLog.logAndDisplay(LogLevel.DEBUG, "Done loading the record protobuf.");
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -99,7 +102,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         try {
             CLog.logAndDisplay(LogLevel.DEBUG, "Start parsing previous test_results.xml");
             CertificationResultXml xmlParser = new CertificationResultXml();
-            SuiteResultHolder holder = xmlParser.parseResults(resultDir, true);
+            SuiteResultHolder holder = xmlParser.parseResults(mResultDir, true);
             CLog.logAndDisplay(LogLevel.DEBUG, "Done parsing previous test_results.xml");
             mExpectedFingerprint = holder.context.getAttributes()
                     .getUniqueMap().get(BUILD_FINGERPRINT);
@@ -138,6 +141,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         newList.add(fingerprintChecker);
         newList.addAll(preparers);
         config.setTargetPreparers(newList);
+
+        // Add the file copier last to copy from previous sesssion
+        List<ITestInvocationListener> listeners = config.getTestInvocationListeners();
+        PreviousSessionFileCopier copier = new PreviousSessionFileCopier();
+        copier.setPreviousSessionDir(mResultDir);
+        listeners.add(copier);
     }
 
     @VisibleForTesting
