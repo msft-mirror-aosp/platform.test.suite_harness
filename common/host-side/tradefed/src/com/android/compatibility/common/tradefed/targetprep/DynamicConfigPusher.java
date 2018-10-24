@@ -21,15 +21,18 @@ import com.android.compatibility.common.util.DynamicConfig;
 import com.android.compatibility.common.util.DynamicConfigHandler;
 import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.log.LogUtil;
+import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetCleaner;
 import com.android.tradefed.targetprep.TargetSetupError;
+import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
 
@@ -41,18 +44,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Pushes dynamic config files from config repository
  */
 @OptionClass(alias="dynamic-config-pusher")
-public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCleaner {
+public class DynamicConfigPusher extends BaseTargetPreparer
+        implements IConfigurationReceiver, ITargetCleaner {
     public enum TestTarget {
         DEVICE,
         HOST
     }
 
+    /* API Key for compatibility test project, used for dynamic configuration. */
+    private static final String API_KEY = "AIzaSyAbwX5JRlmsLeygY2WWihpIJPXFLueOQ3U";
     private static final String LOG_TAG = DynamicConfigPusher.class.getSimpleName();
+
+    @Option(name = "api-key", description = "API key for for dynamic configuration.")
+    private String mApiKey = API_KEY;
 
     @Option(name = "cleanup", description = "Whether to remove config files from the test " +
             "target after test completion.")
@@ -60,7 +70,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCl
 
     @Option(name = "config-url", description = "The url path of the dynamic config. If set, " +
             "will override the default config location defined in CompatibilityBuildProvider.")
-    private String mConfigUrl;
+    private String mConfigUrl = "https://androidpartner.googleapis.com/v1/dynamicconfig/" +
+            "suites/{suite-name}/modules/{module}/version/{version}?key={api-key}";
 
     @Option(name="config-filename", description = "The module name for module-level " +
             "configurations, or the suite name for suite-level configurations", mandatory = true)
@@ -86,10 +97,23 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCl
                 + "logged under the module name.")
     private String mResourceFileName = null;
 
+    @Option(name = "dynamic-config-name",
+            description = "The dynamic config name for module-level configurations, or the "
+                + "suite name for suite-level configurations.")
+    private String mDynamicConfigName = null;
+
     private String mDeviceFilePushed;
+
+    private IConfiguration mConfiguration = null;
 
     void setModuleName(String moduleName) {
         mModuleName = moduleName;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mConfiguration = configuration;
     }
 
     /**
@@ -107,23 +131,21 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCl
             mVersion = buildHelper.getSuiteVersion();
         }
 
+        // TODO(b/117746848): To find a way to share the configuration object across shard.
+        String suiteName = (mConfiguration != null) ?
+                getSuiteName() : TestSuiteInfo.getInstance().getName();
         String apfeConfigInJson = null;
-        String originUrl = (mConfigUrl != null) ? mConfigUrl : buildHelper.getDynamicConfigUrl();
+        String requestUrl = null;
 
-        if (originUrl != null) {
-            String requestUrl = originUrl;
-            try {
-                requestUrl = originUrl
-                        .replace("{module}", mModuleName).replace("{version}", mVersion);
-                java.net.URL request = new URL(requestUrl);
-                apfeConfigInJson = StreamUtil.getStringFromStream(request.openStream());
-            } catch (IOException e) {
-                LogUtil.printLog(Log.LogLevel.WARN, LOG_TAG,
-                        "Cannot download and parse json config from URL " + requestUrl);
-            }
-        } else {
-            LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG,
-                    "Dynamic config override URL is not set, using local configuration values");
+        try {
+            requestUrl = mConfigUrl.replace("{suite-name}", suiteName)
+                    .replace("{module}", mModuleName)
+                    .replace("{version}", mVersion)
+                    .replace("{api-key}", mApiKey);
+            java.net.URL request = new URL(requestUrl);
+            apfeConfigInJson = StreamUtil.getStringFromStream(request.openStream());
+        } catch (IOException e) {
+            CLog.w(e);
         }
 
         // Use DynamicConfigHandler to merge local and service configuration into one file
@@ -156,6 +178,26 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCl
         }
     }
 
+    /**
+     * Return the the first element of test-suite-tag from configuration if it's not empty,
+     * otherwise, return the name from test-suite-info.properties.
+     */
+    @VisibleForTesting
+    String getSuiteName() {
+        List<String> testSuiteTags = mConfiguration.getConfigurationDescription().getSuiteTags();
+        String suiteName = null;
+        if (!testSuiteTags.isEmpty()) {
+            if (testSuiteTags.size() >= 2) {
+                CLog.i("More than 2 test-suite-tag are defined. test-suite-tag: " + testSuiteTags);
+            }
+            suiteName = testSuiteTags.get(0).toUpperCase();
+        } else {
+            suiteName = TestSuiteInfo.getInstance().getName();
+        }
+        CLog.i("Replace {suite-name} placeholder with " + suiteName + " in dynamic config url.");
+        return suiteName;
+    }
+
     @VisibleForTesting
     final File getLocalConfigFile(CompatibilityBuildHelper buildHelper, ITestDevice device)
             throws TargetSetupError {
@@ -178,7 +220,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements ITargetCl
 
         // If not from resources look at local path.
         try {
-            localConfigFile = buildHelper.getTestFile(String.format("%s.dynamic", mModuleName));
+            String lookupName = (mDynamicConfigName != null) ? mDynamicConfigName : mModuleName;
+            localConfigFile = buildHelper.getTestFile(String.format("%s.dynamic", lookupName));
         } catch (FileNotFoundException e) {
             throw new TargetSetupError("Cannot get local dynamic config file from test directory",
                     e, device.getDeviceDescriptor());
