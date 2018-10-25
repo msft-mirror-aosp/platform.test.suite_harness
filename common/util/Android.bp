@@ -32,11 +32,11 @@ java_library_host {
 
     srcs: ["src/**/*.java"],
 
-    static_libs: [
-        "guava",
-        "json-prebuilt",
+    libs: [
         "junit",
-        "kxml2-2.3.0",
-        "platform-test-annotations",
+	"guava",
+	"json-prebuilt",
+	"platform-test-annotations",
+	"kxml2-2.3.0",
     ],
 }
