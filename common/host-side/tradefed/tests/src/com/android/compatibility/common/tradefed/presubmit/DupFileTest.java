@@ -47,8 +47,6 @@ public class DupFileTest {
     private static final Set<String> JAR_TO_EXCLUDE = new HashSet<>();
 
     static {
-        // This needs to be deleted from android-cts package, tradefed.jar includes it already.
-        JAR_TO_EXCLUDE.add("host-libprotobuf-java-full.jar");
         // This conflicts with an internal jar dependency
         JAR_TO_EXCLUDE.add("cts-tradefed.jar");
     }
