@@ -32,4 +32,5 @@ tradefed_binary_host {
     full_name: "Compatibility Test Suite",
     version: "9.0_r1",
     static_libs: ["cts-tradefed-harness"],
+    required: ["compatibility-host-util"],
 }
