@@ -44,6 +44,7 @@ public abstract class BusinessLogicExecutor {
      * @throws RuntimeException when failing to resolve or invoke the condition method
      */
     public boolean executeCondition(String method, String... args) {
+        logDebug("Executing condition: %s", formatExecutionString(method, args));
         try {
             return (Boolean) invokeMethod(method, args);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
@@ -62,6 +63,7 @@ public abstract class BusinessLogicExecutor {
      * @throws RuntimeException when failing to resolve or invoke the action method
      */
     public void executeAction(String method, String... args) {
+        logDebug("Executing action: %s", formatExecutionString(method, args));
         try {
             invokeMethod(method, args);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
@@ -83,6 +85,10 @@ public abstract class BusinessLogicExecutor {
                 throw re;
             }
         }
+    }
+
+    private String formatExecutionString(String method, String... args) {
+        return String.format("%s(%s)", method, String.join(", ", args));
     }
 
     /**
@@ -122,6 +128,12 @@ public abstract class BusinessLogicExecutor {
      * See {@link String.format(String, Object...)} for parameter information.
      */
     public abstract void logInfo(String format, Object... args);
+
+    /**
+     * Log debugging information to the host or device logs (depending on implementation).
+     * See {@link String.format(String, Object...)} for parameter information.
+     */
+    public abstract void logDebug(String format, Object... args);
 
     /**
      * Get the test object. This method is left abstract, since non-abstract subclasses will set
