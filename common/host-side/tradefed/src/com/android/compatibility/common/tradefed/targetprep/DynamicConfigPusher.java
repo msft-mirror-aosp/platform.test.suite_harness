@@ -74,8 +74,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer
             "suites/{suite-name}/modules/{module}/version/{version}?key={api-key}";
 
     @Option(name="config-filename", description = "The module name for module-level " +
-            "configurations, or the suite name for suite-level configurations", mandatory = true)
-    private String mModuleName;
+            "configurations, or the suite name for suite-level configurations")
+    private String mModuleName = null;
 
     @Option(name = "target", description = "The test target, \"device\" or \"host\"",
             mandatory = true)
@@ -127,16 +127,20 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
         File localConfigFile = getLocalConfigFile(buildHelper, device);
 
+        // TODO(b/117746848): To find a way to share the configuration object across shard.
+        String suiteName = (mConfiguration != null) ?
+                getSuiteName() : TestSuiteInfo.getInstance().getName();
+        // Ensure mModuleName is set.
+        if (mModuleName == null) {
+            mModuleName = suiteName.toLowerCase();
+            CLog.w("Option config-filename isn't set. Using suite-name '%s'", mModuleName);
+        }
         if (mVersion == null) {
             mVersion = buildHelper.getSuiteVersion();
         }
 
-        // TODO(b/117746848): To find a way to share the configuration object across shard.
-        String suiteName = (mConfiguration != null) ?
-                getSuiteName() : TestSuiteInfo.getInstance().getName();
         String apfeConfigInJson = null;
         String requestUrl = null;
-
         try {
             requestUrl = mConfigUrl.replace("{suite-name}", suiteName)
                     .replace("{module}", mModuleName)
