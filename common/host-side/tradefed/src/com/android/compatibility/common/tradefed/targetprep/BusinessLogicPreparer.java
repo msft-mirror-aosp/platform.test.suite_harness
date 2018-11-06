@@ -85,7 +85,9 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     /* Dynamic config constants */
     private static final String DYNAMIC_CONFIG_FEATURES_KEY = "business_logic_device_features";
     private static final String DYNAMIC_CONFIG_PROPERTIES_KEY = "business_logic_device_properties";
-    private static final String DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY = "business_logic_extended_device_info";
+    private static final String DYNAMIC_CONFIG_PACKAGES_KEY = "business_logic_device_packages";
+    private static final String DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY =
+            "business_logic_extended_device_info";
     private static final String DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY =
             "conditional_business_logic_tests_enabled";
     /* Format used to append the enabled attribute to the serialized business logic string. */
@@ -216,7 +218,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         for (String property : getBusinessLogicProperties(device, buildInfo)) {
             paramMap.put("properties", property);
         }
-        for (String pkg : device.getInstalledPackageNames()) {
+        for (String pkg : getBusinessLogicPackages(device, buildInfo)) {
             paramMap.put("packages", pkg);
         }
         for (String deviceInfo : getExtendedDeviceInfo(buildInfo)) {
@@ -224,7 +226,9 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         }
 
         IHttpHelper helper = new HttpHelper();
-        return helper.buildUrl(baseUrl, paramMap);
+        String requestString = helper.buildUrl(baseUrl, paramMap);
+        CLog.d("Built request string: \"%s\"", requestString);
+        return requestString;
     }
 
     @VisibleForTesting
@@ -271,12 +275,28 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         }
     }
 
+    /* Get device packages list */
+    private List<String> getBusinessLogicPackages(ITestDevice device, IBuildInfo buildInfo)
+            throws DeviceNotAvailableException {
+        try {
+            List<String> dynamicConfigPackages = DynamicConfigFileReader.getValuesFromConfig(
+                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_PACKAGES_KEY);
+            Set<String> devicePackages = device.getInstalledPackageNames();
+            dynamicConfigPackages.retainAll(devicePackages);
+            return dynamicConfigPackages;
+        } catch (XmlPullParserException | IOException e) {
+            CLog.e("Failed to pull business logic packages from dynamic config");
+            return new ArrayList<>();
+        }
+    }
+
     /* Get extended device info*/
     private List<String> getExtendedDeviceInfo(IBuildInfo buildInfo) {
         List<String> extendedDeviceInfo = new ArrayList<>();
         File deviceInfoPath = buildInfo.getFile(DeviceInfoCollector.DEVICE_INFO_DIR);
         if (deviceInfoPath == null || !deviceInfoPath.exists()) {
-            CLog.w("Device Info directory was not created. May be run <<cts|gts>>-dev ?");
+            CLog.w("Device Info directory was not created (Make sure you are not running plan " +
+                    "\"*ts-dev\" or including option -d/--skip-device-info)");
             return extendedDeviceInfo;
         }
         List<String> requiredDeviceInfo = null;
