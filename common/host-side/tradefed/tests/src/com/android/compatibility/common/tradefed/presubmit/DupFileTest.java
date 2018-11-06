@@ -47,19 +47,14 @@ public class DupFileTest {
     private static final Set<String> JAR_TO_EXCLUDE = new HashSet<>();
 
     static {
-        // This conflicts with an internal jar dependency
-        JAR_TO_EXCLUDE.add("cts-tradefed.jar");
+        // This includes guava, excluding for now, will be fixed later
+        JAR_TO_EXCLUDE.add("CtsUnofficialApisUsageTestCases.jar");
     }
 
     // We ignore directories part of the common java and google packages.
     private static final String[] IGNORE_DIRS =
             new String[] {
                 "android/",
-                // This is the guava dependency, it should be fixed and ensure guava only come from
-                // one place
-                "com/google/common/",
-                "com/google/thirdparty/",
-                "javax/annotation/",
             };
 
     /** test if there are duplicate files in different jars. */
