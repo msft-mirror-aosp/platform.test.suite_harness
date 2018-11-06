@@ -90,6 +90,10 @@ public class BusinessLogicPreparerTest {
                     "        <value>ro.product.model</value>\n" +
                     "        <value>ro.product.name</value>\n" +
                     "    </entry>\n" +
+                    "    <entry key=\"business_logic_device_packages\">\n" +
+                    "        <value>com.google.android.gms</value>\n" +
+                    "        <value>com.android.vending</value>\n" +
+                    "    </entry>\n" +
                     "    <entry key=\"business_logic_extended_device_info\">\n" +
                     "        <value>MemoryDeviceInfo:total_memory</value>\n" +
                     "        <value>MemoryDeviceInfo:low_ram_device</value>\n" +
@@ -155,7 +159,7 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo.setFile(DeviceInfoCollector.DEVICE_INFO_DIR, jsonPath, "v1");
         // Setup BuildInfo attributes.
         mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(17, attributes);
+        testBuildRequestString(16, attributes);
     }
 
     @Test
@@ -163,7 +167,7 @@ public class BusinessLogicPreparerTest {
         Map<String, String> attributes = new HashMap<>();
         // Setup BuildInfo attributes.
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(15, attributes);
+        testBuildRequestString(14, attributes);
     }
 
     private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
@@ -188,7 +192,7 @@ public class BusinessLogicPreparerTest {
         when(mMockDevice.getProperty(RO_MODEL)).thenReturn("fake_model");
         when(mMockDevice.getProperty(RO_NAME)).thenReturn("fake_name");
         // Extra info
-        List<String> pkgNameList = Arrays.asList("com.android.vending",
+        List<String> pkgNameList = Arrays.asList("com.android.vending", "com.google.android.gms",
             "com.google.android.youtube", "com.google.android.apps.photos");
         mPackages = new HashSet<>(pkgNameList);
         when(mMockDevice.getInstalledPackageNames()).thenReturn(mPackages);
@@ -250,9 +254,9 @@ public class BusinessLogicPreparerTest {
                 }
             }
         }
-        assertTrue(expectFeatures.size() == 0);
-        assertTrue(expectProperties.size() == 0);
-        assertTrue(expectPackages.size() == 0);
+        assertEquals(expectFeatures.size(), 0);
+        assertEquals(expectProperties.size(), 0);
+        assertEquals(expectPackages.size(), 2);
     }
 
     private File createTestDeviceInfoJSONFile(String DeviceInfoClassName, String jsonStr)
