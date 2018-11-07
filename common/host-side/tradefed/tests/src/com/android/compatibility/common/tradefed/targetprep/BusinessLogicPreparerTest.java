@@ -17,7 +17,6 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
