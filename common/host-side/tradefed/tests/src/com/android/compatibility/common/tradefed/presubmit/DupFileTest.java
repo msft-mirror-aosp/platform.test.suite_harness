@@ -27,12 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -43,19 +41,8 @@ import java.util.jar.JarFile;
 @RunWith(JUnit4.class)
 public class DupFileTest {
 
-    // List of jars to exclude from check.
-    private static final Set<String> JAR_TO_EXCLUDE = new HashSet<>();
-
-    static {
-        // This includes guava, excluding for now, will be fixed later
-        JAR_TO_EXCLUDE.add("CtsUnofficialApisUsageTestCases.jar");
-    }
-
     // We ignore directories part of the common java and google packages.
-    private static final String[] IGNORE_DIRS =
-            new String[] {
-                "android/",
-            };
+    private static final String[] IGNORE_DIRS = new String[] {"android/", "javax/annotation/"};
 
     /** test if there are duplicate files in different jars. */
     @Test
@@ -120,7 +107,7 @@ public class DupFileTest {
         List<File> listOfJars = new ArrayList<File>();
         for (String jar : classpathStr.split(":")) {
             File jarFile = new File(jar);
-            if (jarFile.exists() && !JAR_TO_EXCLUDE.contains(jarFile.getName())) {
+            if (jarFile.exists()) {
                 listOfJars.add(jarFile);
             }
         }
