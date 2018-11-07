@@ -209,7 +209,4 @@
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testDismissDialog" />
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testLaunchAnyway" />
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testUninstall" />
-
-    <!-- b/117237348 -->
-    <option name="compatibility:exclude-filter" value="CtsDeqpTestCases dEQP-VK.api.external.memory.android_hardware_buffer.image_formats" />
 </configuration>
