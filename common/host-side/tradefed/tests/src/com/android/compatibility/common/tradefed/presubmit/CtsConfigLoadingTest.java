@@ -244,6 +244,8 @@ public class CtsConfigLoadingTest {
                     }
                 }
             }
+            // Ensure options have been set
+            c.validateOptions();
         }
     }
 
