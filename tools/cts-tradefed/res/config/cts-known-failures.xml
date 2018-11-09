@@ -209,4 +209,7 @@
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testDismissDialog" />
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testLaunchAnyway" />
     <option name="compatibility:exclude-filter" value="CtsHarmfulAppWarningHostTestCases android.harmfulappwarning.cts.HarmfulAppWarningTest#testUninstall" />
+
+    <!-- b/119312212 -->
+    <option name="compatibility:exclude-filter" value="CtsAngleIntegrationHostTestCases android.angle.cts.CtsAngleDebugOptionHostTest#testDebugOptionOn" />
 </configuration>
