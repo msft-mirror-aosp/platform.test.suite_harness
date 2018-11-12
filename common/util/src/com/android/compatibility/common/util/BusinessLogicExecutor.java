@@ -87,9 +87,10 @@ public abstract class BusinessLogicExecutor {
         }
     }
 
-    private String formatExecutionString(String method, String... args) {
-        return String.format("%s(%s)", method, String.join(", ", args));
-    }
+    /**
+     * Format invokation information as "method(args[0], args[1], ...)".
+     */
+    protected abstract String formatExecutionString(String method, String... args);
 
     /**
      * Execute a business logic method.
