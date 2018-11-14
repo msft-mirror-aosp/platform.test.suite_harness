@@ -69,6 +69,14 @@ public class BusinessLogicHostExecutor extends BusinessLogicExecutor {
      * {@inheritDoc}
      */
     @Override
+    protected String formatExecutionString(String method, String... args) {
+        return String.format("%s(%s)", method, String.join(", ", args));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected ResolvedMethod getResolvedMethod(Class cls, String methodName, String... args)
             throws ClassNotFoundException {
         List<Method> nameMatches = getMethodsWithName(cls, methodName);
