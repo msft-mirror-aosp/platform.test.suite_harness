@@ -363,7 +363,7 @@ public class CompatibilityConsole extends Console {
         List<List<String>> table = new ArrayList<>();
 
         List<File> resultDirs = null;
-        List<SuiteResultHolder> holders = new ArrayList<>();
+        Map<SuiteResultHolder, File> holders = new LinkedHashMap<>();
         try {
             resultDirs = getResults(getBuildHelper().getResultsDir());
         } catch (FileNotFoundException e) {
@@ -375,7 +375,7 @@ public class CompatibilityConsole extends Console {
                 continue;
             }
             try {
-                holders.add(xmlParser.parseResults(resultDir, true));
+                holders.put(xmlParser.parseResults(resultDir, true), resultDir);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -385,24 +385,26 @@ public class CompatibilityConsole extends Console {
             printLine(String.format("No results found"));
             return;
         }
-
-        for (int i = 0; i < holders.size(); i++) {
-            SuiteResultHolder holder = holders.get(i);
+        int i = 0;
+        for (SuiteResultHolder holder : holders.keySet()) {
             String moduleProgress = String.format("%d of %d",
                     holder.completeModules, holder.totalModules);
 
-            table.add(Arrays.asList(
-                    Integer.toString(i),
-                    Long.toString(holder.passedTests),
-                    Long.toString(holder.failedTests),
-                    moduleProgress,
-                    CompatibilityBuildHelper.getDirSuffix(holder.startTime),
-                    holder.context.getAttributes().get(
-                            CertificationResultXml.SUITE_PLAN_ATTR).get(0),
-                    Joiner.on(", ").join(holder.context.getShardsSerials().values()),
-                    printAttributes(holder.context.getAttributes(), "build_id"),
-                    printAttributes(holder.context.getAttributes(), "build_product")
-                    ));
+            table.add(
+                    Arrays.asList(
+                            Integer.toString(i),
+                            Long.toString(holder.passedTests),
+                            Long.toString(holder.failedTests),
+                            moduleProgress,
+                            holders.get(holder).getName(),
+                            holder.context
+                                    .getAttributes()
+                                    .get(CertificationResultXml.SUITE_PLAN_ATTR)
+                                    .get(0),
+                            Joiner.on(", ").join(holder.context.getShardsSerials().values()),
+                            printAttributes(holder.context.getAttributes(), "build_id"),
+                            printAttributes(holder.context.getAttributes(), "build_product")));
+            i++;
         }
 
         // add the table header to the beginning of the list

@@ -131,6 +131,13 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     }
 
     @Override
+    public final void cleanUp() {
+        if (mTestRecord != null) {
+            mTestRecord = null;
+        }
+    }
+
+    @Override
     public final void customizeConfiguration(IConfiguration config) {
         // This is specific to Compatibility checking and does not work for multi-device.
         List<ITargetPreparer> preparers = config.getTargetPreparers();
