@@ -68,17 +68,17 @@ public class ValidateTestsAbi {
         /**
          * This binary only exists in 32-bit.
          */
-        BINARY_EXCEPTIONS.add("testavcdec");
+        BINARY_EXCEPTIONS.add("testavcdec32");
 
         /**
          * This binary only exists in 32-bit.
          */
-        BINARY_EXCEPTIONS.add("testhevcdec");
+        BINARY_EXCEPTIONS.add("testhevcdec32");
 
         /**
          * This binary only exists in 32-bit.
          */
-        BINARY_EXCEPTIONS.add("testmpeg2dec");
+        BINARY_EXCEPTIONS.add("testmpeg2dec32");
     }
 
     /**
