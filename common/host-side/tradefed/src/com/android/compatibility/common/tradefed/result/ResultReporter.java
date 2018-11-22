@@ -60,6 +60,7 @@ import com.android.tradefed.util.ZipUtil;
 import com.android.tradefed.util.proto.TfMetricProtoUtil;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.xml.XmlEscapers;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -381,7 +382,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     @Override
     public void testFailed(TestDescription test, String trace) {
-        mCurrentResult.failed(trace);
+        mCurrentResult.failed(sanitizeXmlContent(trace));
     }
 
     /**
@@ -1042,5 +1043,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     @VisibleForTesting
     public boolean waitForFinalized(long timeout, TimeUnit unit) throws InterruptedException {
         return mFinalized.await(timeout, unit);
+    }
+
+    private static String sanitizeXmlContent(String s) {
+        return XmlEscapers.xmlContentEscaper().escape(s);
     }
 }
