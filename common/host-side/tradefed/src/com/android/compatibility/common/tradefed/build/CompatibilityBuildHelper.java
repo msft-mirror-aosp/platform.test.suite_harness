@@ -120,8 +120,25 @@ public class CompatibilityBuildHelper {
                 CONFIG_PATH_PREFIX + moduleName /* version */);
     }
 
+    /**
+     * Set the business logic file for this invocation.
+     *
+     * @param hostFile The business logic host file.
+     */
     public void setBusinessLogicHostFile(File hostFile) {
-        mBuildInfo.addBuildAttribute(BUSINESS_LOGIC_HOST_FILE, hostFile.getAbsolutePath());
+        setBusinessLogicHostFile(hostFile, null);
+    }
+
+    /**
+     * Set the business logic file with specific module id for this invocation.
+     *
+     * @param hostFile The business logic host file.
+     * @param moduleId The name of the moduleId.
+     */
+    public void setBusinessLogicHostFile(File hostFile, String moduleId) {
+        String key = (moduleId == null) ? "" : moduleId;
+        mBuildInfo.setFile(BUSINESS_LOGIC_HOST_FILE + key, hostFile,
+                hostFile.getName()/* version */);
     }
 
     public void setModuleIds(String[] moduleIds) {
@@ -147,7 +164,19 @@ public class CompatibilityBuildHelper {
      * @return whether the business logic file has been set for this invocation.
      */
     public boolean hasBusinessLogicHostFile() {
-        return mBuildInfo.getBuildAttributes().get(BUSINESS_LOGIC_HOST_FILE) != null;
+        return hasBusinessLogicHostFile(null);
+    }
+
+    /**
+     * Check whether the business logic file has been set with specific module id for this
+     * invocation.
+     *
+     * @param moduleId The name of the moduleId.
+     * @return True if the business logic file has been set. False otherwise.
+     */
+    public boolean hasBusinessLogicHostFile(String moduleId) {
+        String key = (moduleId == null) ? "" : moduleId;
+        return mBuildInfo.getFile(BUSINESS_LOGIC_HOST_FILE + key) != null;
     }
 
     /**
@@ -155,8 +184,19 @@ public class CompatibilityBuildHelper {
      * invocation, or null if the business logic file has not been set.
      */
     public File getBusinessLogicHostFile() {
-        return (hasBusinessLogicHostFile()) ?
-                new File(mBuildInfo.getBuildAttributes().get(BUSINESS_LOGIC_HOST_FILE)) : null;
+        return getBusinessLogicHostFile(null);
+    }
+
+    /**
+     * Get the file containing business logic data with specific module id for this invocation.
+     *
+     * @param moduleId The name of the moduleId.
+     * @return a {@link File} representing the file containing business logic data with
+     * specific module id for this invocation , or null if the business logic file has not been set.
+     */
+    public File getBusinessLogicHostFile(String moduleId) {
+        String key = (moduleId == null) ? "" : moduleId;
+        return mBuildInfo.getFile(BUSINESS_LOGIC_HOST_FILE + key);
     }
 
     /**
