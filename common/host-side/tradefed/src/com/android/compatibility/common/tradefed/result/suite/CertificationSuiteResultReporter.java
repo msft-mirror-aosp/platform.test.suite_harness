@@ -540,7 +540,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
             Transformer transformer = TransformerFactory.newInstance().newTransformer(
                     new StreamSource(xslStream));
             transformer.transform(new StreamSource(inputXml), new StreamResult(outputStream));
-        } catch (IOException | TransformerException ignored) { }
+        } catch (IOException | TransformerException ignored) {
+            CLog.e(ignored);
+        }
         return failureReport;
     }
 
