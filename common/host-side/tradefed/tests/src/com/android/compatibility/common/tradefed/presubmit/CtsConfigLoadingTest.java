@@ -26,6 +26,7 @@ import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.ConfigurationFactory;
 import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.invoker.shard.token.TokenProperty;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.testtype.HostTest;
@@ -226,6 +227,8 @@ public class CtsConfigLoadingTest {
 
             // Check that specified parameters are expected
             checkModuleParameters(config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+            // Check that specified tokens are expected
+            checkTokens(config.getName(), cd.getMetaData(ITestSuite.TOKEN_KEY));
 
             // Ensure each CTS module is tagged with <option name="test-suite-tag" value="cts" />
             Assert.assertTrue(String.format(
@@ -264,6 +267,22 @@ public class CtsConfigLoadingTest {
                 throw new ConfigurationException(
                         String.format("Config: %s includes an unknown parameter '%s'.",
                                 configName, param));
+            }
+        }
+    }
+
+    /** Test that all tokens can be resolved. */
+    private void checkTokens(String configName, List<String> tokens) throws ConfigurationException {
+        if (tokens == null) {
+            return;
+        }
+        for (String token : tokens) {
+            try {
+                TokenProperty.valueOf(token.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ConfigurationException(
+                        String.format(
+                                "Config: %s includes an unknown token '%s'.", configName, token));
             }
         }
     }
