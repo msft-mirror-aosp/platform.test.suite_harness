@@ -23,10 +23,11 @@ import static org.junit.Assert.fail;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.config.Configuration;
-import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 
@@ -53,11 +54,12 @@ public class DynamicConfigPusherTest {
     private ITestDevice mMockDevice;
     private CompatibilityBuildHelper mMockBuildHelper;
     private IBuildInfo mMockBuildInfo;
-    private IConfiguration mConfiguration;
+    private IInvocationContext mModuleContext;
 
     @Before
     public void setUp() {
-        mConfiguration = new Configuration("foo", "test");
+        mModuleContext = new InvocationContext();
+        mModuleContext.setConfigurationDescriptor(new ConfigurationDescriptor());
         mPreparer = new DynamicConfigPusher();
         mMockDevice = EasyMock.createMock(ITestDevice.class);
         mMockBuildInfo = EasyMock.createMock(IBuildInfo.class);
@@ -71,7 +73,7 @@ public class DynamicConfigPusherTest {
     @Test
     public void testGetSuiteName_fromTestSuiteInfo() throws Exception {
         mPreparer = new DynamicConfigPusher();
-        mPreparer.setConfiguration(mConfiguration);
+        mPreparer.setInvocationContext(mModuleContext);
         EasyMock.replay(mMockDevice, mMockBuildInfo);
         assertNotNull(mPreparer.getSuiteName());
         EasyMock.verify(mMockDevice, mMockBuildInfo);
@@ -83,9 +85,10 @@ public class DynamicConfigPusherTest {
     @Test
     public void testGetSuiteName_fromTestSuiteTag() throws Exception {
         mPreparer = new DynamicConfigPusher();
-        mConfiguration.getConfigurationDescription().setSuiteTags(
-            Arrays.asList("cts", "cts-instant", "gts"));
-        mPreparer.setConfiguration(mConfiguration);
+        mModuleContext
+                .getConfigurationDescriptor()
+                .setSuiteTags(Arrays.asList("cts", "cts-instant", "gts"));
+        mPreparer.setInvocationContext(mModuleContext);
         EasyMock.replay(mMockDevice, mMockBuildInfo);
         assertNotNull(mPreparer.getSuiteName());
         EasyMock.verify(mMockDevice, mMockBuildInfo);
@@ -256,7 +259,7 @@ public class DynamicConfigPusherTest {
         mMockBuildInfo.setFile(EasyMock.contains("moduleName"), EasyMock.capture(capture),
                 EasyMock.eq("DYNAMIC_CONFIG_FILE:moduleName"));
 
-        mPreparer.setConfiguration(mConfiguration);
+        mPreparer.setInvocationContext(mModuleContext);
         EasyMock.replay(mMockDevice, mMockBuildInfo);
         mPreparer.setUp(mMockDevice, mMockBuildInfo);
         EasyMock.verify(mMockDevice, mMockBuildInfo);
