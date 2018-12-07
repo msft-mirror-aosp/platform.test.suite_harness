@@ -51,6 +51,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -135,19 +137,20 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError, BuildError,
             DeviceNotAvailableException {
-        String requestString = buildRequestString(device, buildInfo);
+        String requestParams = buildRequestParams(device, buildInfo);
+        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
         String businessLogicString = null;
         // use cached business logic string if options are set accordingly and cache is valid,
         // otherwise proceed with remote download.
-        if (!shouldReadCache() || (businessLogicString = readFromCache(requestString)) == null) {
+        if (!shouldReadCache()
+                || (businessLogicString = readFromCache(baseUrl, requestParams)) == null) {
             CLog.i("Attempting to connect to business logic service...");
         }
         long start = System.currentTimeMillis();
         while (businessLogicString == null
                 && System.currentTimeMillis() < (start + (mMaxConnectionTime * 1000))) {
             try {
-                URL request = new URL(requestString);
-                businessLogicString = StreamUtil.getStringFromStream(request.openStream());
+                businessLogicString = doPost(baseUrl, requestParams);
                 businessLogicString = addRuntimeConfig(businessLogicString, buildInfo);
             } catch (IOException e) {
                 // ignore, re-attempt connection with remaining time
@@ -170,7 +173,7 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         }
 
         if (shouldWriteCache()) {
-            writeToCache(businessLogicString, requestString, mCleanCache);
+            writeToCache(businessLogicString, baseUrl, requestParams, mCleanCache);
         }
         // Push business logic string to host file
         try {
@@ -198,10 +201,9 @@ public class BusinessLogicPreparer implements ITargetCleaner {
 
     /** Helper to populate the business logic service request with info about the device. */
     @VisibleForTesting
-    String buildRequestString(ITestDevice device, IBuildInfo buildInfo)
+    String buildRequestParams(ITestDevice device, IBuildInfo buildInfo)
             throws DeviceNotAvailableException {
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
-        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
         MultiMap<String, String> paramMap = new MultiMap<>();
         paramMap.put("suite_version", buildHelper.getSuiteVersion());
         paramMap.put("oem", String.valueOf(PropertyUtil.getManufacturer(device)));
@@ -224,11 +226,10 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         for (String deviceInfo : getExtendedDeviceInfo(buildInfo)) {
             paramMap.put("device_info", deviceInfo);
         }
-
         IHttpHelper helper = new HttpHelper();
-        String requestString = helper.buildUrl(baseUrl, paramMap);
-        CLog.d("Built request string: \"%s\"", requestString);
-        return requestString;
+        String paramString = helper.buildParameters(paramMap);
+        CLog.d("Built param string: \"%s\"", paramString);
+        return paramString;
     }
 
     @VisibleForTesting
@@ -375,10 +376,10 @@ public class BusinessLogicPreparer implements ITargetCleaner {
      * - The cached file is timestamped more than BL_CACHE_DAYS prior to now
      * In the last two cases, the file is deleted so an up-to-date configuration may be cached anew
      */
-    private static synchronized String readFromCache(String url) {
-        // url hashCode makes file unique, in case host runs invocations for different
+    private static synchronized String readFromCache(String baseUrl, String params) {
+        // baseUrl + params hashCode makes file unique, in case host runs invocations for different
         // device builds and/or test suites using business logic
-        File cachedFile = getCachedFile(url);
+        File cachedFile = getCachedFile(baseUrl, params);
         if (!cachedFile.exists()) {
             CLog.i("No cached business logic found");
             return null;
@@ -405,11 +406,14 @@ public class BusinessLogicPreparer implements ITargetCleaner {
      * file does not already exist. Synchronize this method to prevent concurrent writes in the
      * sharding case.
      * @param blString the string to cache
-     * @url the business logic request url containing suite and device information, useful for
-     * getting the correct cached file.
+     * @param baseUrl the base business logic request url containing suite info
+     * @param params the string of params for the business logic request containing device info
      */
-    private static synchronized void writeToCache(String blString, String url, boolean overwrite) {
-        File cachedFile = getCachedFile(url);
+    private static synchronized void writeToCache(String blString, String baseUrl, String params,
+            boolean overwrite) {
+        // baseUrl + params hashCode makes file unique, in case host runs invocations for different
+        // device builds and/or test suites using business logic
+        File cachedFile = getCachedFile(baseUrl, params);
         if (!cachedFile.exists() || overwrite) {
             // don't overwrite existing file, whether from previous shard or previous invocation
             try {
@@ -421,10 +425,26 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     }
 
     /**
-     * Get the cached business logic file given the base url used to retrieve this logic.
+     * Get the cached business logic file given the base url and params used to retrieve this logic.
      */
-    private static File getCachedFile(String url) {
-        return new File(System.getProperty("java.io.tmpdir"), BL_CACHE_FILE + url.hashCode());
+    private static File getCachedFile(String baseUrl, String params) {
+        int hashCode = (baseUrl + params).hashCode();
+        return new File(System.getProperty("java.io.tmpdir"), BL_CACHE_FILE + hashCode);
+    }
+
+    private String doPost(String baseUrl, String params) throws IOException {
+        URL url = new URL(baseUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("User-Agent", "BusinessLogicClient");
+        // Send params in POST request body
+        conn.setDoOutput(true);
+        try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+            wr.writeBytes(params);
+        }
+        int responseCode = conn.getResponseCode();
+        CLog.d("Business Logic Service Response Code : %s", responseCode);
+        return StreamUtil.getStringFromStream(conn.getInputStream());
     }
 
     /**
