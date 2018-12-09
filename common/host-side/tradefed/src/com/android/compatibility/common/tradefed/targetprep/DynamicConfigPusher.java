@@ -19,19 +19,18 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
 import com.android.compatibility.common.util.DynamicConfigHandler;
-import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.config.IConfiguration;
-import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetCleaner;
 import com.android.tradefed.targetprep.TargetSetupError;
+import com.android.tradefed.testtype.IInvocationContextReceiver;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
@@ -46,12 +45,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
-/**
- * Pushes dynamic config files from config repository
- */
-@OptionClass(alias="dynamic-config-pusher")
+/** Pushes dynamic config files from config repository */
+@OptionClass(alias = "dynamic-config-pusher")
 public class DynamicConfigPusher extends BaseTargetPreparer
-        implements IConfigurationReceiver, ITargetCleaner {
+        implements ITargetCleaner, IInvocationContextReceiver {
     public enum TestTarget {
         DEVICE,
         HOST
@@ -59,7 +56,6 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     /* API Key for compatibility test project, used for dynamic configuration. */
     private static final String API_KEY = "AIzaSyAbwX5JRlmsLeygY2WWihpIJPXFLueOQ3U";
-    private static final String LOG_TAG = DynamicConfigPusher.class.getSimpleName();
 
     @Option(name = "api-key", description = "API key for for dynamic configuration.")
     private String mApiKey = API_KEY;
@@ -104,7 +100,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     private String mDeviceFilePushed;
 
-    private IConfiguration mConfiguration = null;
+    private IInvocationContext mModuleContext = null;
 
     void setModuleName(String moduleName) {
         mModuleName = moduleName;
@@ -112,8 +108,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     /** {@inheritDoc} */
     @Override
-    public void setConfiguration(IConfiguration configuration) {
-        mConfiguration = configuration;
+    public void setInvocationContext(IInvocationContext invocationContext) {
+        mModuleContext = invocationContext;
     }
 
     /**
@@ -127,9 +123,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
         File localConfigFile = getLocalConfigFile(buildHelper, device);
 
-        // TODO(b/117746848): To find a way to share the configuration object across shard.
-        String suiteName = (mConfiguration != null) ?
-                getSuiteName() : TestSuiteInfo.getInstance().getName();
+        String suiteName =
+                (mModuleContext != null) ? getSuiteName() : TestSuiteInfo.getInstance().getName();
         // Ensure mModuleName is set.
         if (mModuleName == null) {
             mModuleName = suiteName.toLowerCase();
@@ -188,17 +183,24 @@ public class DynamicConfigPusher extends BaseTargetPreparer
      */
     @VisibleForTesting
     String getSuiteName() {
-        List<String> testSuiteTags = mConfiguration.getConfigurationDescription().getSuiteTags();
+        List<String> testSuiteTags = mModuleContext.getConfigurationDescriptor().getSuiteTags();
         String suiteName = null;
         if (!testSuiteTags.isEmpty()) {
             if (testSuiteTags.size() >= 2) {
                 CLog.i("More than 2 test-suite-tag are defined. test-suite-tag: " + testSuiteTags);
             }
             suiteName = testSuiteTags.get(0).toUpperCase();
+            CLog.i(
+                    "Replacing {suite-name} placeholder with %s from test suite tags in dynamic "
+                            + "config url.",
+                    suiteName);
         } else {
             suiteName = TestSuiteInfo.getInstance().getName();
+            CLog.i(
+                    "Replacing {suite-name} placeholder with %s from TestSuiteInfo in dynamic "
+                            + "config url.",
+                    suiteName);
         }
-        CLog.i("Replace {suite-name} placeholder with " + suiteName + " in dynamic config url.");
         return suiteName;
     }
 
