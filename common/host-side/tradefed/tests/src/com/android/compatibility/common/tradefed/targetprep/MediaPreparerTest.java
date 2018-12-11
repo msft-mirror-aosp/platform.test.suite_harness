@@ -21,6 +21,7 @@ import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.targetprep.TargetSetupError;
 
 import junit.framework.TestCase;
 
@@ -51,11 +52,31 @@ public class MediaPreparerTest extends TestCase {
         assertEquals(mMediaPreparer.mBaseDeviceFullDir, "/sdcard/test/bbb_full/");
     }
 
+    public void testDefaultModuleDirMountPoint() throws Exception {
+        EasyMock.expect(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE)).andReturn(
+                "/sdcard").once();
+        EasyMock.replay(mMockDevice);
+        mMediaPreparer.setMountPoint(mMockDevice);
+        assertEquals(mMediaPreparer.mBaseDeviceModuleDir, "/sdcard/test/android-cts-media/");
+        assertEquals(mMediaPreparer.getMediaDir().getName(), "android-cts-media");
+    }
+
+    public void testSetModuleDirMountPoint() throws Exception {
+        mOptionSetter.setOptionValue("media-folder-name", "unittest");
+        EasyMock.expect(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE)).andReturn(
+                "/sdcard").once();
+        EasyMock.replay(mMockDevice);
+        mMediaPreparer.setMountPoint(mMockDevice);
+        assertEquals(mMediaPreparer.mBaseDeviceModuleDir, "/sdcard/test/unittest/");
+        assertEquals(mMediaPreparer.getMediaDir().getName(), "unittest");
+    }
+
     public void testCopyMediaFiles() throws Exception {
         mMediaPreparer.mMaxRes = MediaPreparer.DEFAULT_MAX_RESOLUTION;
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
         mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
             String shortFile = String.format("%s%s", mMediaPreparer.mBaseDeviceShortDir,
                     resolution.toString());
@@ -66,6 +87,8 @@ public class MediaPreparerTest extends TestCase {
         }
         EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir))
                 .andReturn(true).anyTimes();
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
+                .andReturn(false).anyTimes();
         EasyMock.replay(mMockDevice);
         mMediaPreparer.copyMediaFiles(mMockDevice);
     }
@@ -89,6 +112,15 @@ public class MediaPreparerTest extends TestCase {
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
 
+    public void testMediaFilesExistOnDeviceTrueWithPushAll() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
+                .andReturn(true).anyTimes();
+        EasyMock.replay(mMockDevice);
+        assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+    }
+
     public void testMediaFilesExistOnDeviceFalse() throws Exception {
         mMediaPreparer.mMaxRes = MediaPreparer.DEFAULT_MAX_RESOLUTION;
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
@@ -102,6 +134,37 @@ public class MediaPreparerTest extends TestCase {
         mOptionSetter.setOptionValue("skip-media-download", "true");
         EasyMock.replay();
         mMediaPreparer.run(mMockDevice, mMockBuildInfo);
+    }
+
+    public void testPushAll() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mOptionSetter.setOptionValue("media-folder-name", "unittest");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/unittest/";
+        mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
+        mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
+        mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
+                .andReturn(true).anyTimes();
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir))
+                .andReturn(false).anyTimes();
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir))
+                .andReturn(false).anyTimes();
+        EasyMock.expect(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir))
+                .andReturn(false).anyTimes();
+        EasyMock.replay(mMockDevice);
+        mMediaPreparer.copyMediaFiles(mMockDevice);
+    }
+
+    public void testWithBothPushAllAndImagesOnly() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mOptionSetter.setOptionValue("images-only", "true");
+        EasyMock.replay(mMockDevice);
+        try {
+            mMediaPreparer.run(mMockDevice, mMockBuildInfo);
+            fail("TargetSetupError expected");
+        } catch (TargetSetupError e) {
+            // Expected
+        }
     }
 
 }
