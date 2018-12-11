@@ -207,13 +207,6 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         MultiMap<String, String> paramMap = new MultiMap<>();
         paramMap.put("suite_version", buildHelper.getSuiteVersion());
         paramMap.put("oem", String.valueOf(PropertyUtil.getManufacturer(device)));
-        String accessToken = getToken();
-        // Add api key (not authenticated) or Oath token, but not both.
-        if (Strings.isNullOrEmpty(accessToken)) {
-            paramMap.put("key", mApiKey);
-        } else {
-            paramMap.put("access_token", accessToken);
-        }
         for (String feature : getBusinessLogicFeatures(device, buildInfo)) {
             paramMap.put("features", feature);
         }
@@ -433,10 +426,19 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     }
 
     private String doPost(String baseUrl, String params) throws IOException {
+        String accessToken = getToken();
+        if (Strings.isNullOrEmpty(accessToken)) {
+            // Set API key on base URL
+            baseUrl += String.format("?key=%s", mApiKey);
+        }
         URL url = new URL(baseUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("User-Agent", "BusinessLogicClient");
+        if (!Strings.isNullOrEmpty(accessToken)) {
+            // Set authorization access token in POST header
+            conn.setRequestProperty("Authorization", String.format("Bearer %s", accessToken));
+        }
         // Send params in POST request body
         conn.setDoOutput(true);
         try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
