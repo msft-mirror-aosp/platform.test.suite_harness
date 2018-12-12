@@ -70,6 +70,24 @@ public class MediaPreparer extends PreconditionPreparer {
             description = "Only push images files to the device")
     protected boolean mImagesOnly = false;
 
+    @Option(name = "push-all",
+            description = "Push everything downloaded to the device,"
+            + " use 'media-folder-name' to specify the destination dir name.")
+    protected boolean mPushAll = false;
+
+    @Option(name = "dynamic-config-module",
+            description = "For a target preparer, the 'module' of the configuration" +
+            " is the test suite.")
+    private String mDynamicConfigModule = "cts";
+
+    @Option(name = "media-folder-name",
+            description = "The name of local directory into which media" +
+            " files will be downloaded, if option 'local-media-path' is not" +
+            " provided. This directory will live inside the temp directory." +
+            " If option 'push-all' is set, this is also the subdirectory name on device" +
+            " where media files are pushed to")
+    private String mMediaFolderName = MEDIA_FOLDER_NAME;
+
     /*
      * The pathnames of the device's directories that hold media files for the tests.
      * These depend on the device's mount point, which is retrieved in the MediaPreparer's run
@@ -77,6 +95,7 @@ public class MediaPreparer extends PreconditionPreparer {
      *
      * These fields are exposed for unit testing
      */
+    protected String mBaseDeviceModuleDir;
     protected String mBaseDeviceShortDir;
     protected String mBaseDeviceFullDir;
     protected String mBaseDeviceImagesDir;
@@ -99,9 +118,6 @@ public class MediaPreparer extends PreconditionPreparer {
 
     /* The key used to retrieve the media files URL from the dynamic configuration */
     private static final String MEDIA_FILES_URL_KEY = "media_files_url";
-
-    /* For a target preparer, the "module" of the configuration is the test suite */
-    private static final String DYNAMIC_CONFIG_MODULE = "cts";
 
     /*
      * Info used to install and uninstall the MediaPreparerApp
@@ -164,6 +180,10 @@ public class MediaPreparer extends PreconditionPreparer {
         return new File(System.getProperty("java.io.tmpdir"), MEDIA_FOLDER_NAME);
     }
 
+    protected File getMediaDir() {
+        return new File(System.getProperty("java.io.tmpdir"), mMediaFolderName);
+    }
+
     /*
      * Returns true if all necessary media files exist on the device, and false otherwise.
      *
@@ -171,7 +191,9 @@ public class MediaPreparer extends PreconditionPreparer {
      */
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
-        if (!mImagesOnly) {
+        if (mPushAll) {
+            return device.doesFileExist(mBaseDeviceModuleDir);
+        } else if (!mImagesOnly) {
             for (Resolution resolution : RESOLUTIONS) {
                 if (resolution.width > mMaxRes.width) {
                     break; // no need to check for resolutions greater than this
@@ -210,14 +232,14 @@ public class MediaPreparer extends PreconditionPreparer {
     /*
      * Copies the media files to the host from a predefined URL.
      *
-     * Synchronize this static method so that multiple shards won't download/extract
+     * Synchronize this method so that multiple shards won't download/extract
      * this file to the same location on the host. Only an issue in Android O and above,
      * where MediaPreparer is used for multiple, shardable modules.
      */
-    private static synchronized File downloadMediaToHost(ITestDevice device, IBuildInfo buildInfo)
+    private synchronized File downloadMediaToHost(ITestDevice device, IBuildInfo buildInfo)
             throws TargetSetupError {
         // Retrieve default directory for storing media files
-        File mediaFolder = getDefaultMediaDir();
+        File mediaFolder = getMediaDir();
         if (mediaFolder.exists() && mediaFolder.list().length > 0) {
             // Folder has already been created and populated by previous MediaPreparer runs,
             // assume all necessary media files exist inside.
@@ -228,7 +250,7 @@ public class MediaPreparer extends PreconditionPreparer {
         try {
             // Get download URL from dynamic configuration service
             String mediaUrlString = DynamicConfigFileReader.getValueFromConfig(
-                    buildInfo, DYNAMIC_CONFIG_MODULE, MEDIA_FILES_URL_KEY);
+                    buildInfo, mDynamicConfigModule, MEDIA_FILES_URL_KEY);
             url = new URL(mediaUrlString);
         } catch (IOException | XmlPullParserException e) {
             throw new TargetSetupError("Trouble finding media file download location with " +
@@ -247,7 +269,7 @@ public class MediaPreparer extends PreconditionPreparer {
         } catch (IOException e) {
             FileUtil.recursiveDelete(mediaFolder);
             throw new TargetSetupError("Failed to download and open media files on host, the"
-                    + " device requires these media files for CTS media tests", e,
+                    + " device requires these media files for compatibility tests", e,
                     device.getDeviceDescriptor());
         } finally {
             FileUtil.deleteFile(mediaFolderZip);
@@ -265,6 +287,10 @@ public class MediaPreparer extends PreconditionPreparer {
      * This method is exposed for unit testing.
      */
     protected void copyMediaFiles(ITestDevice device) throws DeviceNotAvailableException {
+        if (mPushAll) {
+            copyAll(device);
+            return;
+        }
         if (!mImagesOnly) {
             copyVideoFiles(device);
         }
@@ -307,9 +333,18 @@ public class MediaPreparer extends PreconditionPreparer {
         }
     }
 
+    // copy everything from the host directory to the device
+    protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
+        if (!device.doesFileExist(mBaseDeviceModuleDir)) {
+            logInfo("Copying files to device");
+            device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir);
+        }
+    }
+
     // Initialize directory strings where media files live on device
     protected void setMountPoint(ITestDevice device) {
         String mountPoint = device.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE);
+        mBaseDeviceModuleDir = String.format("%s/test/%s/", mountPoint, mMediaFolderName);
         mBaseDeviceShortDir = String.format("%s/test/bbb_short/", mountPoint);
         mBaseDeviceFullDir = String.format("%s/test/bbb_full/", mountPoint);
         mBaseDeviceImagesDir = String.format("%s/test/images/", mountPoint);
@@ -318,14 +353,17 @@ public class MediaPreparer extends PreconditionPreparer {
     @Override
     public void run(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
             BuildError, DeviceNotAvailableException {
-
+        if (mImagesOnly && mPushAll) {
+            throw new TargetSetupError(
+                    "'images-only' and 'push-all' cannot be set to true together.");
+        }
         if (mSkipMediaDownload) {
             logInfo("Skipping media preparation");
             return; // skip this precondition
         }
         if (!mMediaDownloadOnly) {
             setMountPoint(device);
-            if (!mImagesOnly) {
+            if (!mImagesOnly && !mPushAll) {
                 setMaxRes(device, buildInfo); // max resolution only applies to video files
             }
             if (mediaFilesExistOnDevice(device)) {
