@@ -157,7 +157,7 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo.setFile(DeviceInfoCollector.DEVICE_INFO_DIR, jsonPath, "v1");
         // Setup BuildInfo attributes.
         mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(16, attributes);
+        testBuildRequestString(15, attributes);
     }
 
     @Test
@@ -165,7 +165,7 @@ public class BusinessLogicPreparerTest {
         Map<String, String> attributes = new HashMap<>();
         // Setup BuildInfo attributes.
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(14, attributes);
+        testBuildRequestString(13, attributes);
     }
 
     private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
