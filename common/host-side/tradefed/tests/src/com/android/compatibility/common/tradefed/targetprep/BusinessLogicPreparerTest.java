@@ -25,7 +25,6 @@ import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.util.FileUtil;
 
 import org.junit.After;
@@ -158,7 +157,7 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo.setFile(DeviceInfoCollector.DEVICE_INFO_DIR, jsonPath, "v1");
         // Setup BuildInfo attributes.
         mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(16, attributes);
+        testBuildRequestString(15, attributes);
     }
 
     @Test
@@ -166,7 +165,7 @@ public class BusinessLogicPreparerTest {
         Map<String, String> attributes = new HashMap<>();
         // Setup BuildInfo attributes.
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(14, attributes);
+        testBuildRequestString(13, attributes);
     }
 
     private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
@@ -210,11 +209,7 @@ public class BusinessLogicPreparerTest {
             Arrays.asList("MemoryDeviceInfo%3Atotal_memory%3A1902936064",
             "MemoryDeviceInfo%3Alow_ram_device%3Afalse"));
 
-        String url = mPreparer.buildRequestString(mMockDevice, mMockBuildInfo);
-        CLog.i("Business Logic request url: %s", url);
-
-        String parts[]= url.split("\\?");
-        String params[]= parts[2].split("&");
+        String[] params = mPreparer.buildRequestParams(mMockDevice, mMockBuildInfo).split("&");
         assertEquals(expectedParams, params.length);
 
         for (String param: params){
