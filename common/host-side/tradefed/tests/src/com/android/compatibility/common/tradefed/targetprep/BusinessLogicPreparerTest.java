@@ -142,6 +142,7 @@ public class BusinessLogicPreparerTest {
         OptionSetter setter = new OptionSetter(mPreparer);
         setter.setOptionValue("business-logic-url", serviceUrl);
         setter.setOptionValue("business-logic-api-key", "fakeApiKey");
+        setter.setOptionValue("version", "fakeVersion");
     }
 
     @After
@@ -157,7 +158,7 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo.setFile(DeviceInfoCollector.DEVICE_INFO_DIR, jsonPath, "v1");
         // Setup BuildInfo attributes.
         mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(15, attributes);
+        testBuildRequestString(16, attributes);
     }
 
     @Test
@@ -165,7 +166,7 @@ public class BusinessLogicPreparerTest {
         Map<String, String> attributes = new HashMap<>();
         // Setup BuildInfo attributes.
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        testBuildRequestString(13, attributes);
+        testBuildRequestString(14, attributes);
     }
 
     private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
@@ -181,6 +182,7 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo.setFile(CONFIG_VERSION + "tests", configFile, CONFIG_VERSION + "tests");
         mMockBuildInfo.setFile(CONFIG_VERSION + "gts", configFile, CONFIG_VERSION + "gts");
         mMockBuildInfo.setFile(CONFIG_VERSION + "cts", configFile, CONFIG_VERSION + "cts");
+        mMockBuildInfo.setFile(CONFIG_VERSION + "ats", configFile, CONFIG_VERSION + "ats");
         when(mMockDevice.executeShellCommand(LIST_FEATURE_QUERY)).thenReturn(FEATURES);
         // In getBusinessLogicProperties.
         when(mMockDevice.executeShellCommand(GOOGLE_SETTINGS_QUERY)).thenReturn(PARTNER_CONTENT);
