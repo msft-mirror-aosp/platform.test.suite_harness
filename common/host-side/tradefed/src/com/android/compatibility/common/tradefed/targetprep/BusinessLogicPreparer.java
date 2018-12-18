@@ -26,10 +26,14 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetCleaner;
 import com.android.tradefed.targetprep.TargetSetupError;
+import com.android.tradefed.testtype.IAbi;
+import com.android.tradefed.testtype.IAbiReceiver;
+import com.android.tradefed.testtype.IInvocationContextReceiver;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.MultiMap;
@@ -64,8 +68,9 @@ import java.util.Set;
 /**
  * Pushes business Logic to the host and the test device, for use by test cases in the test suite.
  */
-@OptionClass(alias="business-logic-preparer")
-public class BusinessLogicPreparer implements ITargetCleaner {
+@OptionClass(alias = "business-logic-preparer")
+public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextReceiver,
+        ITargetCleaner {
 
     /* Placeholder in the service URL for the suite to be configured */
     private static final String SUITE_PLACEHOLDER = "{suite-name}";
@@ -128,8 +133,37 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             "connection to the business logic service, in seconds.")
     private int mMaxConnectionTime = DEFAULT_CONNECTION_TIME;
 
+    @Option(name = "config-filename", description = "The module name for module-level " +
+            "configurations, or the suite name for suite-level configurations. Will lookup " +
+            "suite name if not provided.")
+    private String mModuleName = null;
+
+    @Option(name = "version", description = "The module configuration version to retrieve.")
+    private String mModuleVersion = null;
+
     private String mDeviceFilePushed;
     private String mHostFilePushed;
+    private IAbi mAbi = null;
+    private IInvocationContext mModuleContext = null;
+
+    /** {@inheritDoc} */
+    @Override
+    public void setAbi(IAbi abi) {
+        mAbi = abi;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public IAbi getAbi() {
+        return mAbi;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public void setInvocationContext(IInvocationContext invocationContext) {
+        mModuleContext = invocationContext;
+    }
 
     /**
      * {@inheritDoc}
@@ -137,6 +171,15 @@ public class BusinessLogicPreparer implements ITargetCleaner {
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError, BuildError,
             DeviceNotAvailableException {
+        // Ensure mModuleName is set.
+        if (mModuleName == null) {
+            mModuleName = getSuiteName();
+            CLog.w("Option config-filename isn't set. Using suite-name '%s'", mModuleName);
+        }
+        if (mModuleVersion == null) {
+            CLog.w("Option version isn't set. Using 'null' instead.");
+            mModuleVersion = "null";
+        }
         String requestParams = buildRequestParams(device, buildInfo);
         String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
         String businessLogicString = null;
@@ -165,10 +208,10 @@ public class BusinessLogicPreparer implements ITargetCleaner {
                 return;
             } else {
                 throw new TargetSetupError(String.format("Cannot connect to business logic "
-                        + "service for suite %s.\nIf this problem persists, re-invoking with "
+                        + "service for config %s.\nIf this problem persists, re-invoking with "
                         + "option '--ignore-business-logic-failure' will cause tests to execute "
                         + "anyways (though tests depending on the remote configuration will fail).",
-                        TestSuiteInfo.getInstance().getName()), device.getDeviceDescriptor());
+                        mModuleName), device.getDeviceDescriptor());
             }
         }
 
@@ -181,11 +224,13 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             FileUtil.writeToFile(businessLogicString, hostFile);
             mHostFilePushed = hostFile.getAbsolutePath();
             CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
-            buildHelper.setBusinessLogicHostFile(hostFile);
+            // Ensure bitness is set.
+            String bitness = (mAbi != null) ? mAbi.getBitness() : "";
+            buildHelper.setBusinessLogicHostFile(hostFile, bitness + mModuleName);
         } catch (IOException e) {
             throw new TargetSetupError(String.format(
-                    "Retrieved business logic for suite %s could not be written to host",
-                    TestSuiteInfo.getInstance().getName()), device.getDeviceDescriptor());
+                    "Retrieved business logic for config %s could not be written to host",
+                    mModuleName), device.getDeviceDescriptor());
         }
         // Push business logic string to device file
         removeDeviceFile(device); // remove any existing business logic file from device
@@ -193,9 +238,8 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             mDeviceFilePushed = BusinessLogic.DEVICE_FILE;
         } else {
             throw new TargetSetupError(String.format(
-                    "Retrieved business logic for suite %s could not be written to device %s",
-                    TestSuiteInfo.getInstance().getName(), device.getSerialNumber()),
-                    device.getDeviceDescriptor());
+                    "Retrieved business logic for config %s could not be written to device %s",
+                    mModuleName, device.getSerialNumber()), device.getDeviceDescriptor());
         }
     }
 
@@ -205,7 +249,12 @@ public class BusinessLogicPreparer implements ITargetCleaner {
             throws DeviceNotAvailableException {
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         MultiMap<String, String> paramMap = new MultiMap<>();
-        paramMap.put("suite_version", buildHelper.getSuiteVersion());
+        String suiteVersion = buildHelper.getSuiteVersion();
+        if (suiteVersion == null) {
+            suiteVersion = "null";
+        }
+        paramMap.put("suite_version", suiteVersion);
+        paramMap.put("module_version", mModuleVersion);
         paramMap.put("oem", String.valueOf(PropertyUtil.getManufacturer(device)));
         for (String feature : getBusinessLogicFeatures(device, buildInfo)) {
             paramMap.put("features", feature);
@@ -225,9 +274,31 @@ public class BusinessLogicPreparer implements ITargetCleaner {
         return paramString;
     }
 
+    /**
+     * Return the the first element of test-suite-tag from configuration if it's not empty,
+     * otherwise, return the name from test-suite-info.properties.
+     */
     @VisibleForTesting
     String getSuiteName() {
-        return TestSuiteInfo.getInstance().getName().toLowerCase();
+        String suiteName = null;
+        if (mModuleContext == null) {
+            suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
+        } else {
+            List<String> testSuiteTags = mModuleContext.getConfigurationDescriptor().
+                    getSuiteTags();
+            if (!testSuiteTags.isEmpty()) {
+                if (testSuiteTags.size() >= 2) {
+                    CLog.i("More than 2 test-suite-tag are defined. test-suite-tag: " +
+                        testSuiteTags);
+                }
+                suiteName = testSuiteTags.get(0).toLowerCase();
+                CLog.i("Using %s from test suite tags to get value from dynamic config", suiteName);
+            } else {
+                suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
+                CLog.i("Using %s from TestSuiteInfo to get value from dynamic config", suiteName);
+            }
+        }
+        return suiteName;
     }
 
     /* Get device properties list, with element format "<property_name>:<property_value>" */
