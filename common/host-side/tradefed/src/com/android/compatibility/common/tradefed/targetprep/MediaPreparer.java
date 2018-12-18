@@ -15,6 +15,7 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
 import com.android.ddmlib.IDevice;
@@ -53,27 +54,39 @@ import java.util.zip.ZipFile;
 @OptionClass(alias="media-preparer")
 public class MediaPreparer extends PreconditionPreparer {
 
-    @Option(name = "local-media-path",
-            description = "Absolute path of the media files directory, containing" +
-            "'bbb_short' and 'bbb_full' directories")
-    protected String mLocalMediaPath = null;
+    @Option(
+        name = "local-media-path",
+        description =
+                "Absolute path of the media files directory, containing"
+                        + "'bbb_short' and 'bbb_full' directories"
+    )
+    private String mLocalMediaPath = null;
 
-    @Option(name = "skip-media-download",
-            description = "Whether to skip the media files precondition")
-    protected boolean mSkipMediaDownload = false;
+    @Option(
+        name = "skip-media-download",
+        description = "Whether to skip the media files precondition"
+    )
+    private boolean mSkipMediaDownload = false;
 
-    @Option(name = "media-download-only",
-            description = "Only download media files; do not run instrumentation or copy files")
-    protected boolean mMediaDownloadOnly = false;
+    /** @deprecated do not use it. */
+    @Deprecated
+    @Option(
+        name = "media-download-only",
+        description =
+                "Deprecated: Only download media files; do not run instrumentation or copy files"
+    )
+    private boolean mMediaDownloadOnly = false;
 
-    @Option(name = "images-only",
-            description = "Only push images files to the device")
-    protected boolean mImagesOnly = false;
+    @Option(name = "images-only", description = "Only push images files to the device")
+    private boolean mImagesOnly = false;
 
-    @Option(name = "push-all",
-            description = "Push everything downloaded to the device,"
-            + " use 'media-folder-name' to specify the destination dir name.")
-    protected boolean mPushAll = false;
+    @Option(
+        name = "push-all",
+        description =
+                "Push everything downloaded to the device,"
+                        + " use 'media-folder-name' to specify the destination dir name."
+    )
+    private boolean mPushAll = false;
 
     @Option(name = "dynamic-config-module",
             description = "For a target preparer, the 'module' of the configuration" +
@@ -174,6 +187,11 @@ public class MediaPreparer extends PreconditionPreparer {
         public String toString() {
             return String.format("%dx%d", width, height);
         }
+
+        /** Returns the width of the resolution. */
+        public int getWidth() {
+            return width;
+        }
     }
 
     public static File getDefaultMediaDir() {
@@ -189,6 +207,7 @@ public class MediaPreparer extends PreconditionPreparer {
      *
      * This method is exposed for unit testing.
      */
+    @VisibleForTesting
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
         if (mPushAll) {
@@ -355,23 +374,24 @@ public class MediaPreparer extends PreconditionPreparer {
             BuildError, DeviceNotAvailableException {
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
-                    "'images-only' and 'push-all' cannot be set to true together.");
+                    "'images-only' and 'push-all' cannot be set to true together.",
+                    device.getDeviceDescriptor());
         }
         if (mSkipMediaDownload) {
             logInfo("Skipping media preparation");
             return; // skip this precondition
         }
-        if (!mMediaDownloadOnly) {
-            setMountPoint(device);
-            if (!mImagesOnly && !mPushAll) {
-                setMaxRes(device, buildInfo); // max resolution only applies to video files
-            }
-            if (mediaFilesExistOnDevice(device)) {
-                // if files already on device, do nothing
-                logInfo("Media files found on the device");
-                return;
-            }
+
+        setMountPoint(device);
+        if (!mImagesOnly && !mPushAll) {
+            setMaxRes(device, buildInfo); // max resolution only applies to video files
         }
+        if (mediaFilesExistOnDevice(device)) {
+            // if files already on device, do nothing
+            logInfo("Media files found on the device");
+            return;
+        }
+
         if (mLocalMediaPath == null) {
             // Option 'local-media-path' has not been defined
             // Get directory to store media files on this host
@@ -380,9 +400,7 @@ public class MediaPreparer extends PreconditionPreparer {
             updateLocalMediaPath(device, mediaFolder);
         }
         logInfo("Media files located on host at: %s", mLocalMediaPath);
-        if (!mMediaDownloadOnly) {
-            copyMediaFiles(device);
-        }
+        copyMediaFiles(device);
     }
 
     // Initialize maximum resolution of media files to copy
