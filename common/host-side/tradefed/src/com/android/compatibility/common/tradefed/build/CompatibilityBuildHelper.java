@@ -22,6 +22,7 @@ import com.android.tradefed.build.VersionedFile;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.util.FileUtil;
 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,8 +50,6 @@ public class CompatibilityBuildHelper {
     private static final String DYNAMIC_CONFIG_OVERRIDE_URL = "DYNAMIC_CONFIG_OVERRIDE_URL";
     private static final String BUSINESS_LOGIC_HOST_FILE = "BUSINESS_LOGIC_HOST_FILE";
     private static final String RETRY_COMMAND_LINE_ARGS = "retry_command_line_args";
-    private static final String ALT_HOST_TESTCASE_DIR = "ANDROID_HOST_OUT_TESTCASES";
-    private static final String ALT_TARGET_TESTCASE_DIR = "ANDROID_TARGET_OUT_TESTCASES";
 
     private static final String CONFIG_PATH_PREFIX = "DYNAMIC_CONFIG_FILE:";
 
@@ -279,12 +278,13 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the directory structure is not valid.
      */
     public File getTestsDir() throws FileNotFoundException {
-        // We have 3 options that can be the test modules dir (and we're going
+        // We have 2 options that can be the test modules dir (and we're going
         // look for them in the following order):
         //   1. ../android-*ts/testcases/
-        //   2. ALT_HOST_TESTCASE_DIR
-        //   3. ALT_TARGET_TESTCASE_DIR (we'll skip this since if #2 fails, this
-        //      will inevitably fail as well.)
+        //   2. The build info tests dir
+        // ANDROID_HOST_OUT and ANDROID_TARGET_OUT are already linked
+        // by tradefed to the tests dir when they exists so there is
+        // no need to explicitly search them.
 
         File testsDir = null;
         try {
@@ -297,13 +297,6 @@ public class CompatibilityBuildHelper {
         if (testsDir == null) {
             if (mBuildInfo instanceof IDeviceBuildInfo) {
                 testsDir = ((IDeviceBuildInfo) mBuildInfo).getTestsDir();
-            }
-        }
-
-        if (testsDir == null) {
-            String altTestsDir = System.getenv().get(ALT_HOST_TESTCASE_DIR);
-            if (altTestsDir != null) {
-                testsDir = new File(altTestsDir);
             }
         }
 
@@ -335,21 +328,7 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the test file cannot be found
      */
     public File getTestFile(String filename, IAbi abi) throws FileNotFoundException {
-        // We have a lot of places to check for the test file.
-        //   1. ../android-*ts/testcases/
-        //   2. ALT_HOST_TESTCASE_DIR/
-        //   3. ALT_TARGET_TESTCASE_DIR/
-
-        // Our search depends on our run env, if we're in *ts, then we only want
-        // to check #1.  If we're in gen tf, then we only want to check #2/3.
-        // In *ts mode, getTestsDir will return #1, in gen tf mode, it'll return
-        // #2.  In the event we're in *ts mode and the file isn't in #1, #2 or
-        // #3, then the user probably needs to run lunch to setup the env.
-        String altTargetTestDir = System.getenv().get(ALT_TARGET_TESTCASE_DIR);
-        if (altTargetTestDir == null) {
-            altTargetTestDir = "";
-        }
-        File[] testDirs = {getTestsDir(), new File(altTargetTestDir)};
+        File[] testDirs = {getTestsDir()};
 
         // The file may be in a subdirectory so do a more through search
         // if it did not exist.
