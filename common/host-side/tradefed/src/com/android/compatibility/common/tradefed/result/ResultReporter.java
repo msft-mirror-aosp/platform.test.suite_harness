@@ -455,6 +455,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     @Override
     public void testRunFailed(String errorMessage) {
         mTestRunFailed = true;
+        mCurrentModuleResult.setFailed();
     }
 
     /**
