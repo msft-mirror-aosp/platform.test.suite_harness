@@ -262,8 +262,10 @@ public class ResultHandler {
                             } else if (parser.getName().equals(SCREENSHOT_TAG)) {
                                 test.setScreenshot(parser.nextText());
                                 parser.require(XmlPullParser.END_TAG, NS, SCREENSHOT_TAG);
-                            } else {
+                            } else if (SUMMARY_TAG.equals(parser.getName())) {
                                 test.setReportLog(ReportLog.parse(parser));
+                            } else {
+                                parser.nextTag();
                             }
                         }
                         parser.require(XmlPullParser.END_TAG, NS, TEST_TAG);
