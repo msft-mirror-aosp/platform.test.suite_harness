@@ -36,6 +36,7 @@ public class ModuleResult implements IModuleResult {
     private int mExpectedTestRuns = 0;
     private int mActualTestRuns = 0;
     private int mNotExecuted = 0;
+    private boolean mIsFailed = false;
 
     private Map<String, ICaseResult> mResults = new HashMap<>();
 
@@ -254,6 +255,16 @@ public class ModuleResult implements IModuleResult {
         return getId().compareTo(another.getId());
     }
 
+    @Override
+    public void setFailed() {
+        mIsFailed = true;
+    }
+
+    @Override
+    public boolean isFailed() {
+        return mIsFailed;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -267,13 +278,17 @@ public class ModuleResult implements IModuleResult {
 
         this.mRuntime += otherModuleResult.getRuntime();
         this.mNotExecuted += otherModuleResult.getNotExecuted();
-        // only touch variables related to 'done' status if this module is not already done
+        // Only touch variables related to 'done' status if this module is not already done
         if (!isDone()) {
             this.setDone(otherModuleResult.isDoneSoFar());
             this.mActualTestRuns += otherModuleResult.getTestRuns();
             // expected test runs are the same across shards, except for shards that do not run
             // this module at least once (for which the value is not yet set).
-            this.mExpectedTestRuns = otherModuleResult.getExpectedTestRuns();
+            this.mExpectedTestRuns += otherModuleResult.getExpectedTestRuns();
+        }
+        // If something failed, then the aggregation is failed
+        if (!this.isFailed()) {
+            this.mIsFailed = otherModuleResult.isFailed();
         }
         for (ICaseResult otherCaseResult : otherModuleResult.getResults()) {
             ICaseResult caseResult = getOrCreateResult(otherCaseResult.getName());
