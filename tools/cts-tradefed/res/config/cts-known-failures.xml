@@ -223,4 +223,11 @@
     <!-- b/112688380 -->
     <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testAppOrientationRequestConfigClears" />
     <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+
+    <!-- b/120874937 -->
+    <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_8888_P3" />
+    <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_FP16_P3" />
+    <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_FP16_LinearExtendedSRGB" />
+    <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGet565Bitmap_SRGB" />
+    <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_SRGB" />
 </configuration>
