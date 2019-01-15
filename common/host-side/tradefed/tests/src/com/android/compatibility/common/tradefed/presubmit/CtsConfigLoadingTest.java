@@ -26,6 +26,7 @@ import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.ConfigurationFactory;
 import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.invoker.shard.token.TokenProperty;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.testtype.HostTest;
@@ -90,6 +91,24 @@ public class CtsConfigLoadingTest {
             "vr",
             "webview"
     ));
+    private static final Set<String> KNOWN_MISC_MODULES =
+            new HashSet<>(
+                    Arrays.asList(
+                            // Modifications to the list below must be approved by someone in
+                            // test/suite_harness/OWNERS.
+                            "CtsSliceTestCases.config",
+                            "CtsSampleDeviceTestCases.config",
+                            "CtsUsbTests.config",
+                            "CtsGpuToolsHostTestCases.config",
+                            "CtsEdiHostTestCases.config",
+                            "CtsClassLoaderFactoryPathClassLoaderTestCases.config",
+                            "CtsSampleHostTestCases.config",
+                            "CtsHardwareTestCases.config",
+                            "CtsMonkeyTestCases.config",
+                            "CtsAndroidAppTestCases.config",
+                            "CtsClassLoaderFactoryInMemoryDexClassLoaderTestCases.config",
+                            "CtsAppComponentFactoryTestCases.config",
+                            "CtsSeccompHostTestCases.config"));
 
     /**
      * List of the officially supported runners in CTS, they meet all the interfaces criteria as
@@ -224,8 +243,20 @@ public class CtsConfigLoadingTest {
                     + "field \"%s\", supported ones are: %s\nconfig: %s",
                     cmp, KNOWN_COMPONENTS, config), KNOWN_COMPONENTS.contains(cmp));
 
+            if ("misc".equals(cmp)) {
+                String configFileName = config.getName();
+                Assert.assertTrue(
+                        String.format(
+                                "Adding new module %s to \"misc\" component is restricted, "
+                                        + "please pick a component that your module fits in",
+                                configFileName),
+                        KNOWN_MISC_MODULES.contains(configFileName));
+            }
+
             // Check that specified parameters are expected
             checkModuleParameters(config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+            // Check that specified tokens are expected
+            checkTokens(config.getName(), cd.getMetaData(ITestSuite.TOKEN_KEY));
 
             // Ensure each CTS module is tagged with <option name="test-suite-tag" value="cts" />
             Assert.assertTrue(String.format(
@@ -244,6 +275,8 @@ public class CtsConfigLoadingTest {
                     }
                 }
             }
+            // Ensure options have been set
+            c.validateOptions();
         }
     }
 
@@ -262,6 +295,22 @@ public class CtsConfigLoadingTest {
                 throw new ConfigurationException(
                         String.format("Config: %s includes an unknown parameter '%s'.",
                                 configName, param));
+            }
+        }
+    }
+
+    /** Test that all tokens can be resolved. */
+    private void checkTokens(String configName, List<String> tokens) throws ConfigurationException {
+        if (tokens == null) {
+            return;
+        }
+        for (String token : tokens) {
+            try {
+                TokenProperty.valueOf(token.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ConfigurationException(
+                        String.format(
+                                "Config: %s includes an unknown token '%s'.", configName, token));
             }
         }
     }

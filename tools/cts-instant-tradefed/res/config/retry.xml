@@ -15,7 +15,6 @@
 -->
 <configuration description="Runs a retry of a previous CTS instant session.">
     <option name="dynamic-sharding" value="true" />
-    <option name="disable-strict-sharding" value="true" />
 
     <device_recovery class="com.android.tradefed.device.WaitDeviceRecovery" />
     <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
@@ -39,7 +38,8 @@
     <option name="compatibility:primary-abi-only" value="true" />
 
     <!-- Include cts-instant setup -->
-    <include name="cts-instant-setup" />
+    <include name="cts-instant-option-setup" />
+    <!-- Do not include cts-instant-filter-setup. Otherwise retry includes all instant tests.  -->
 
     <option name="plan" value="cts-instant-retry" />
     <option name="test-tag" value="cts-instant" />

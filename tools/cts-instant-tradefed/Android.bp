@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+java_library_host {
+    name: "cts-instant-resources",
+
+    java_resource_dirs: ["res"],
+}
+
 tradefed_binary_host {
     name: "cts-instant-tradefed",
     defaults: ["cts_error_prone_rules"],
@@ -20,5 +26,8 @@ tradefed_binary_host {
     full_name: "Compatibility Test Suite for Instant Apps",
     version: "9.0_r2",
 
-    static_libs: ["cts-tradefed-harness"],
+    static_libs: [
+        "cts-instant-resources",
+        "cts-tradefed-harness",
+    ],
 }

@@ -71,7 +71,6 @@ public class CompatibilityTestSuite extends BaseTestSuite {
     public CompatibilityTestSuite() {
         try {
             OptionSetter setter = new OptionSetter(this);
-            setter.setOptionValue("config-patterns", ".*\\.config");
             setter.setOptionValue("skip-loading-config-jar", "true");
         } catch (ConfigurationException e) {
             // Should not happen
@@ -150,9 +149,9 @@ public class CompatibilityTestSuite extends BaseTestSuite {
      */
     @Override
     public LinkedHashMap<String, IConfiguration> loadingStrategy(
-            Set<IAbi> abis, File testsDir, String suitePrefix, String suiteTag) {
+            Set<IAbi> abis, List<File> testsDirs, String suitePrefix, String suiteTag) {
         LinkedHashMap<String, IConfiguration> loadedConfigs =
-                super.loadingStrategy(abis, testsDir, suitePrefix, suiteTag);
+                super.loadingStrategy(abis, testsDirs, suitePrefix, suiteTag);
         // Add an extra check in CTS since we never expect the config folder to be empty.
         if (loadedConfigs.size() == 0) {
             // Only log if nothing to run.

@@ -41,6 +41,7 @@ import com.android.tradefed.testtype.IRuntimeHintProvider;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.AbiUtils;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.MultiMap;
 import com.android.tradefed.util.Pair;
 import com.android.tradefed.util.RegexTrie;
 import com.android.tradefed.util.TableFormatter;
@@ -362,7 +363,7 @@ public class CompatibilityConsole extends Console {
         List<List<String>> table = new ArrayList<>();
 
         List<File> resultDirs = null;
-        List<SuiteResultHolder> holders = new ArrayList<>();
+        Map<SuiteResultHolder, File> holders = new LinkedHashMap<>();
         try {
             resultDirs = getResults(getBuildHelper().getResultsDir());
         } catch (FileNotFoundException e) {
@@ -374,7 +375,7 @@ public class CompatibilityConsole extends Console {
                 continue;
             }
             try {
-                holders.add(xmlParser.parseResults(resultDir, true));
+                holders.put(xmlParser.parseResults(resultDir, true), resultDir);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -384,30 +385,39 @@ public class CompatibilityConsole extends Console {
             printLine(String.format("No results found"));
             return;
         }
-
-        for (int i = 0; i < holders.size(); i++) {
-            SuiteResultHolder holder = holders.get(i);
+        int i = 0;
+        for (SuiteResultHolder holder : holders.keySet()) {
             String moduleProgress = String.format("%d of %d",
                     holder.completeModules, holder.totalModules);
 
-            table.add(Arrays.asList(
-                    Integer.toString(i),
-                    Long.toString(holder.passedTests),
-                    Long.toString(holder.failedTests),
-                    moduleProgress,
-                    CompatibilityBuildHelper.getDirSuffix(holder.startTime),
-                    holder.context.getAttributes().get(
-                            CertificationResultXml.SUITE_PLAN_ATTR).get(0),
-                    Joiner.on(", ").join(holder.context.getShardsSerials().values()),
-                    holder.context.getAttributes().get("build_id").get(0),
-                    holder.context.getAttributes().get("build_product").get(0)
-                    ));
+            table.add(
+                    Arrays.asList(
+                            Integer.toString(i),
+                            Long.toString(holder.passedTests),
+                            Long.toString(holder.failedTests),
+                            moduleProgress,
+                            holders.get(holder).getName(),
+                            holder.context
+                                    .getAttributes()
+                                    .get(CertificationResultXml.SUITE_PLAN_ATTR)
+                                    .get(0),
+                            Joiner.on(", ").join(holder.context.getShardsSerials().values()),
+                            printAttributes(holder.context.getAttributes(), "build_id"),
+                            printAttributes(holder.context.getAttributes(), "build_product")));
+            i++;
         }
 
         // add the table header to the beginning of the list
         table.add(0, Arrays.asList("Session", "Pass", "Fail", "Modules Complete",
                 "Result Directory", "Test Plan", "Device serial(s)", "Build ID", "Product"));
         tableFormatter.displayTable(table, new PrintWriter(System.out, true));
+    }
+
+    private String printAttributes(MultiMap<String, String> map, String key) {
+        if (map.get(key) == null) {
+            return "unknown";
+        }
+        return map.get(key).get(0);
     }
 
     /**

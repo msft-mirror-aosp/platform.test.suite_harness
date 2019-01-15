@@ -15,7 +15,9 @@
 -->
 <configuration description="CTS system checker configs">
     <system_checker class="com.android.compatibility.common.tradefed.targetprep.NetworkConnectivityChecker" />
+    <system_checker class="com.android.tradefed.suite.checker.ShellStatusChecker" />
     <system_checker class="com.android.tradefed.suite.checker.KeyguardStatusChecker" />
+    <system_checker class="com.android.tradefed.suite.checker.LeakedThreadStatusChecker" />
     <system_checker class="com.android.tradefed.suite.checker.TimeStatusChecker" />
     <system_checker class="com.android.tradefed.suite.checker.DeviceSettingChecker" />
     <system_checker class="com.android.tradefed.suite.checker.SystemServerStatusChecker" />
