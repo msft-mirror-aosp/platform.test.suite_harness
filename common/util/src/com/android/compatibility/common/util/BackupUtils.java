@@ -33,8 +33,10 @@ import java.util.regex.Pattern;
  * Utility class for backup and restore.
  */
 public abstract class BackupUtils {
-    public static final String LOCAL_TRANSPORT =
+    private static final String LOCAL_TRANSPORT_NAME = "com.android.localtransport/.LocalTransport";
+    private static final String LOCAL_TRANSPORT_NAME_PRE_Q =
             "android/com.android.internal.backup.LocalTransport";
+    private static final String LOCAL_TRANSPORT_PACKAGE = "com.android.localtransport";
     public static final String LOCAL_TRANSPORT_TOKEN = "1";
 
     private static final int BACKUP_PROVISIONING_TIMEOUT_SECONDS = 30;
@@ -93,7 +95,7 @@ public abstract class BackupUtils {
     }
 
     public boolean isLocalTransportSelected() throws IOException {
-        return getShellCommandOutput("bmgr list transports").contains("* " + LOCAL_TRANSPORT);
+        return getShellCommandOutput("bmgr list transports").contains("* " + LOCAL_TRANSPORT_NAME);
     }
 
     public boolean isBackupEnabled() throws IOException {
@@ -103,6 +105,16 @@ public abstract class BackupUtils {
     public void wakeAndUnlockDevice() throws IOException {
         executeShellCommandSync("input keyevent KEYCODE_WAKEUP");
         executeShellCommandSync("wm dismiss-keyguard");
+    }
+
+    /**
+     * Returns {@link #LOCAL_TRANSPORT_NAME} if it's available on the device, or {@link
+     * #LOCAL_TRANSPORT_NAME_PRE_Q} otherwise.
+     */
+    public String getLocalTransportName() throws IOException {
+        return getShellCommandOutput("pm list packages").contains(LOCAL_TRANSPORT_PACKAGE)
+                ? LOCAL_TRANSPORT_NAME
+                : LOCAL_TRANSPORT_NAME_PRE_Q;
     }
 
     /** Executes "bmgr backupnow <package>" and returns an {@link InputStream} for its output. */
