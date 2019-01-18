@@ -68,6 +68,12 @@ public abstract class BackupUtils {
         assertBackupIsSuccessful(packageName, backupNow(packageName));
     }
 
+    /** Executes "bmgr --user <id> backupnow <package>" and assert success. */
+    public void backupNowAndAssertSuccessForUser(String packageName, int userId)
+            throws IOException {
+        assertBackupIsSuccessful(packageName, backupNowForUser(packageName, userId));
+    }
+
     public void backupNowAndAssertBackupNotAllowed(String packageName) throws IOException {
         assertBackupNotAllowed(packageName, getBackupNowOutput(packageName));
     }
@@ -86,6 +92,12 @@ public abstract class BackupUtils {
         assertRestoreIsSuccessful(restore(token, packageName));
     }
 
+    /** Executes shell command "bmgr --user <id> restore <token> <package>" and assert success. */
+    public void restoreAndAssertSuccessForUser(String token, String packageName, int userId)
+            throws IOException {
+        assertRestoreIsSuccessful(restoreForUser(token, packageName, userId));
+    }
+
     public void restoreSync(String token, String packageName) throws IOException {
         StreamUtil.drainAndClose(new InputStreamReader(restore(token, packageName)));
     }
@@ -95,11 +107,30 @@ public abstract class BackupUtils {
     }
 
     public boolean isLocalTransportSelected() throws IOException {
-        return getShellCommandOutput("bmgr list transports").contains("* " + LOCAL_TRANSPORT_NAME);
+        return getShellCommandOutput("bmgr list transports")
+                .contains("* " + getLocalTransportName());
+    }
+
+    /**
+     * Executes shell command "bmgr --user <id> list transports" to check the currently selected
+     * transport and returns {@code true} if the local transport is the selected one.
+     */
+    public boolean isLocalTransportSelectedForUser(int userId) throws IOException {
+        return getShellCommandOutput(String.format("bmgr --user %d list transports", userId))
+                .contains("* " + getLocalTransportName());
     }
 
     public boolean isBackupEnabled() throws IOException {
         return getShellCommandOutput("bmgr enabled").contains("currently enabled");
+    }
+
+    /**
+     * Executes shell command "bmgr --user <id> enabled" and returns if backup is enabled for the
+     * user {@code userId}.
+     */
+    public boolean isBackupEnabledForUser(int userId) throws IOException {
+        return getShellCommandOutput(String.format("bmgr --user %d enabled", userId))
+                .contains("currently enabled");
     }
 
     public void wakeAndUnlockDevice() throws IOException {
@@ -120,6 +151,15 @@ public abstract class BackupUtils {
     /** Executes "bmgr backupnow <package>" and returns an {@link InputStream} for its output. */
     private InputStream backupNow(String packageName) throws IOException {
         return executeShellCommand("bmgr backupnow " + packageName);
+    }
+
+    /**
+     * Executes "bmgr --user <id> backupnow <package>" and returns an {@link InputStream} for its
+     * output.
+     */
+    private InputStream backupNowForUser(String packageName, int userId) throws IOException {
+        return executeShellCommand(
+                String.format("bmgr --user %d backupnow %s", userId, packageName));
     }
 
     /**
@@ -179,6 +219,16 @@ public abstract class BackupUtils {
      */
     private InputStream restore(String token, String packageName) throws IOException {
         return executeShellCommand(String.format("bmgr restore %s %s", token, packageName));
+    }
+
+    /**
+     * Executes "bmgr --user <id> restore <token> <packageName>" and returns an {@link InputStream}
+     * for its output.
+     */
+    private InputStream restoreForUser(String token, String packageName, int userId)
+            throws IOException {
+        return executeShellCommand(
+                String.format("bmgr --user %d restore %s %s", userId, token, packageName));
     }
 
     /**
@@ -259,6 +309,15 @@ public abstract class BackupUtils {
         return previouslyEnabled;
     }
 
+    /**
+     * Execute shell command "bmgr --user <id> enable <enable> and return previous enabled state.
+     */
+    public boolean enableBackupForUser(boolean enable, int userId) throws IOException {
+        boolean previouslyEnabled = isBackupEnabledForUser(userId);
+        executeShellCommand(String.format("bmgr --user %d enable %b", userId, enable));
+        return previouslyEnabled;
+    }
+
     private String getLineString(InputStream inputStream) throws IOException {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
@@ -287,6 +346,42 @@ public abstract class BackupUtils {
             }
         }
         throw new IOException("Timed out waiting for backup initialization");
+    }
+
+    /**
+     * Executes shell command "bmgr --user <id> list transports" and returns {@code true} if the
+     * user has the {@code transport} available.
+     */
+    public boolean userHasBackupTransport(String transport, int userId) throws IOException {
+        String output =
+                getLineString(
+                        executeShellCommand(
+                                String.format("bmgr --user %d list transports", userId)));
+        for (String t : output.split("\n")) {
+            // Parse out the '*' character used to denote the selected transport.
+            t = t.replace("*", "").trim();
+            if (transport.equals(t)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Executes shell command "bmgr --user <id> transport <transport>" and returns the old
+     * transport.
+     */
+    public String setBackupTransportForUser(String transport, int userId) throws IOException {
+        String output =
+                executeShellCommandAndReturnOutput(
+                        String.format("bmgr --user %d transport %s", userId, transport));
+        Pattern pattern = Pattern.compile("\\(formerly (.*)\\)$");
+        Matcher matcher = pattern.matcher(output);
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            throw new RuntimeException("Non-parsable output setting bmgr transport: " + output);
+        }
     }
 }
 
