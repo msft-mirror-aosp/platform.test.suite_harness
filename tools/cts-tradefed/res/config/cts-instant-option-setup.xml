@@ -197,6 +197,18 @@
     <!-- CtsOsHostTestCases -->
     <option name="compatibility:module-arg" value="CtsOsHostTestCases:instant-mode:true" />
 
+    <!-- CtsOmapiTestCases -->
+    <option name="compatibility:module-arg" value="CtsOmapiTestCases:instant-mode:true" />
+
+    <!-- signed-CtsSecureElementAccessControlTestCases1 -->
+    <option name="compatibility:module-arg" value="signed-CtsSecureElementAccessControlTestCases1:instant-mode:true" />
+
+    <!-- signed-CtsSecureElementAccessControlTestCases2 -->
+    <option name="compatibility:module-arg" value="signed-CtsSecureElementAccessControlTestCases2:instant-mode:true" />
+
+    <!-- signed-CtsSecureElementAccessControlTestCases3 -->
+    <option name="compatibility:module-arg" value="signed-CtsSecureElementAccessControlTestCases3:instant-mode:true" />
+
     <!-- CtsEdiHostTestCases -->
     <!-- Included not for instant-app but to collect the required information for the run -->
 </configuration>
