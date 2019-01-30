@@ -14,7 +14,7 @@
 
 java_test_host {
     name: "compatibility-tradefed-tests",
-    //defaults: ["cts_error_prone_rules"],
+    defaults: ["tradefed_errorprone_defaults"],
 
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
