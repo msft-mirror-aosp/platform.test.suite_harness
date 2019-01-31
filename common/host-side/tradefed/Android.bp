@@ -16,6 +16,7 @@ java_library_host {
     name: "compatibility-tradefed",
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
+    defaults: ["tradefed_errorprone_defaults"],
     libs: [
         "tradefed",
         "compatibility-host-util",
