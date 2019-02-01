@@ -22,6 +22,7 @@ import com.android.compatibility.common.util.BusinessLogicFactory;
 import com.android.compatibility.common.util.FeatureUtil;
 import com.android.compatibility.common.util.PropertyUtil;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.GlobalConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
@@ -74,6 +75,9 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
 
     /* Placeholder in the service URL for the suite to be configured */
     private static final String SUITE_PLACEHOLDER = "{suite-name}";
+
+    /* String for the key to get file from GlobalConfiguration */
+    private static final String GLOBAL_APE_API_KEY = "ape-api-key";
 
     /* String for creating files to store the business logic configuration on the host */
     private static final String FILE_LOCATION = "business-logic";
@@ -540,17 +544,24 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
         device.executeShellCommand(String.format("rm -rf %s", BusinessLogic.DEVICE_FILE));
     }
 
-    /*
-    * Returns an OAuth2 token string obtained using a service account json key file.
-    *
-    * Uses the service account key file location stored in environment variable 'APE_API_KEY'
-    * to request an OAuth2 token.
-    */
+    /**
+     * Returns an OAuth2 token string obtained using a service account json key file.
+     *
+     * Uses the service account key file location stored in environment variable 'APE_API_KEY'
+     * to request an OAuth2 token. If APE_API_KEY wasn't set, try to get if file is dynamically
+     * downloaded from GlobalConfiguration.
+     */
     private String getToken() {
         String keyFilePath = System.getenv("APE_API_KEY");
         if (Strings.isNullOrEmpty(keyFilePath)) {
-            CLog.d("Environment variable APE_API_KEY not set.");
-            return null;
+            File globalKeyFile = GlobalConfiguration.getInstance().getHostOptions().
+                getServiceAccountJsonKeyFiles().get(GLOBAL_APE_API_KEY);
+            if (globalKeyFile == null || !globalKeyFile.exists()) {
+                CLog.d("Unable to fetch the service key because neither environment variable " +
+                        "APE_API_KEY is set nor the key file is dynamically downloaded.");
+                return null;
+            }
+            keyFilePath = globalKeyFile.getAbsolutePath();
         }
         if (Strings.isNullOrEmpty(mApiScope)) {
             CLog.d("API scope not set, use flag --business-logic-api-scope.");
