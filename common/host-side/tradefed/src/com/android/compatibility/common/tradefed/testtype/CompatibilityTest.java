@@ -476,6 +476,10 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
                 moduleContext.addInvocationAttribute(IModuleDef.MODULE_NAME, module.getName());
                 moduleContext.addInvocationAttribute(IModuleDef.MODULE_ABI,
                         module.getAbi().getName());
+                // This format is not always true but for the deprecated runner this is best effort.
+                moduleContext.addInvocationAttribute(
+                        IModuleDef.MODULE_ID,
+                        String.format("%s %s", module.getAbi().getName(), module.getName()));
                 mInvocationContext.setModuleInvocationContext(moduleContext);
                 // Populate the module context with devices and builds
                 for (String deviceName : mInvocationContext.getDeviceConfigNames()) {
