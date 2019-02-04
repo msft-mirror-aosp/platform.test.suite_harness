@@ -97,8 +97,8 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
         try {
             instrument(device, buildInfo);
         } catch (FileNotFoundException e1) {
-            logError("Couldn't find apk to instrument");
-            logError(e1);
+            CLog.e("Couldn't find apk to instrument");
+            CLog.e(e1);
         }
     }
 
@@ -112,11 +112,11 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
         }
 
         if (device.getAppPackageInfo(mPackageName) != null) {
-            logInfo("Package %s already present on the device, uninstalling ...", mPackageName);
+            CLog.i("Package %s already present on the device, uninstalling ...", mPackageName);
             device.uninstallPackage(mPackageName);
         }
 
-        logInfo("Instrumenting package: %s", mPackageName);
+        CLog.i("Instrumenting package: %s", mPackageName);
         CollectingTestListener listener = new CollectingTestListener();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
         instrTest.setDevice(device);
@@ -130,11 +130,11 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
         for (Entry<TestDescription, TestResult> results : result.getTestResults().entrySet()) {
             if (TestStatus.FAILURE.equals(results.getValue().getStatus())) {
                 if (mThrowError) {
-                    logError(
+                    CLog.e(
                             "Target preparation step %s failed.\n%s",
                             results.getKey(), results.getValue().getStackTrace());
                 } else {
-                    logWarning(
+                    CLog.w(
                             "Target preparation step %s failed.\n%s",
                             results.getKey(), results.getValue().getStackTrace());
                 }
