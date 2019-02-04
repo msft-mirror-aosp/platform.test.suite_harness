@@ -19,6 +19,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.targetprep.PushFilePreparer;
+import com.android.tradefed.targetprep.TargetSetupError;
 
 import java.io.File;
 
@@ -30,11 +31,10 @@ public final class FilePusher extends PushFilePreparer {
             description = "Append the ABI's bitness to the filename.")
     private boolean mAppendBitness = false;
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public File resolveRelativeFilePath(IBuildInfo buildInfo, String fileName) {
+    public File resolveRelativeFilePath(IBuildInfo buildInfo, String fileName)
+            throws TargetSetupError {
         return super.resolveRelativeFilePath(
                 buildInfo,
                 String.format("%s%s", fileName, mAppendBitness ? getAbi().getBitness() : ""));
