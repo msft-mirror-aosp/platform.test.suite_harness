@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.targetprep.ApkInstaller;
+import com.android.compatibility.common.tradefed.targetprep.PreconditionPreparer;
 import com.android.compatibility.common.tradefed.testtype.JarHostTest;
 import com.android.tradefed.build.FolderBuildInfo;
 import com.android.tradefed.config.ConfigurationDescriptor;
@@ -184,6 +185,13 @@ public class CtsConfigLoadingTest {
                                     + "SuiteApkInstaller instead of com.android.compatibility."
                                     + "common.tradefed.targetprep.ApkInstaller, options will be "
                                     + "the same.", config));
+                }
+                if (prep.getClass().isAssignableFrom(PreconditionPreparer.class)) {
+                    throw new ConfigurationException(
+                            String.format(
+                                    "%s: includes a PreconditionPreparer (%s) which is not allowed"
+                                            + " in modules.",
+                                    config.getName(), prep.getClass()));
                 }
             }
             // We can ensure that Host side tests are not empty.
