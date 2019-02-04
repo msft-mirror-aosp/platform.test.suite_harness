@@ -160,7 +160,7 @@ public class MediaPreparerTest {
     public void testSkipMediaDownload() throws Exception {
         mOptionSetter.setOptionValue("skip-media-download", "true");
         EasyMock.replay(mMockDevice);
-        mMediaPreparer.run(mMockDevice, mMockBuildInfo);
+        mMediaPreparer.setUp(mMockDevice, mMockBuildInfo);
         EasyMock.verify(mMockDevice);
     }
 
@@ -194,7 +194,7 @@ public class MediaPreparerTest {
 
         EasyMock.replay(mMockDevice);
         try {
-            mMediaPreparer.run(mMockDevice, mMockBuildInfo);
+            mMediaPreparer.setUp(mMockDevice, mMockBuildInfo);
             fail("TargetSetupError expected");
         } catch (TargetSetupError e) {
             // Expected
@@ -227,7 +227,7 @@ public class MediaPreparerTest {
         }
         EasyMock.expect(mMockDevice.doesFileExist("/sdcard/test/images/")).andReturn(true).once();
         EasyMock.replay(mMockDevice);
-        mMediaPreparer.run(mMockDevice, mMockBuildInfo);
+        mMediaPreparer.setUp(mMockDevice, mMockBuildInfo);
         EasyMock.verify(mMockDevice);
     }
 }
