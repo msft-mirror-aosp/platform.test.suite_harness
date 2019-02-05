@@ -30,4 +30,7 @@
     <option name="compatibility:module-arg" value="CtsDeqpTestCases:include-filter:dEQP-GLES2.functional.prerequisite#*" />
     <option name="compatibility:module-arg" value="CtsDeqpTestCases:include-filter:dEQP-EGL.*" />
     <option name="compatibility:module-arg" value="CtsLibcoreTestCases:core-expectation:/virtualdeviceknownfailures.txt" />
+
+    <!-- Virtual devices usually run as root -->
+    <option name="compatibility:skip-system-status-check" value="com.android.tradefed.suite.checker.ShellStatusChecker" />
 </configuration>
