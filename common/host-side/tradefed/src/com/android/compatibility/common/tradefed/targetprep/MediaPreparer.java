@@ -26,9 +26,11 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil;
+import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
+import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
@@ -48,11 +50,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
-/**
- * Ensures that the appropriate media files exist on the device
- */
-@OptionClass(alias="media-preparer")
-public class MediaPreparer extends PreconditionPreparer {
+/** Ensures that the appropriate media files exist on the device */
+@OptionClass(alias = "media-preparer")
+public class MediaPreparer extends BaseTargetPreparer {
 
     @Option(
         name = "local-media-path",
@@ -320,14 +320,14 @@ public class MediaPreparer extends PreconditionPreparer {
     protected void copyVideoFiles(ITestDevice device) throws DeviceNotAvailableException {
         for (Resolution resolution : RESOLUTIONS) {
             if (resolution.width > mMaxRes.width) {
-                logInfo("Media file copying complete");
+                CLog.i("Media file copying complete");
                 return;
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
             if (!device.doesFileExist(deviceShortFilePath) ||
                     !device.doesFileExist(deviceFullFilePath)) {
-                logInfo("Copying files of resolution %s to device", resolution.toString());
+                CLog.i("Copying files of resolution %s to device", resolution.toString());
                 String localShortDirName = "bbb_short/" + resolution.toString();
                 String localFullDirName = "bbb_full/" + resolution.toString();
                 File localShortDir = new File(mLocalMediaPath, localShortDirName);
@@ -347,7 +347,7 @@ public class MediaPreparer extends PreconditionPreparer {
     // copy image files to the device
     protected void copyImagesFiles(ITestDevice device) throws DeviceNotAvailableException {
         if (!device.doesFileExist(mBaseDeviceImagesDir)) {
-            logInfo("Copying images files to device");
+            CLog.i("Copying images files to device");
             device.pushDir(new File(mLocalMediaPath, "images"), mBaseDeviceImagesDir);
         }
     }
@@ -355,7 +355,7 @@ public class MediaPreparer extends PreconditionPreparer {
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
         if (!device.doesFileExist(mBaseDeviceModuleDir)) {
-            logInfo("Copying files to device");
+            CLog.i("Copying files to device");
             device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir);
         }
     }
@@ -370,15 +370,15 @@ public class MediaPreparer extends PreconditionPreparer {
     }
 
     @Override
-    public void run(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
-            BuildError, DeviceNotAvailableException {
+    public void setUp(ITestDevice device, IBuildInfo buildInfo)
+            throws TargetSetupError, BuildError, DeviceNotAvailableException {
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
                     "'images-only' and 'push-all' cannot be set to true together.",
                     device.getDeviceDescriptor());
         }
         if (mSkipMediaDownload) {
-            logInfo("Skipping media preparation");
+            CLog.i("Skipping media preparation");
             return; // skip this precondition
         }
 
@@ -388,7 +388,7 @@ public class MediaPreparer extends PreconditionPreparer {
         }
         if (mediaFilesExistOnDevice(device)) {
             // if files already on device, do nothing
-            logInfo("Media files found on the device");
+            CLog.i("Media files found on the device");
             return;
         }
 
@@ -399,7 +399,7 @@ public class MediaPreparer extends PreconditionPreparer {
             // set mLocalMediaPath to extraction location of media files
             updateLocalMediaPath(device, mediaFolder);
         }
-        logInfo("Media files located on host at: %s", mLocalMediaPath);
+        CLog.i("Media files located on host at: %s", mLocalMediaPath);
         copyMediaFiles(device);
     }
 
@@ -417,14 +417,15 @@ public class MediaPreparer extends PreconditionPreparer {
             }
         } catch (FileNotFoundException e) {
             mMaxRes = DEFAULT_MAX_RESOLUTION;
-            logWarning("Cound not find %s to determine maximum resolution, copying up to %s",
+            CLog.w(
+                    "Cound not find %s to determine maximum resolution, copying up to %s",
                     APP_APK, DEFAULT_MAX_RESOLUTION.toString());
             return;
         }
         if (device.getAppPackageInfo(APP_PKG_NAME) != null) {
             device.uninstallPackage(APP_PKG_NAME);
         }
-        logInfo("Instrumenting package %s:", APP_PKG_NAME);
+        CLog.i("Instrumenting package %s:", APP_PKG_NAME);
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
@@ -432,11 +433,12 @@ public class MediaPreparer extends PreconditionPreparer {
         instrTest.run(listener);
         if (mFailureStackTrace != null) {
             mMaxRes = DEFAULT_MAX_RESOLUTION;
-            logWarning("Retrieving maximum resolution failed with trace:\n%s", mFailureStackTrace);
-            logWarning("Copying up to %s", DEFAULT_MAX_RESOLUTION.toString());
+            CLog.w("Retrieving maximum resolution failed with trace:\n%s", mFailureStackTrace);
+            CLog.w("Copying up to %s", DEFAULT_MAX_RESOLUTION.toString());
         } else if (mMaxRes == null) {
             mMaxRes = DEFAULT_MAX_RESOLUTION;
-            logWarning("Failed to pull resolution capabilities from device, copying up to %s",
+            CLog.w(
+                    "Failed to pull resolution capabilities from device, copying up to %s",
                     DEFAULT_MAX_RESOLUTION.toString());
         }
     }
