@@ -20,6 +20,7 @@ import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.DevicePropertyInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
+import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.ITestLogger;
@@ -35,9 +36,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-/**
- * An {@link ApkInstrumentationPreparer} that collects device info.
- */
+/** An {@link ApkInstrumentationPreparer} that collects device info. */
+@OptionClass(alias = "device-info-collector")
 public class DeviceInfoCollector extends ApkInstrumentationPreparer implements ITestLoggerReceiver {
 
     public static final String DEVICE_INFO_DIR = "device_info_dir";
