@@ -59,7 +59,6 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
     @Option(name = "throw-error", description = "Whether to throw error for device test failure")
     protected boolean mThrowError = true;
 
-
     /**
      * {@inheritDoc}
      */
@@ -124,6 +123,8 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
         instrTest.setPackageName(mPackageName);
         instrTest.setRerunMode(false);
         instrTest.setReRunUsingTestFile(false);
+        // TODO: Make this configurable.
+        instrTest.setIsolatedStorage(false);
         instrTest.run(listener);
         TestRunResult result = listener.getCurrentRunResults();
 
