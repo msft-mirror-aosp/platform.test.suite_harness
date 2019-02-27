@@ -205,4 +205,7 @@
 
     <!-- b/129859594 -->
     <option name="compatibility:exclude-filter" value="CtsAtomicInstallTestCases com.android.tests.atomicinstall.AtomicInstallTest#testFailInconsistentMultiPackageCommit" />
+
+    <!-- b/126548816 -->
+    <option name="compatibility:exclude-filter" value="CtsRcsTestCases" />
 </configuration>
