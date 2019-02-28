@@ -17,7 +17,7 @@
 <!DOCTYPE xsl:stylesheet [ <!ENTITY nbsp "&#160;"> ]>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-    <xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes"/>
+    <xsl:output method="html" version="5.0" encoding="UTF-8" indent="yes"/>
 
     <xsl:template match="/">
 
@@ -250,7 +250,7 @@
                                             <td class="failuredetails">
                                                 <div class="details">
                                                     <xsl:choose>
-                                                        <xsl:when test="$fullStackTrace=true()">
+                                                        <xsl:when test="boolean($fullStackTrace)=true()">
                                                             <xsl:value-of select="Failure/StackTrace" />
                                                         </xsl:when>
                                                         <xsl:otherwise>
@@ -270,7 +270,7 @@
                                             <td class="failuredetails">
                                                 <div class="details">
                                                     <xsl:choose>
-                                                        <xsl:when test="$fullStackTrace=true()">
+                                                        <xsl:when test="boolean($fullStackTrace)=true()">
                                                             <xsl:value-of select="Failure/StackTrace" />
                                                         </xsl:when>
                                                         <xsl:otherwise>
