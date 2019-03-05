@@ -17,6 +17,7 @@
     <system_checker class="com.android.tradefed.suite.checker.UserChecker" />
     <system_checker class="com.android.compatibility.common.tradefed.targetprep.NetworkConnectivityChecker" />
     <system_checker class="com.android.tradefed.suite.checker.ShellStatusChecker" />
+    <system_checker class="com.android.tradefed.suite.checker.EnforcedSeLinuxChecker" />
     <system_checker class="com.android.tradefed.suite.checker.KeyguardStatusChecker" />
     <system_checker class="com.android.tradefed.suite.checker.LeakedThreadStatusChecker" />
     <system_checker class="com.android.tradefed.suite.checker.TimeStatusChecker" />
