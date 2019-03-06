@@ -94,6 +94,10 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
             BuildError, DeviceNotAvailableException {
+        if (buildInfo.getFile(DEVICE_INFO_DIR) != null) {
+            CLog.i("Device info already collected, skipping DeviceInfoCollector.");
+            return;
+        }
         DevicePropertyInfo devicePropertyInfo =
                 new DevicePropertyInfo(
                         ABI,
