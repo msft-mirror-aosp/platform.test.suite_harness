@@ -28,6 +28,7 @@ import com.android.tradefed.targetprep.TargetSetupError;
 public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
 
     private String mExpectedFingerprint = null;
+    private String mFingerprintProperty = "ro.build.fingerprint";
 
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo)
@@ -37,7 +38,7 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
                     device.getDeviceDescriptor());
         }
         try {
-            String currentBuildFingerprint = device.getProperty("ro.build.fingerprint");
+            String currentBuildFingerprint = device.getProperty(mFingerprintProperty);
             if (!mExpectedFingerprint.equals(currentBuildFingerprint)) {
                 throw new IllegalArgumentException(String.format(
                         "Device build fingerprint must match %s.",
@@ -60,5 +61,13 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
      */
     public String getExpectedFingerprint() {
         return mExpectedFingerprint;
+    }
+
+    /**
+     * Allow to override the base fingerprint property. In some cases, we want to check the
+     * "ro.vendor.build.fingerpint" for example.
+     */
+    public void setFingerprintProperty(String property) {
+        mFingerprintProperty = property;
     }
 }
