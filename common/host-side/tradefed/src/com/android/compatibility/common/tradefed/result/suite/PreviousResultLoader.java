@@ -59,6 +59,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             mandatory = true)
     private Integer mRetrySessionId = null;
 
+    @Option(
+        name = "fingerprint-property",
+        description = "The property name to check for the fingerprint."
+    )
+    private String mFingerprintProperty = "ro.build.fingerprint";
+
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
     private String mExpectedFingerprint;
@@ -145,6 +151,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         // Add the fingerprint checker first to ensure we check it before rerunning the config.
         BuildFingerPrintPreparer fingerprintChecker = new BuildFingerPrintPreparer();
         fingerprintChecker.setExpectedFingerprint(mExpectedFingerprint);
+        fingerprintChecker.setFingerprintProperty(mFingerprintProperty);
         newList.add(fingerprintChecker);
         newList.addAll(preparers);
         config.setTargetPreparers(newList);
