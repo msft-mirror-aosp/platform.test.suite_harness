@@ -255,45 +255,56 @@ public class MediaPreparer extends BaseTargetPreparer {
      * this file to the same location on the host. Only an issue in Android O and above,
      * where MediaPreparer is used for multiple, shardable modules.
      */
-    private synchronized File downloadMediaToHost(ITestDevice device, IBuildInfo buildInfo)
+    private File downloadMediaToHost(ITestDevice device, IBuildInfo buildInfo)
             throws TargetSetupError {
-        // Retrieve default directory for storing media files
-        File mediaFolder = getMediaDir();
-        if (mediaFolder.exists() && mediaFolder.list().length > 0) {
-            // Folder has already been created and populated by previous MediaPreparer runs,
-            // assume all necessary media files exist inside.
+        // Make sure the synchronization is on the class and not the object
+        synchronized (MediaPreparer.class) {
+            // Retrieve default directory for storing media files
+            File mediaFolder = getMediaDir();
+            if (mediaFolder.exists() && mediaFolder.list().length > 0) {
+                // Folder has already been created and populated by previous MediaPreparer runs,
+                // assume all necessary media files exist inside.
+                return mediaFolder;
+            }
+            mediaFolder.mkdirs();
+            URL url;
+            try {
+                // Get download URL from dynamic configuration service
+                String mediaUrlString =
+                        DynamicConfigFileReader.getValueFromConfig(
+                                buildInfo, mDynamicConfigModule, MEDIA_FILES_URL_KEY);
+                url = new URL(mediaUrlString);
+            } catch (IOException | XmlPullParserException e) {
+                throw new TargetSetupError(
+                        "Trouble finding media file download location with "
+                                + "dynamic configuration",
+                        e,
+                        device.getDeviceDescriptor());
+            }
+            File mediaFolderZip = new File(mediaFolder.getAbsolutePath() + ".zip");
+            try {
+                LogUtil.printLog(
+                        Log.LogLevel.INFO,
+                        LOG_TAG,
+                        String.format("Downloading media files from %s", url.toString()));
+                URLConnection conn = url.openConnection();
+                InputStream in = conn.getInputStream();
+                mediaFolderZip.createNewFile();
+                FileUtil.writeToFile(in, mediaFolderZip);
+                LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Unzipping media files");
+                ZipUtil.extractZip(new ZipFile(mediaFolderZip), mediaFolder);
+            } catch (IOException e) {
+                FileUtil.recursiveDelete(mediaFolder);
+                throw new TargetSetupError(
+                        "Failed to download and open media files on host, the"
+                                + " device requires these media files for compatibility tests",
+                        e,
+                        device.getDeviceDescriptor());
+            } finally {
+                FileUtil.deleteFile(mediaFolderZip);
+            }
             return mediaFolder;
         }
-        mediaFolder.mkdirs();
-        URL url;
-        try {
-            // Get download URL from dynamic configuration service
-            String mediaUrlString = DynamicConfigFileReader.getValueFromConfig(
-                    buildInfo, mDynamicConfigModule, MEDIA_FILES_URL_KEY);
-            url = new URL(mediaUrlString);
-        } catch (IOException | XmlPullParserException e) {
-            throw new TargetSetupError("Trouble finding media file download location with " +
-                    "dynamic configuration", e, device.getDeviceDescriptor());
-        }
-        File mediaFolderZip = new File(mediaFolder.getAbsolutePath() + ".zip");
-        try {
-            LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG,
-                    String.format("Downloading media files from %s", url.toString()));
-            URLConnection conn = url.openConnection();
-            InputStream in = conn.getInputStream();
-            mediaFolderZip.createNewFile();
-            FileUtil.writeToFile(in, mediaFolderZip);
-            LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Unzipping media files");
-            ZipUtil.extractZip(new ZipFile(mediaFolderZip), mediaFolder);
-        } catch (IOException e) {
-            FileUtil.recursiveDelete(mediaFolder);
-            throw new TargetSetupError("Failed to download and open media files on host, the"
-                    + " device requires these media files for compatibility tests", e,
-                    device.getDeviceDescriptor());
-        } finally {
-            FileUtil.deleteFile(mediaFolderZip);
-        }
-        return mediaFolder;
     }
 
     /*
