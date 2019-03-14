@@ -39,6 +39,7 @@ import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
 import com.android.tradefed.util.proto.TestRecordProtoUtil;
 
+import com.google.api.client.util.Strings;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.File;
@@ -52,6 +53,11 @@ import java.util.List;
 public final class PreviousResultLoader implements ITestSuiteResultLoader {
 
     public static final String BUILD_FINGERPRINT = "build_fingerprint";
+    /**
+     * Some suites have a business need to alter the original real device fingerprint value, in this
+     * case we expect an "unaltered" version to be available to still do the original check.
+     */
+    public static final String BUILD_FINGERPRINT_UNALTERED = "build_fingerprint_unaltered";
 
     @Option(name = RetryFactoryTest.RETRY_OPTION,
             shortName = 'r',
@@ -68,6 +74,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
     private String mExpectedFingerprint;
+    private String mUnalteredFingerprint;
     private File mResultDir;
 
     private IBuildProvider mProvider;
@@ -116,6 +123,9 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
                 throw new IllegalArgumentException(
                         "Could not find the build_fingerprint field in the loaded result.");
             }
+            // Some cases will have an unaltered fingerprint
+            mUnalteredFingerprint =
+                    holder.context.getAttributes().getUniqueMap().get(BUILD_FINGERPRINT_UNALTERED);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -152,6 +162,9 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         BuildFingerPrintPreparer fingerprintChecker = new BuildFingerPrintPreparer();
         fingerprintChecker.setExpectedFingerprint(mExpectedFingerprint);
         fingerprintChecker.setFingerprintProperty(mFingerprintProperty);
+        if (!Strings.isNullOrEmpty(mUnalteredFingerprint)) {
+            fingerprintChecker.setUnalteredFingerprint(mUnalteredFingerprint);
+        }
         newList.add(fingerprintChecker);
         newList.addAll(preparers);
         config.setTargetPreparers(newList);

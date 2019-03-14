@@ -24,10 +24,15 @@ import com.android.tradefed.targetprep.TargetSetupError;
 
 /**
  * Special preparer used to check the build fingerprint of a device against an expected one.
+ *
+ * <p>An "unaltered" fingerprint might be available. Which reflects that the official fingerprint
+ * has been modified for business reason, but we still want to validate the original device is the
+ * same.
  */
 public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
 
     private String mExpectedFingerprint = null;
+    private String mUnalteredFingerprint = null;
     private String mFingerprintProperty = "ro.build.fingerprint";
 
     @Override
@@ -38,11 +43,16 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
                     device.getDeviceDescriptor());
         }
         try {
+            String compare = mExpectedFingerprint;
+            if (mUnalteredFingerprint != null) {
+                compare = mUnalteredFingerprint;
+            }
             String currentBuildFingerprint = device.getProperty(mFingerprintProperty);
-            if (!mExpectedFingerprint.equals(currentBuildFingerprint)) {
-                throw new IllegalArgumentException(String.format(
-                        "Device build fingerprint must match %s.",
-                        mExpectedFingerprint));
+            if (!compare.equals(currentBuildFingerprint)) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Device build fingerprint must match %s. Found '%s' instead.",
+                                compare, currentBuildFingerprint));
             }
         } catch (DeviceNotAvailableException e) {
             throw new RuntimeException(e);
@@ -69,5 +79,10 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
      */
     public void setFingerprintProperty(String property) {
         mFingerprintProperty = property;
+    }
+
+    /** Sets the unchanged original fingerprint. */
+    public void setUnalteredFingerprint(String unalteredFingerprint) {
+        mUnalteredFingerprint = unalteredFingerprint;
     }
 }
