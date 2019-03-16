@@ -114,6 +114,7 @@ public class ResultHandler {
     private static final String SUITE_VERSION_ATTR = "suite_version";
     private static final String SUITE_BUILD_ATTR = "suite_build_number";
     private static final String SUMMARY_TAG = "Summary";
+    private static final String METRIC_TAG = "Metric";
     private static final String TEST_TAG = "Test";
 
     private static final String LATEST_RESULT_DIR = "latest";
@@ -264,6 +265,10 @@ public class ResultHandler {
                                 parser.require(XmlPullParser.END_TAG, NS, SCREENSHOT_TAG);
                             } else if (SUMMARY_TAG.equals(parser.getName())) {
                                 test.setReportLog(ReportLog.parse(parser));
+                            } else if (METRIC_TAG.equals(parser.getName())) {
+                                // Ignore the new format in the old parser.
+                                parser.nextText();
+                                parser.require(XmlPullParser.END_TAG, NS, METRIC_TAG);
                             } else {
                                 parser.nextTag();
                             }

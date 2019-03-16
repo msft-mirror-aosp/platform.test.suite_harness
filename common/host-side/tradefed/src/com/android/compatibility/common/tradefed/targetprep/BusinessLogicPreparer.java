@@ -101,8 +101,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
             "business_logic_extended_device_info";
     private static final String DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY =
             "conditional_business_logic_tests_enabled";
-    /* Format used to append the enabled attribute to the serialized business logic string. */
-    private static final String ENABLED_ATTRIBUTE_SNIPPET = ", \"%s\":%s }";
 
     @Option(name = "business-logic-url", description = "The URL to use when accessing the " +
             "business logic service, parameters not included", mandatory = true)
@@ -128,10 +126,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
     @Option(name = "ignore-business-logic-failure", description = "Whether to proceed with the " +
             "suite invocation if retrieval of business logic fails.")
     private boolean mIgnoreFailure = false;
-
-    @Option(name="conditional-business-logic-tests-enabled",
-            description="Setting to true will ensure the device specific tests are executed.")
-    private boolean mConditionalTestsEnabled = false;
 
     @Option(name = "business-logic-connection-time", description = "Amount of time to attempt " +
             "connection to the business logic service, in seconds.")
@@ -198,7 +192,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
                 && System.currentTimeMillis() < (start + (mMaxConnectionTime * 1000))) {
             try {
                 businessLogicString = doPost(baseUrl, requestParams);
-                businessLogicString = addRuntimeConfig(businessLogicString, buildInfo);
             } catch (IOException e) {
                 // ignore, re-attempt connection with remaining time
                 CLog.d("BusinessLogic connection failure message: %s\nRetrying...", e.getMessage());
@@ -403,37 +396,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
 
     private boolean shouldWriteCache() {
         return mCache || mCleanCache;
-    }
-
-    /**
-     * Append runtime configuration attributes to the end of the Json string.
-     * Determine if conditional tests should execute and add the value to the serialized business
-     * logic settings.
-     */
-    private String addRuntimeConfig(String businessLogicString, IBuildInfo buildInfo) {
-        int indexOfClosingParen = businessLogicString.lastIndexOf("}");
-        // Replace the closing paren with th enabled flag and closing paren. ex
-        // { "a":4 } -> {"a":4, "enabled":true }
-        return businessLogicString.substring(0, indexOfClosingParen) +
-                String.format(ENABLED_ATTRIBUTE_SNIPPET,
-                        BusinessLogicFactory.CONDITIONAL_TESTS_ENABLED,
-                        shouldExecuteConditionalTests(buildInfo));
-    }
-
-    /**
-     * Execute device specific test if enabled in config or through the command line.
-     * Otherwise skip all conditional tests.
-     */
-    private boolean shouldExecuteConditionalTests(IBuildInfo buildInfo) {
-        boolean enabledInConfig = false;
-        try {
-            String enabledInConfigValue = DynamicConfigFileReader.getValueFromConfig(
-                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY);
-            enabledInConfig = Boolean.parseBoolean(enabledInConfigValue);
-        } catch (XmlPullParserException | IOException e) {
-            CLog.e("Failed to pull business logic features from dynamic config");
-        }
-        return enabledInConfig || mConditionalTestsEnabled;
     }
 
     /**
