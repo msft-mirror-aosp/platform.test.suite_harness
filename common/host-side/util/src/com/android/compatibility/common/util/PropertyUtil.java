@@ -51,12 +51,6 @@ public class PropertyUtil {
         return propertyEquals(device, BUILD_TYPE_PROPERTY, "user");
     }
 
-    /** Returns whether the device build is the factory ROM */
-    public static boolean isFactoryROM(ITestDevice device) throws DeviceNotAvailableException {
-        // first API level property should be undefined if and only if the product is factory ROM.
-        return device.getProperty(FIRST_API_LEVEL) == null;
-    }
-
     /** Returns whether this build is built with dev-keys */
     public static boolean isDevKeysBuild(ITestDevice device) throws DeviceNotAvailableException {
         String buildTags = device.getProperty(BUILD_TAGS_PROPERTY);
