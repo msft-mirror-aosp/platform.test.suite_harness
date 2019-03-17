@@ -32,8 +32,11 @@ import com.android.tradefed.targetprep.TargetSetupError;
 public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
 
     private String mExpectedFingerprint = null;
+    private String mExpectedVendorFingerprint = null;
     private String mUnalteredFingerprint = null;
+
     private String mFingerprintProperty = "ro.build.fingerprint";
+    private String mVendorFingerprintProperty = "ro.vendor.build.fingerprint";
 
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo)
@@ -53,6 +56,16 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
                         String.format(
                                 "Device build fingerprint must match %s. Found '%s' instead.",
                                 compare, currentBuildFingerprint));
+            }
+            if (mExpectedVendorFingerprint != null) {
+                String currentBuildVendorFingerprint =
+                        device.getProperty(mVendorFingerprintProperty);
+                if (!mExpectedVendorFingerprint.equals(currentBuildVendorFingerprint)) {
+                    throw new IllegalArgumentException(
+                            String.format(
+                                    "Device vendor build fingerprint must match %s - found %s instead.",
+                                    mExpectedVendorFingerprint, currentBuildVendorFingerprint));
+                }
             }
         } catch (DeviceNotAvailableException e) {
             throw new RuntimeException(e);
@@ -84,5 +97,10 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
     /** Sets the unchanged original fingerprint. */
     public void setUnalteredFingerprint(String unalteredFingerprint) {
         mUnalteredFingerprint = unalteredFingerprint;
+    }
+
+    /** Set the property value associated with ro.vendor.build.fingerprint */
+    public void setExpectedVendorFingerprint(String expectedVendorFingerprint) {
+        mExpectedVendorFingerprint = expectedVendorFingerprint;
     }
 }
