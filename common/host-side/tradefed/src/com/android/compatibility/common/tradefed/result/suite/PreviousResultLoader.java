@@ -52,7 +52,10 @@ import java.util.List;
  */
 public final class PreviousResultLoader implements ITestSuiteResultLoader {
 
+    /** Usually associated with ro.build.fingerprint. */
     public static final String BUILD_FINGERPRINT = "build_fingerprint";
+    /** Usally associated with ro.vendor.build.fingerprint. */
+    public static final String BUILD_VENDOR_FINGERPRINT = "build_vendor_fingerprint";
     /**
      * Some suites have a business need to alter the original real device fingerprint value, in this
      * case we expect an "unaltered" version to be available to still do the original check.
@@ -74,7 +77,9 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     private TestRecord mTestRecord;
     private IInvocationContext mPreviousContext;
     private String mExpectedFingerprint;
+    private String mExpectedVendorFingerprint;
     private String mUnalteredFingerprint;
+
     private File mResultDir;
 
     private IBuildProvider mProvider;
@@ -121,7 +126,18 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
                     .getUniqueMap().get(BUILD_FINGERPRINT);
             if (mExpectedFingerprint == null) {
                 throw new IllegalArgumentException(
-                        "Could not find the build_fingerprint field in the loaded result.");
+                        String.format(
+                                "Could not find the %s field in the loaded result.",
+                                BUILD_FINGERPRINT));
+            }
+            /** If available in the report, collect the vendor fingerprint too. */
+            mExpectedVendorFingerprint =
+                    holder.context.getAttributes().getUniqueMap().get(BUILD_VENDOR_FINGERPRINT);
+            if (mExpectedVendorFingerprint == null) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Could not find the %s field in the loaded result.",
+                                BUILD_VENDOR_FINGERPRINT));
             }
             // Some cases will have an unaltered fingerprint
             mUnalteredFingerprint =
@@ -161,6 +177,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         // Add the fingerprint checker first to ensure we check it before rerunning the config.
         BuildFingerPrintPreparer fingerprintChecker = new BuildFingerPrintPreparer();
         fingerprintChecker.setExpectedFingerprint(mExpectedFingerprint);
+        fingerprintChecker.setExpectedVendorFingerprint(mExpectedVendorFingerprint);
         fingerprintChecker.setFingerprintProperty(mFingerprintProperty);
         if (!Strings.isNullOrEmpty(mUnalteredFingerprint)) {
             fingerprintChecker.setUnalteredFingerprint(mUnalteredFingerprint);
