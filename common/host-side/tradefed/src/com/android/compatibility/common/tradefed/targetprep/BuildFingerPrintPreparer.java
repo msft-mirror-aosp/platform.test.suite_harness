@@ -52,19 +52,21 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
             }
             String currentBuildFingerprint = device.getProperty(mFingerprintProperty);
             if (!compare.equals(currentBuildFingerprint)) {
-                throw new IllegalArgumentException(
+                throw new TargetSetupError(
                         String.format(
                                 "Device build fingerprint must match %s. Found '%s' instead.",
-                                compare, currentBuildFingerprint));
+                                compare, currentBuildFingerprint),
+                        device.getDeviceDescriptor());
             }
             if (mExpectedVendorFingerprint != null) {
                 String currentBuildVendorFingerprint =
                         device.getProperty(mVendorFingerprintProperty);
                 if (!mExpectedVendorFingerprint.equals(currentBuildVendorFingerprint)) {
-                    throw new IllegalArgumentException(
+                    throw new TargetSetupError(
                             String.format(
                                     "Device vendor build fingerprint must match %s - found %s instead.",
-                                    mExpectedVendorFingerprint, currentBuildVendorFingerprint));
+                                    mExpectedVendorFingerprint, currentBuildVendorFingerprint),
+                            device.getDeviceDescriptor());
                 }
             }
         } catch (DeviceNotAvailableException e) {
