@@ -162,8 +162,11 @@ public class PreviousResultLoaderTest {
                 + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
                 + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
                 + "devices=\"HT6570300047\"  >\n");
-        sb.append("  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
-                + " build_reference_fingerprint=\"\" build_fingerprint=\"testfingerprint\"/>\n");
+        sb.append(
+                "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
+                        + " build_vendor_fingerprint=\"vendorFingerprint\" "
+                        + " build_reference_fingerprint=\"\" "
+                        + " build_fingerprint=\"testfingerprint\"/>\n");
         // Summary
         sb.append("  <Summary pass=\"0\" failed=\"0\" modules_done=\"2\" modules_total=\"2\" />\n");
         // Each module results
