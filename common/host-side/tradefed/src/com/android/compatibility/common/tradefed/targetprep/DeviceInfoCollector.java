@@ -124,7 +124,6 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
         for (Entry<String, String> entry :
                 devicePropertyInfo.getPropertytMapWithPrefix(PREFIX_TAG).entrySet()) {
             String property = nullToEmpty(device.getProperty(entry.getValue()));
-            CLog.e("%s/%s=%s", entry.getKey(), entry.getValue(), property);
             buildInfo.addBuildAttribute(entry.getKey(), property);
         }
         if (mSkipDeviceInfo) {
