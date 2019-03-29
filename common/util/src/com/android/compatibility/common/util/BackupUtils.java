@@ -318,6 +318,20 @@ public abstract class BackupUtils {
         return previouslyEnabled;
     }
 
+    /** Execute shell command "bmgr --user <id> activate <activate>." */
+    public void activateBackupForUser(boolean activate, int userId) throws IOException {
+        executeShellCommandSync(String.format("bmgr --user %d activate %b", userId, activate));
+    }
+
+    /**
+     * Executes shell command "bmgr --user <id> activated" and returns if backup is activated for
+     * the user {@code userId}.
+     */
+    public boolean isBackupActivatedForUser(int userId) throws IOException {
+        return getShellCommandOutput(String.format("bmgr --user %d activated", userId))
+                .contains("currently activated");
+    }
+
     private String getLineString(InputStream inputStream) throws IOException {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
