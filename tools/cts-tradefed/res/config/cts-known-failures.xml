@@ -210,4 +210,7 @@
 
     <!-- b/119312212 -->
     <option name="compatibility:exclude-filter" value="CtsAngleIntegrationHostTestCases android.angle.cts.CtsAngleDebugOptionHostTest#testDebugOptionOn" />
+
+    <!-- b/129859594 -->
+    <option name="compatibility:exclude-filter" value="CtsAtomicInstallTestCases com.android.tests.atomicinstall.AtomicInstallTest#testFailInconsistentMultiPackageCommit" />
 </configuration>
