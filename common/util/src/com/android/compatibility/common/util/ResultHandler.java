@@ -403,13 +403,7 @@ public class ResultHandler {
             serializer.attribute(NS, NAME_ATTR, module.getName());
             serializer.attribute(NS, ABI_ATTR, module.getAbi());
             serializer.attribute(NS, RUNTIME_ATTR, String.valueOf(module.getRuntime()));
-
-            boolean done = module.isDone();
-            if (module.isFailed()) {
-                done = false;
-            }
-
-            serializer.attribute(NS, DONE_ATTR, Boolean.toString(done));
+            serializer.attribute(NS, DONE_ATTR, Boolean.toString(module.isDone()));
             serializer.attribute(NS, PASS_ATTR,
                     Integer.toString(module.countResults(TestStatus.PASS)));
             for (ICaseResult cr : module.getResults()) {
