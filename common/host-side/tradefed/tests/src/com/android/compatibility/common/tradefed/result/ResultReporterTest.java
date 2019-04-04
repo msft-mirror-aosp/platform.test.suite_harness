@@ -532,8 +532,8 @@ public class ResultReporterTest extends TestCase {
         assertEquals("Expected 1 module", 1, modules.size());
         IModuleResult module = modules.get(0);
 
-        // Ensure module is seens as done but failed
-        assertTrue(module.isDone());
+        // Ensure module is seen as not done and failed
+        assertFalse(module.isDone());
         assertTrue(module.isFailed());
 
         assertEquals("Incorrect ID", ID, module.getId());
