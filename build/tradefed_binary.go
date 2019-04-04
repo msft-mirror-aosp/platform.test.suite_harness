@@ -28,7 +28,7 @@ var pctx = android.NewPackageContext("android/soong/suite_harness")
 func init() {
 	android.RegisterModuleType("tradefed_binary_host", tradefedBinaryFactory)
 
-	pctx.Import("android/soong/common")
+	pctx.Import("android/soong/android")
 }
 
 type TradefedBinaryProperties struct {
