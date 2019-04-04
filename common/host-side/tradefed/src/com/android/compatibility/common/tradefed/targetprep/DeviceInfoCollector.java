@@ -94,6 +94,10 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
             BuildError, DeviceNotAvailableException {
+        if (buildInfo.getFile(DEVICE_INFO_DIR) != null) {
+            CLog.i("Device info already collected, skipping DeviceInfoCollector.");
+            return;
+        }
         DevicePropertyInfo devicePropertyInfo =
                 new DevicePropertyInfo(
                         ABI,
@@ -124,7 +128,6 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
         for (Entry<String, String> entry :
                 devicePropertyInfo.getPropertytMapWithPrefix(PREFIX_TAG).entrySet()) {
             String property = nullToEmpty(device.getProperty(entry.getValue()));
-            CLog.e("%s/%s=%s", entry.getKey(), entry.getValue(), property);
             buildInfo.addBuildAttribute(entry.getKey(), property);
         }
         if (mSkipDeviceInfo) {
