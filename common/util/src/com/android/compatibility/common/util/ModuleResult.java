@@ -53,6 +53,10 @@ public class ModuleResult implements IModuleResult {
      */
     @Override
     public boolean isDone() {
+        // If module is failed, it cannot be marked done.
+        if (isFailed()) {
+            return false;
+        }
         return mDone && !mInProgress && (mActualTestRuns >= mExpectedTestRuns);
     }
 
