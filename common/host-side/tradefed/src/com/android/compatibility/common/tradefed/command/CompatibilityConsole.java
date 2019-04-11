@@ -46,6 +46,7 @@ import com.android.tradefed.util.Pair;
 import com.android.tradefed.util.RegexTrie;
 import com.android.tradefed.util.TableFormatter;
 import com.android.tradefed.util.TimeUtil;
+import com.android.tradefed.util.VersionParser;
 
 import com.google.common.base.Joiner;
 
@@ -88,9 +89,17 @@ public class CompatibilityConsole extends Console {
      */
     @Override
     public void run() {
-        printLine(String.format("Android %s %s (%s)", TestSuiteInfo.getInstance().getFullName(),
-                TestSuiteInfo.getInstance().getVersion(),
-                TestSuiteInfo.getInstance().getBuildNumber()));
+        String buildNumber = TestSuiteInfo.getInstance().getBuildNumber();
+        String versionFile = VersionParser.fetchVersion();
+        if (versionFile != null) {
+            buildNumber = versionFile;
+        }
+        printLine(
+                String.format(
+                        "Android %s %s (%s)",
+                        TestSuiteInfo.getInstance().getFullName(),
+                        TestSuiteInfo.getInstance().getVersion(),
+                        buildNumber));
         printLine("Use \"help\" or \"help all\" to get more information on running commands.");
         super.run();
     }
