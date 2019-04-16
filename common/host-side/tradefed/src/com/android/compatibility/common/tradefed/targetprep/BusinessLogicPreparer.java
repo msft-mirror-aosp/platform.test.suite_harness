@@ -541,7 +541,7 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
 
     /** Remove business logic file from the device */
     private static void removeDeviceFile(ITestDevice device) throws DeviceNotAvailableException {
-        device.executeShellCommand(String.format("rm -rf %s", BusinessLogic.DEVICE_FILE));
+        device.deleteFile(BusinessLogic.DEVICE_FILE);
     }
 
     /**
