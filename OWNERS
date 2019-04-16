@@ -9,3 +9,6 @@ sbasi@google.com
 aaronholden@google.com
 yuji@google.com
 nickrose@google.com
+
+# File Specific Approvers
+per-file Backup* = anniemeng@google.com, brufino@google.com, nathch@google.com, rthakohov@google.com

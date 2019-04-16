@@ -100,7 +100,6 @@ public abstract class LogcatInspector {
             InputStream logcatStream = executeShellCommand("logcat -v brief -d " + filterSpec);
             BufferedReader logcat = new BufferedReader(new InputStreamReader(logcatStream));
             String line;
-            stringIndex = 0;
             while ((line = logcat.readLine()) != null) {
                 if (line.contains(logcatStrings[stringIndex])) {
                     stringIndex++;

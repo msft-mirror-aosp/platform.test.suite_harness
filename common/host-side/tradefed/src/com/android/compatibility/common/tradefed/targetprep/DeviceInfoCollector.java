@@ -52,6 +52,7 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     private static final String BRAND = "ro.product.brand";
     private static final String DEVICE = "ro.product.device";
     private static final String FINGERPRINT = "ro.build.fingerprint";
+    private static final String VENDOR_FINGERPRINT = "ro.vendor.build.fingerprint";
     private static final String ID = "ro.build.id";
     private static final String MANUFACTURER = "ro.product.manufacturer";
     private static final String MODEL = "ro.product.model";
@@ -93,16 +94,41 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
             BuildError, DeviceNotAvailableException {
-        DevicePropertyInfo devicePropertyInfo = new DevicePropertyInfo(ABI, ABI2, ABIS, ABIS_32,
-                ABIS_64, BOARD, BRAND, DEVICE, FINGERPRINT, ID, MANUFACTURER, MODEL, PRODUCT,
-                REFERENCE_FINGERPRINT, SERIAL, TAGS, TYPE, VERSION_BASE_OS, VERSION_RELEASE,
-                VERSION_SDK, VERSION_SECURITY_PATCH, VERSION_INCREMENTAL);
+        if (buildInfo.getFile(DEVICE_INFO_DIR) != null) {
+            CLog.i("Device info already collected, skipping DeviceInfoCollector.");
+            return;
+        }
+        DevicePropertyInfo devicePropertyInfo =
+                new DevicePropertyInfo(
+                        ABI,
+                        ABI2,
+                        ABIS,
+                        ABIS_32,
+                        ABIS_64,
+                        BOARD,
+                        BRAND,
+                        DEVICE,
+                        FINGERPRINT,
+                        VENDOR_FINGERPRINT,
+                        ID,
+                        MANUFACTURER,
+                        MODEL,
+                        PRODUCT,
+                        REFERENCE_FINGERPRINT,
+                        SERIAL,
+                        TAGS,
+                        TYPE,
+                        VERSION_BASE_OS,
+                        VERSION_RELEASE,
+                        VERSION_SDK,
+                        VERSION_SECURITY_PATCH,
+                        VERSION_INCREMENTAL);
 
         // add device properties to the result with a prefix tag for each key
         for (Entry<String, String> entry :
                 devicePropertyInfo.getPropertytMapWithPrefix(PREFIX_TAG).entrySet()) {
-            buildInfo.addBuildAttribute(
-                    entry.getKey(), nullToEmpty(device.getProperty(entry.getValue())));
+            String property = nullToEmpty(device.getProperty(entry.getValue()));
+            buildInfo.addBuildAttribute(entry.getKey(), property);
         }
         if (mSkipDeviceInfo) {
             return;

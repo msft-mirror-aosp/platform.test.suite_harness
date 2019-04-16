@@ -24,10 +24,19 @@ import com.android.tradefed.targetprep.TargetSetupError;
 
 /**
  * Special preparer used to check the build fingerprint of a device against an expected one.
+ *
+ * <p>An "unaltered" fingerprint might be available. Which reflects that the official fingerprint
+ * has been modified for business reason, but we still want to validate the original device is the
+ * same.
  */
 public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
 
     private String mExpectedFingerprint = null;
+    private String mExpectedVendorFingerprint = null;
+    private String mUnalteredFingerprint = null;
+
+    private String mFingerprintProperty = "ro.build.fingerprint";
+    private String mVendorFingerprintProperty = "ro.vendor.build.fingerprint";
 
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo)
@@ -37,11 +46,28 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
                     device.getDeviceDescriptor());
         }
         try {
-            String currentBuildFingerprint = device.getProperty("ro.build.fingerprint");
-            if (!mExpectedFingerprint.equals(currentBuildFingerprint)) {
-                throw new IllegalArgumentException(String.format(
-                        "Device build fingerprint must match %s.",
-                        mExpectedFingerprint));
+            String compare = mExpectedFingerprint;
+            if (mUnalteredFingerprint != null) {
+                compare = mUnalteredFingerprint;
+            }
+            String currentBuildFingerprint = device.getProperty(mFingerprintProperty);
+            if (!compare.equals(currentBuildFingerprint)) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Device build fingerprint must match %s. Found '%s' instead.",
+                                compare, currentBuildFingerprint),
+                        device.getDeviceDescriptor());
+            }
+            if (mExpectedVendorFingerprint != null) {
+                String currentBuildVendorFingerprint =
+                        device.getProperty(mVendorFingerprintProperty);
+                if (!mExpectedVendorFingerprint.equals(currentBuildVendorFingerprint)) {
+                    throw new TargetSetupError(
+                            String.format(
+                                    "Device vendor build fingerprint must match %s - found %s instead.",
+                                    mExpectedVendorFingerprint, currentBuildVendorFingerprint),
+                            device.getDeviceDescriptor());
+                }
             }
         } catch (DeviceNotAvailableException e) {
             throw new RuntimeException(e);
@@ -60,5 +86,23 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
      */
     public String getExpectedFingerprint() {
         return mExpectedFingerprint;
+    }
+
+    /**
+     * Allow to override the base fingerprint property. In some cases, we want to check the
+     * "ro.vendor.build.fingerpint" for example.
+     */
+    public void setFingerprintProperty(String property) {
+        mFingerprintProperty = property;
+    }
+
+    /** Sets the unchanged original fingerprint. */
+    public void setUnalteredFingerprint(String unalteredFingerprint) {
+        mUnalteredFingerprint = unalteredFingerprint;
+    }
+
+    /** Set the property value associated with ro.vendor.build.fingerprint */
+    public void setExpectedVendorFingerprint(String expectedVendorFingerprint) {
+        mExpectedVendorFingerprint = expectedVendorFingerprint;
     }
 }
