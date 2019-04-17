@@ -173,7 +173,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
         // Remove any file we have pushed to the device, host file will be moved to the result
         // directory by ResultReporter upon invocation completion.
         if (mDeviceFilePushed != null && !(e instanceof DeviceNotAvailableException) && mCleanup) {
-            device.executeShellCommand("rm -r " + mDeviceFilePushed);
+            device.deleteFile(mDeviceFilePushed);
         }
     }
 
