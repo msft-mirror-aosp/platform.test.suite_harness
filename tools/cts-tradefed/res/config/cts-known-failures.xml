@@ -22,10 +22,6 @@
     <!-- b/38182235 -->
     <option name="compatibility:exclude-filter" value="CtsLocationTestCases android.location.cts.GnssTtffTests#testTtffWithNetwork" />
 
-    <!-- b/35314835 -->
-    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerPinnedStackTests#testAlwaysFocusablePipActivity" />
-    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerPinnedStackTests#testLaunchIntoPinnedStack" />
-
     <!-- b/17989532 -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.SurfaceViewPreviewTest#testPreparePerformance" />
 
@@ -188,13 +184,6 @@
 
     <!-- b/110354076 -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testCreateAndManageUser_DontSkipSetupWizard" />
-
-    <!-- b/112125308 -->
-    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerActivityVisibilityTests#testTurnScreenOnAttrNoLockScreen" />
-
-    <!-- b/112688380 -->
-    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testAppOrientationRequestConfigClears" />
-    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
 
     <!-- b/123280814 -->
     <option name="compatibility:exclude-filter" value="CtsLocation2TestCases android.location2.cts.LocationManagerTest#testGetCoarseLocationUpdates_withListener" />
