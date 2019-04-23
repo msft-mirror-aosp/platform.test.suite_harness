@@ -157,7 +157,7 @@
     <!-- CtsUiAutomationTestCases -->
     <option name="compatibility:module-arg" value="CtsUiAutomationTestCases:instant-mode:true" />
 
-    <!-- CtsActivityManagerDeviceSdk25TestCases -->
+    <!-- CtsWindowManagerSdk25TestCases -->
     <!-- These tests require targeting API 25 which does not support instant apps -->
 
     <!-- CtsHostsideWebViewTests -->
@@ -174,9 +174,6 @@
 
     <!-- CtsUsageStatsTestCases -->
     <option name="compatibility:module-arg" value="CtsUsageStatsTestCases:instant-mode:true" />
-
-    <!-- CtsActivityManagerDeviceTestCases -->
-    <!-- This module needs a permission not available to instant apps -->
 
     <!-- CtsLocationTestCases -->
     <option name="compatibility:module-arg" value="CtsLocationTestCases:instant-mode:true" />
