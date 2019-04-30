@@ -15,5 +15,6 @@
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/cts/libs/json/json/linux_glibc_common/javac/json.jar"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/tools/tradefederation/core/tradefed-protos/linux_glibc_common/combined/tradefed-protos.jar"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/prebuilts/tools/common/google-api-java-client/1.23.0/google-api-java-client-min-repackaged-1.23.0.jar"/>
+	<classpathentry kind="var" path="TRADEFED_ROOT/prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
