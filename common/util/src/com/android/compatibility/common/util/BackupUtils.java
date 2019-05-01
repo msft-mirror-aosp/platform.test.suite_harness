@@ -19,6 +19,8 @@ package com.android.compatibility.common.util;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +43,7 @@ public abstract class BackupUtils {
 
     private static final int BACKUP_PROVISIONING_TIMEOUT_SECONDS = 30;
     private static final int BACKUP_PROVISIONING_POLL_INTERVAL_SECONDS = 1;
+    private static final int BACKUP_SERVICE_INIT_TIMEOUT_SECS = 30;
 
     private static final Pattern BACKUP_MANAGER_CURRENTLY_ENABLE_STATUS_PATTERN =
             Pattern.compile("^Backup Manager currently (enabled|disabled)$");
@@ -360,6 +363,24 @@ public abstract class BackupUtils {
             }
         }
         throw new IOException("Timed out waiting for backup initialization");
+    }
+
+    public void waitUntilBackupServiceIsRunning(int userId)
+            throws IOException, InterruptedException {
+        waitUntilBackupServiceIsRunning(userId, BACKUP_SERVICE_INIT_TIMEOUT_SECS);
+    }
+
+    @VisibleForTesting
+    void waitUntilBackupServiceIsRunning(int userId, int timeout)
+            throws IOException, InterruptedException {
+        CommonTestUtils.waitUntil(
+                "Backup Manager init timed out",
+                timeout,
+                () -> {
+                    String output = getLineString(executeShellCommand("dumpsys backup users"));
+                    return output.matches(
+                            "Backup Manager is running for users:.* " + userId + "( .*)?");
+                });
     }
 
     /**
