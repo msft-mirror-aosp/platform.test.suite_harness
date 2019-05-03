@@ -187,9 +187,10 @@ public class RetryFactoryTestTest {
         mFactory.setInvocationContext(mMockContext);
 
         mMockListener.testModuleStarted(EasyMock.anyObject());
-        mMockListener.testRunStarted("module1", 0);
-        mMockListener.testRunEnded(EasyMock.anyLong(),
-                (HashMap<String, Metric>) EasyMock.anyObject());
+        mMockListener.testRunStarted(
+                EasyMock.eq("module1"), EasyMock.eq(0), EasyMock.eq(0), EasyMock.anyLong());
+        mMockListener.testRunEnded(
+                EasyMock.anyLong(), EasyMock.<HashMap<String, Metric>>anyObject());
         mMockListener.testModuleEnded();
 
         EasyMock.replay(mMockListener, mMockInfo, mMockDevice);
