@@ -175,10 +175,15 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError, BuildError,
             DeviceNotAvailableException {
+        CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
+        if (buildHelper.hasBusinessLogicHostFile()) {
+            CLog.i("Business logic file already collected, skipping BusinessLogicPreparer.");
+            return;
+        }
         // Ensure mModuleName is set.
         if (mModuleName == null) {
-            mModuleName = getSuiteName();
-            CLog.w("Option config-filename isn't set. Using suite-name '%s'", mModuleName);
+            mModuleName = "";
+            CLog.w("Option config-filename isn't set. Using empty string instead.");
         }
         if (mModuleVersion == null) {
             CLog.w("Option version isn't set. Using 'null' instead.");
@@ -227,7 +232,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
             File hostFile = FileUtil.createTempFile(FILE_LOCATION, FILE_EXT);
             FileUtil.writeToFile(businessLogicString, hostFile);
             mHostFilePushed = hostFile.getAbsolutePath();
-            CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
             // Ensure bitness is set.
             String bitness = (mAbi != null) ? mAbi.getBitness() : "";
             buildHelper.setBusinessLogicHostFile(hostFile, bitness + mModuleName);
