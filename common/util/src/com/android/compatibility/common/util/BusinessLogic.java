@@ -18,6 +18,7 @@ package com.android.compatibility.common.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -131,7 +132,7 @@ public class BusinessLogic {
         String[] descriptions = keySet.toArray(new String[keySet.size()]);
         StringBuilder msg = new StringBuilder("");
         msg.append(String.format("Test %s for cases: ", (failed) ? "failed" : "skipped"));
-        msg.append(String.join(", ", descriptions));
+        msg.append(Arrays.toString(descriptions));
         msg.append("\nReasons include:");
         for (String description : descriptions) {
             RuntimeException re = exceptions.get(description);
