@@ -18,6 +18,7 @@ package com.android.compatibility.common.util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.tradefed.util.RunUtil;
 
@@ -35,6 +36,9 @@ import java.io.InputStream;
  */
 @RunWith(JUnit4.class)
 public class BackupUtilsTest {
+    private static final int BACKUP_SERVICE_INIT_TIMEOUT_SECS = 1;
+    private static final int TEST_USER_ID = 10;
+
     private boolean mIsDumpsysCommandCalled;
     private boolean mIsEnableCommandCalled;
 
@@ -284,6 +288,50 @@ public class BackupUtilsTest {
         };
         backupUtils.waitForBackupInitialization();
         assertTrue(mIsDumpsysCommandCalled);
+    }
+
+    @Test
+    public void testWaitUntilBackupServiceIsRunning_whenRunning_doesntThrow() throws Exception {
+        BackupUtils backupUtils = constructDumpsysForBackupUsers(TEST_USER_ID);
+
+        try {
+            backupUtils.waitUntilBackupServiceIsRunning(
+                    TEST_USER_ID, BACKUP_SERVICE_INIT_TIMEOUT_SECS);
+        } catch (AssertionError e) {
+            fail("BackupUtils#waitUntilBackupServiceIsRunning threw an exception");
+        }
+        assertTrue(mIsDumpsysCommandCalled);
+    }
+
+    @Test
+    public void testWaitUntilBackupServiceIsRunning_whenNotRunning_throws() throws Exception {
+        // Pass in a different userId to not have the current one among running ids.
+        BackupUtils backupUtils = constructDumpsysForBackupUsers(TEST_USER_ID + 1);
+
+        boolean wasExceptionThrown = false;
+        try {
+            backupUtils.waitUntilBackupServiceIsRunning(
+                    TEST_USER_ID, BACKUP_SERVICE_INIT_TIMEOUT_SECS);
+        } catch (AssertionError e) {
+            wasExceptionThrown = true;
+        }
+
+        assertTrue(mIsDumpsysCommandCalled);
+        assertTrue(wasExceptionThrown);
+    }
+
+    private BackupUtils constructDumpsysForBackupUsers(int runningUserId) {
+        return new BackupUtils() {
+            @Override
+            protected InputStream executeShellCommand(String command) throws IOException {
+                String output = "";
+                if (command.equals("dumpsys backup users")) {
+                    output = "Backup Manager is running for users: " + runningUserId;
+                    mIsDumpsysCommandCalled = true;
+                }
+                return new ByteArrayInputStream(output.getBytes("UTF-8"));
+            }
+        };
     }
 
     @Test
