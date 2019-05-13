@@ -29,9 +29,6 @@
     <!-- b/17989532 -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.SurfaceViewPreviewTest#testPreparePerformance" />
 
-    <!-- These test cases are only applicable to Android Auto Embedded targets.-->
-    <option name="compatibility:exclude-filter" value="CtsCarTestCases" />
-
     <!-- b/23776893 -->
     <option name="compatibility:exclude-filter" value="CtsDumpsysHostTestCases android.dumpsys.cts.DumpsysHostTest#testBatterystatsOutput" />
     <option name="compatibility:exclude-filter" value="CtsDumpsysHostTestCases android.dumpsys.cts.DumpsysHostTest#testGfxinfoFramestats" />
@@ -65,9 +62,6 @@
     <!-- b/21262226 -->
     <option name="compatibility:exclude-filter" value="CtsJobSchedulerTestCases android.jobscheduler.cts.ConnectivityConstraintTest#testConnectivityConstraintExecutes_withMobile" />
     <option name="compatibility:exclude-filter" value="CtsJobSchedulerTestCases android.jobscheduler.cts.ConnectivityConstraintTest#testUnmeteredConstraintFails_withMobile" />
-
-    <!-- b/62616944 -->
-    <option name="compatibility:exclude-filter" value="CtsLibcoreJavaUtilCollectionsTestCases" />
 
     <!-- b/18682315 -->
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.SSLCertificateSocketFactoryTest#test_createSocket_bind" />
