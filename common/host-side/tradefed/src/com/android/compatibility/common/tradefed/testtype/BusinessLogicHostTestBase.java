@@ -71,11 +71,19 @@ public class BusinessLogicHostTestBase extends BaseHostJUnit4Test {
     }
 
     protected void loadBusinessLogic() {
+        File businessLogicFile = null;
         CompatibilityBuildHelper helper = new CompatibilityBuildHelper(getBuild());
-        String bitness = (getAbi() != null) ? getAbi().getBitness() : "";
-        String moduleName = getInvocationContext().getConfigurationDescriptor().
-            getModuleName();
-        File businessLogicFile = helper.getBusinessLogicHostFile(bitness + moduleName);
+        // Check if business logic file has been already collected by suite level business logic
+        // preparer.
+        if (helper.hasBusinessLogicHostFile()) {
+            businessLogicFile = helper.getBusinessLogicHostFile();
+        }
+        else {
+            String bitness = (getAbi() != null) ? getAbi().getBitness() : "";
+            String moduleName = getInvocationContext().getConfigurationDescriptor().
+                getModuleName();
+            businessLogicFile = helper.getBusinessLogicHostFile(bitness + moduleName);
+        }
         if (businessLogicFile != null && businessLogicFile.canRead()) {
             mBusinessLogic = BusinessLogicFactory.createFromFile(businessLogicFile);
         } else {
