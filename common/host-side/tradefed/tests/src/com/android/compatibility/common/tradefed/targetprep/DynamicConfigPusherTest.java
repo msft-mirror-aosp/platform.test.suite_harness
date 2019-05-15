@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.build.VersionedFile;
 import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
@@ -41,7 +42,9 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -255,6 +258,8 @@ public class DynamicConfigPusherTest {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
         EasyMock.expect(mMockBuildInfo.getBuildAttributes()).andStubReturn(attributes);
+        Collection<VersionedFile> versionedFiles = new LinkedList<VersionedFile>();
+        EasyMock.expect(mMockBuildInfo.getFiles()).andStubReturn(versionedFiles);
         Capture<File> capture = new Capture<>();
         mMockBuildInfo.setFile(EasyMock.contains("moduleName"), EasyMock.capture(capture),
                 EasyMock.eq("DYNAMIC_CONFIG_FILE:moduleName"));

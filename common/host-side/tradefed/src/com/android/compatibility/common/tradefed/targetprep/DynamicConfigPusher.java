@@ -129,6 +129,10 @@ public class DynamicConfigPusher extends BaseTargetPreparer
         if (mModuleName == null) {
             mModuleName = suiteName.toLowerCase();
             CLog.w("Option config-filename isn't set. Using suite-name '%s'", mModuleName);
+            if (buildHelper.getDynamicConfigFiles().get(mModuleName) != null) {
+                CLog.i("Dynamic config file already collected, skipping DynamicConfigPusher.");
+                return;
+            }
         }
         if (mVersion == null) {
             mVersion = buildHelper.getSuiteVersion();
