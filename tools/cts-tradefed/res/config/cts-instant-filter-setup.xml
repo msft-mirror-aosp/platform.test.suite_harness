@@ -156,7 +156,7 @@
     <!-- CtsUiAutomationTestCases -->
     <option name="compatibility:include-filter" value="CtsUiAutomationTestCases" />
 
-    <!-- CtsActivityManagerDeviceSdk25TestCases -->
+    <!-- CtsWindowManagerSdk25TestCases -->
     <!-- These tests require targeting API 25 which does not support instant apps -->
 
     <!-- CtsHostsideWebViewTests -->
@@ -173,9 +173,6 @@
 
     <!-- CtsUsageStatsTestCases -->
     <option name="compatibility:include-filter" value="CtsUsageStatsTestCases" />
-
-    <!-- CtsActivityManagerDeviceTestCases -->
-    <!-- This module needs a permission not available to instant apps -->
 
     <!-- CtsLocationTestCases -->
     <option name="compatibility:include-filter" value="CtsLocationTestCases" />

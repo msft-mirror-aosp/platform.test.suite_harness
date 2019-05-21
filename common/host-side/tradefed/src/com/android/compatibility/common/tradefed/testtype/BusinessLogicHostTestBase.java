@@ -50,6 +50,7 @@ public class BusinessLogicHostTestBase extends BaseHostJUnit4Test {
     @Before
     public void handleBusinessLogic() {
         loadBusinessLogic();
+        ensureAuthenticated();
         executeBusinessLogic();
     }
 
@@ -71,16 +72,45 @@ public class BusinessLogicHostTestBase extends BaseHostJUnit4Test {
     }
 
     protected void loadBusinessLogic() {
+        File businessLogicFile = null;
         CompatibilityBuildHelper helper = new CompatibilityBuildHelper(getBuild());
-        String bitness = (getAbi() != null) ? getAbi().getBitness() : "";
-        String moduleName = getInvocationContext().getConfigurationDescriptor().
-            getModuleName();
-        File businessLogicFile = helper.getBusinessLogicHostFile(bitness + moduleName);
+        // Check if business logic file has been already collected by suite level business logic
+        // preparer.
+        if (helper.hasBusinessLogicHostFile()) {
+            businessLogicFile = helper.getBusinessLogicHostFile();
+        }
+        else {
+            String bitness = (getAbi() != null) ? getAbi().getBitness() : "";
+            String moduleName = getInvocationContext().getConfigurationDescriptor().
+                getModuleName();
+            businessLogicFile = helper.getBusinessLogicHostFile(bitness + moduleName);
+        }
         if (businessLogicFile != null && businessLogicFile.canRead()) {
             mBusinessLogic = BusinessLogicFactory.createFromFile(businessLogicFile);
         } else {
             mCanReadBusinessLogic = false; // failed to retrieve business logic
         }
+    }
+
+    protected void ensureAuthenticated() {
+        if (!mCanReadBusinessLogic) {
+            // super class handles the condition that the service is unavailable.
+            return;
+        }
+
+        if (!mBusinessLogic.mConditionalTestsEnabled) {
+            skipTest("Execution of device specific tests is not enabled. "
+                    + "Enable with '--conditional-business-logic-tests-enabled'");
+        }
+
+        if (mBusinessLogic.isAuthorized()) {
+            // Run test as normal.
+            return;
+        }
+        String message = mBusinessLogic.getAuthenticationStatusMessage();
+
+        // Fail test since request was not authorized.
+        failTest(String.format("Unable to execute because %s.", message));
     }
 
     public static void skipTest(String message) {
