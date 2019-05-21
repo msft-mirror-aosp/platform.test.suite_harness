@@ -488,8 +488,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 CLog.d("Result zip URL: %s", logFile.getUrl());
-                logReportFiles(
-                        mConfiguration, zippedResults, zippedResults.getName(), LogDataType.ZIP);
+                logReportFiles(mConfiguration, zippedResults, "results", LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }
