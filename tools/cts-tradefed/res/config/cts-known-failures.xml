@@ -227,4 +227,7 @@
     <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_FP16_LinearExtendedSRGB" />
     <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGet565Bitmap_SRGB" />
     <option name="compatibility:exclude-filter" value="CtsViewTestCases android.view.cts.TextureViewTest#testGetBitmap_SRGB" />
+
+    <!-- b/133377378 -->
+    <option name="compatibility:exclude-filter" value="CtsBackupTestCases android.backup.cts.FullBackupQuotaTest#testQuotaExceeded" />
 </configuration>
