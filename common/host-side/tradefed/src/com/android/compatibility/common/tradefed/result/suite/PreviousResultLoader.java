@@ -35,16 +35,20 @@ import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.result.suite.SuiteResultHolder;
+import com.android.tradefed.result.suite.XmlSuiteResultFormatter.RunHistory;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
 import com.android.tradefed.util.proto.TestRecordProtoUtil;
 
 import com.google.api.client.util.Strings;
+import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -61,6 +65,8 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
      * case we expect an "unaltered" version to be available to still do the original check.
      */
     public static final String BUILD_FINGERPRINT_UNALTERED = "build_fingerprint_unaltered";
+    /** Used to get run history from the invocation context of last run. */
+    public static final String RUN_HISTORY_KEY = "run_history";
 
     @Option(name = RetryFactoryTest.RETRY_OPTION,
             shortName = 'r',
@@ -83,6 +89,13 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     private File mResultDir;
 
     private IBuildProvider mProvider;
+
+    /**
+     * The run history of last run (last run excluded) will be first parsed out and stored here, the
+     * information of last run is added second. Then this object is serialized and added to the
+     * configuration of the current test run.
+     */
+    private Collection<RunHistory> mRunHistories;
 
     @Override
     public void init() {
@@ -114,9 +127,19 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         }
         mPreviousContext = InvocationContext.fromProto(contextProto);
 
+        mRunHistories = new ArrayList<>();
+        String runHistoryJSON =
+                mPreviousContext.getAttributes().getUniqueMap().get(RUN_HISTORY_KEY);
+        if (runHistoryJSON != null) {
+            Gson gson = new Gson();
+            RunHistory[] runHistories = gson.fromJson(runHistoryJSON, RunHistory[].class);
+            Collections.addAll(mRunHistories, runHistories);
+        }
+
         // Validate the fingerprint
         // TODO: Use fingerprint argument from TestRecord but we have to deal with suite namespace
         // for example: cts:build_fingerprint instead of just build_fingerprint.
+        // And update run history.
         try {
             CLog.logAndDisplay(LogLevel.DEBUG, "Start parsing previous test_results.xml");
             CertificationResultXml xmlParser = new CertificationResultXml();
@@ -142,6 +165,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             // Some cases will have an unaltered fingerprint
             mUnalteredFingerprint =
                     holder.context.getAttributes().getUniqueMap().get(BUILD_FINGERPRINT_UNALTERED);
+
+            // Add the information of last test run to a run history list.
+            RunHistory newRun = new RunHistory();
+            newRun.startTime = holder.startTime;
+            newRun.endTime = holder.endTime;
+            mRunHistories.add(newRun);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -191,6 +220,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         PreviousSessionFileCopier copier = new PreviousSessionFileCopier();
         copier.setPreviousSessionDir(mResultDir);
         listeners.add(copier);
+
+        // Add run history to the configuration so it will be augmented in the next test run.
+        Gson gson = new Gson();
+        config.getCommandOptions()
+                .getInvocationData()
+                .put(RUN_HISTORY_KEY, gson.toJson(mRunHistories));
     }
 
     @VisibleForTesting

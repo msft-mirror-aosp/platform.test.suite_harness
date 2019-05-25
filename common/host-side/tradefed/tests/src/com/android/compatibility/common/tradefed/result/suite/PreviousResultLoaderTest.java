@@ -55,6 +55,8 @@ import java.io.FileOutputStream;
 @RunWith(JUnit4.class)
 public class PreviousResultLoaderTest {
 
+    public static final String RUN_HISTORY_KEY = "run_history";
+
     private PreviousResultLoader mLoader;
     private IInvocationContext mContext;
     private File mRootDir;
@@ -108,6 +110,8 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests() throws Exception {
+        final String EXPECTED_RUN_HISTORY =
+                "[{\"startTime\":1530218251501," + "\"endTime\":1530218261061}]";
         EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
@@ -124,6 +128,34 @@ public class PreviousResultLoaderTest {
         assertTrue(preparer instanceof BuildFingerPrintPreparer);
         assertEquals("testfingerprint",
                 ((BuildFingerPrintPreparer) preparer).getExpectedFingerprint());
+        String runHistory =
+                config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
+        assertEquals(EXPECTED_RUN_HISTORY, runHistory);
+        EasyMock.verify(mMockDevice, mMockProvider);
+    }
+
+    /** Test that the loader can correctly provide the run history back. */
+    @Test
+    public void testReloadTests_withRunHistory() throws Exception {
+        final String EXPECTED_RUN_HISTORY =
+                "[{\"startTime\":10000000000000,"
+                        + "\"endTime\":10000000100000},{\"startTime\":1530218251501,"
+                        + "\"endTime\":1530218261061}]";
+        final String OLD_RUN_HISTORY =
+                "[{\"startTime\":10000000000000,\"endTime\":10000000100000}]";
+        mContext.addInvocationAttribute(RUN_HISTORY_KEY, OLD_RUN_HISTORY);
+        EasyMock.expect(mMockProvider.getBuild())
+                .andReturn(createFakeBuild(createResultsWithRunHistory()));
+        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
+        EasyMock.replay(mMockDevice, mMockProvider);
+
+        mLoader.init();
+        IConfiguration config = new Configuration("name", "desc");
+        mLoader.customizeConfiguration(config);
+        String runHistory =
+                config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
+
+        assertEquals(EXPECTED_RUN_HISTORY, runHistory);
         EasyMock.verify(mMockDevice, mMockProvider);
     }
 
@@ -174,6 +206,45 @@ public class PreviousResultLoaderTest {
                 + "done=\"true\" pass=\"0\" total_tests=\"0\" />\n");
         sb.append("  <Module name=\"CtsGestureTestCases\" abi=\"armeabi-v7a\" runtime=\"2776\" "
                 + "done=\"true\" pass=\"0\" total_tests=\"0\" />\n");
+        // End
+        sb.append("</Result>");
+        return sb.toString();
+    }
+
+    private String createResultsWithRunHistory() {
+        // This method is the same as createBasicResults() except that it contains run history.
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n");
+        sb.append("<?xml-stylesheet type=\"text/xsl\" href=\"compatibility_result.xsl\"?>\n");
+        sb.append(
+                "<Result start=\"1530218251501\" end=\"1530218261061\" "
+                        + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
+                        + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
+                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
+                        + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
+                        + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
+                        + "devices=\"HT6570300047\"  >\n");
+        sb.append(
+                "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
+                        + " build_vendor_fingerprint=\"vendorFingerprint\" "
+                        + " build_reference_fingerprint=\"\" "
+                        + " build_fingerprint=\"testfingerprint\""
+                        + " run_history=\"[{'startTime':10000000000000,"
+                        + "'endTime':10000000100000}]\"/>\n");
+        // Run history
+        sb.append(
+                "  <RunHistory>\n"
+                        + "    <Run start=\"10000000000000\" end=\"10000000100000\"/>\n"
+                        + "  </RunHistory>\n");
+        // Summary
+        sb.append("  <Summary pass=\"0\" failed=\"0\" modules_done=\"2\" modules_total=\"2\" />\n");
+        // Each module results
+        sb.append(
+                "  <Module name=\"CtsGestureTestCases\" abi=\"arm64-v8a\" runtime=\"2776\" "
+                        + "done=\"true\" pass=\"0\" total_tests=\"0\" />\n");
+        sb.append(
+                "  <Module name=\"CtsGestureTestCases\" abi=\"armeabi-v7a\" runtime=\"2776\" "
+                        + "done=\"true\" pass=\"0\" total_tests=\"0\" />\n");
         // End
         sb.append("</Result>");
         return sb.toString();
