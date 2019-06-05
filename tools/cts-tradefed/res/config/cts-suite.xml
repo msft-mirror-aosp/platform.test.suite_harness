@@ -31,6 +31,7 @@
     <include name="cts-system-checkers" />
     <include name="cts-known-failures" />
     <include name="cts-exclude" />
+    <include name="cts-exclude-instant" />
 
     <option name="plan" value="cts-suite" />
     <option name="test-tag" value="cts-suite" />
