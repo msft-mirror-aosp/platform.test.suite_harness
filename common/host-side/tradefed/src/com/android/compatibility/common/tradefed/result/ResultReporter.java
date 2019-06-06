@@ -787,7 +787,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     protected File generateResultXmlFile()
             throws IOException, XmlPullParserException {
         return ResultHandler.writeResults(mBuildHelper.getSuiteName(),
-                mBuildHelper.getSuiteVersion(), mBuildHelper.getSuitePlan(),
+                mBuildHelper.getSuiteVersion(), getSuitePlan(mBuildHelper),
                 mBuildHelper.getSuiteBuild(), mResult, mResultDir, mResult.getStartTime(),
                 mElapsedTime + mResult.getStartTime(), mReferenceUrl, getLogUrl(),
                 mBuildHelper.getCommandLineArgs());
@@ -856,6 +856,17 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             IInvocationResult invocationResult) {
         buildProperties.entrySet().stream().forEach(entry ->
                 invocationResult.addInvocationInfo(entry.getKey(), entry.getValue()));
+    }
+
+    /**
+     * Get the suite plan. This protected method was created for overrides.
+     * Extending classes can decide on the content of the output's suite_plan field.
+     *
+     * @param mBuildHelper Helper that contains build information.
+     * @return string Suite plan to use.
+     */
+    protected String getSuitePlan(CompatibilityBuildHelper mBuildHelper) {
+        return mBuildHelper.getSuitePlan();
     }
 
     /**
