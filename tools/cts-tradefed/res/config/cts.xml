@@ -17,6 +17,7 @@
 
     <include name="cts-common" />
     <include name="cts-exclude" />
+    <include name="cts-exclude-instant" />
 
     <option name="plan" value="cts" />
 
