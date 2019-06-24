@@ -102,6 +102,7 @@ public class RetryFactoryTestTest {
         mMockMainConfiguration = new Configuration("mockMain", "mockMain");
         mCheckers = new ArrayList<>();
         mMockInfo = EasyMock.createMock(IDeviceBuildInfo.class);
+        EasyMock.expect(mMockInfo.getRemoteFiles()).andStubReturn(null);
         mMockDevice = EasyMock.createMock(ITestDevice.class);
         mMockContext = new InvocationContext();
         mMockContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
