@@ -163,7 +163,7 @@ public class PreviousResultLoaderTest {
         DeviceBuildInfo build = new DeviceBuildInfo();
         build.addBuildAttribute(CompatibilityBuildHelper.SUITE_NAME, "CTS");
         mRootDir = FileUtil.createTempDir("cts-root-dir");
-        new File(mRootDir, "android-cts/results").mkdirs();
+        new File(mRootDir, "android-cts/results/").mkdirs();
         build.addBuildAttribute(CompatibilityBuildHelper.ROOT_DIR, mRootDir.getAbsolutePath());
         // Create fake result dir
         long time = System.currentTimeMillis();
@@ -174,8 +174,12 @@ public class PreviousResultLoaderTest {
                 "test_result.xml");
         testResult.createNewFile();
         // Populate a proto result
-        mProtoFile = new File(new CompatibilityBuildHelper(build).getResultDir(),
-                CompatibilityProtoResultReporter.PROTO_FILE_NAME);
+        File protoDir =
+                new File(
+                        new CompatibilityBuildHelper(build).getResultDir(),
+                        CompatibilityProtoResultReporter.PROTO_DIR);
+        protoDir.mkdir();
+        mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME);
         TestRecord.Builder builder = TestRecord.newBuilder();
         builder.setDescription(Any.pack(mContext.toProto()));
         builder.build().writeDelimitedTo(new FileOutputStream(mProtoFile));
