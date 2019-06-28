@@ -111,9 +111,10 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             CLog.logAndDisplay(LogLevel.DEBUG, "Start loading the record protobuf.");
             mResultDir =
                     ResultHandler.getResultDirectory(helperBuild.getResultsDir(), mRetrySessionId);
+            File protoDir = new File(mResultDir, CompatibilityProtoResultReporter.PROTO_DIR);
             mTestRecord =
                     TestRecordProtoUtil.readFromFile(
-                            new File(mResultDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
+                            new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME));
             CLog.logAndDisplay(LogLevel.DEBUG, "Done loading the record protobuf.");
         } catch (IOException e) {
             throw new RuntimeException(e);
