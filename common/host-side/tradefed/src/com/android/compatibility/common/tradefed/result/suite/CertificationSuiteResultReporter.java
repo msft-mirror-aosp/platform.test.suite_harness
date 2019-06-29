@@ -34,6 +34,7 @@ import com.android.tradefed.result.InputStreamSource;
 import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.result.LogFile;
 import com.android.tradefed.result.LogFileSaver;
+import com.android.tradefed.result.SnapshotInputStreamSource;
 import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.result.TestSummary;
 import com.android.tradefed.result.suite.IFormatterGenerator;
@@ -53,6 +54,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -112,7 +114,10 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
     private ResultUploader mUploader;
 
+    /** LogFileSaver to copy the file to the CTS results folder */
     private LogFileSaver mTestLogSaver;
+
+    private Map<LogFile, InputStreamSource> mPreInvocationLogs = new HashMap<>();
     /** Invocation level Log saver to receive when files are logged */
     private ILogSaver mLogSaver;
     /** Invocation level configuration */
@@ -157,6 +162,12 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         if (name.endsWith(DeviceInfo.FILE_SUFFIX)) {
             // Handle device info file case
             testLogDeviceInfo(name, stream);
+            return;
+        }
+        if (mTestLogSaver == null) {
+            LogFile info = new LogFile(name, null, type);
+            mPreInvocationLogs.put(
+                    info, new SnapshotInputStreamSource(name, stream.createInputStream()));
             return;
         }
         try {
@@ -280,8 +291,17 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
             throw new IllegalArgumentException(String.format("Could not create log dir %s",
                     mLogDir.getAbsolutePath()));
         }
+        // During sharding, we reach here before invocationStarted is called so the log_saver will
+        // be null at that point.
         if (mTestLogSaver == null) {
             mTestLogSaver = new LogFileSaver(mLogDir);
+            // Log all the early logs from before init.
+            for (LogFile earlyLog : mPreInvocationLogs.keySet()) {
+                try (InputStreamSource source = mPreInvocationLogs.get(earlyLog)) {
+                    testLog(earlyLog.getPath(), earlyLog.getType(), source);
+                }
+            }
+            mPreInvocationLogs.clear();
         }
     }
 
