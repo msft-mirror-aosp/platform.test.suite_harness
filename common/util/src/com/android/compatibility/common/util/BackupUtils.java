@@ -35,7 +35,8 @@ import java.util.regex.Pattern;
  * Utility class for backup and restore.
  */
 public abstract class BackupUtils {
-    private static final String LOCAL_TRANSPORT_NAME = "com.android.localtransport/.LocalTransport";
+    private static final String LOCAL_TRANSPORT_NAME =
+            "com.android.localtransport/.LocalTransport";
     private static final String LOCAL_TRANSPORT_NAME_PRE_Q =
             "android/com.android.internal.backup.LocalTransport";
     private static final String LOCAL_TRANSPORT_PACKAGE = "com.android.localtransport";
@@ -142,13 +143,12 @@ public abstract class BackupUtils {
     }
 
     /**
-     * Returns {@link #LOCAL_TRANSPORT_NAME} if it's available on the device, or {@link
-     * #LOCAL_TRANSPORT_NAME_PRE_Q} otherwise.
+     * Returns {@link #LOCAL_TRANSPORT_NAME} if it's available on the device, or
+     * {@link #LOCAL_TRANSPORT_NAME_PRE_Q} otherwise.
      */
     public String getLocalTransportName() throws IOException {
         return getShellCommandOutput("pm list packages").contains(LOCAL_TRANSPORT_PACKAGE)
-                ? LOCAL_TRANSPORT_NAME
-                : LOCAL_TRANSPORT_NAME_PRE_Q;
+                ? LOCAL_TRANSPORT_NAME : LOCAL_TRANSPORT_NAME_PRE_Q;
     }
 
     /** Executes "bmgr backupnow <package>" and returns an {@link InputStream} for its output. */
