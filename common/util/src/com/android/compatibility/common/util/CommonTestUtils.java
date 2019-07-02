@@ -17,7 +17,6 @@ package com.android.compatibility.common.util;
 
 import static org.junit.Assert.fail;
 
-// TODO(b/131736394): Remove duplication with HostSideTestUtils.
 /** Utility class for tests. */
 public class CommonTestUtils {
     @FunctionalInterface
