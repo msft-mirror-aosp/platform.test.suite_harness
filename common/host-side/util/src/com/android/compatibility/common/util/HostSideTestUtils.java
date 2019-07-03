@@ -17,9 +17,10 @@ package com.android.compatibility.common.util;
 
 import static org.junit.Assert.fail;
 
-// TODO(b/131736394): Remove duplication with HostSideTestUtils.
-/** Utility class for tests. */
-public class CommonTestUtils {
+import com.android.tradefed.util.RunUtil;
+
+/** Utility class for host-side tests. */
+public class HostSideTestUtils {
     @FunctionalInterface
     public interface BooleanSupplierWithThrow<E extends Throwable> {
         boolean getAsBoolean() throws E;
@@ -27,15 +28,14 @@ public class CommonTestUtils {
 
     /** Wait until {@code predicate} is satisfied, or fail, with a given timeout. */
     public static <E extends Throwable> void waitUntil(
-            String message, long timeoutSeconds, BooleanSupplierWithThrow<E> predicate)
-            throws E, InterruptedException {
+            String message, long timeoutSeconds, BooleanSupplierWithThrow<E> predicate) throws E {
         int sleep = 125;
         final long timeout = System.currentTimeMillis() + timeoutSeconds * 1000;
         while (System.currentTimeMillis() < timeout) {
             if (predicate.getAsBoolean()) {
                 return;
             }
-            Thread.sleep(sleep);
+            RunUtil.getDefault().sleep(sleep);
         }
         fail(message);
     }
