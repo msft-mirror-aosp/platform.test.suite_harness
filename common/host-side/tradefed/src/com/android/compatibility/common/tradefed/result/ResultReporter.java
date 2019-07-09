@@ -18,6 +18,7 @@ package com.android.compatibility.common.tradefed.result;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
+import com.android.compatibility.common.tradefed.util.FingerprintComparisonException;
 import com.android.compatibility.common.tradefed.util.RetryType;
 import com.android.compatibility.common.util.ChecksumReporter;
 import com.android.compatibility.common.util.DeviceInfo;
@@ -160,6 +161,8 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     private String mDeviceSerial = UNKNOWN_DEVICE;
     private Set<String> mMasterDeviceSerials = new HashSet<>();
     private Set<IBuildInfo> mMasterBuildInfos = new HashSet<>();
+    // Whether or not we failed the fingerprint check
+    private boolean mFingerprintFailure = false;
 
     // mCurrentTestNum and mTotalTestsInModule track the progress within the module
     // Note that this count is not necessarily equal to the count of tests contained
@@ -531,6 +534,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     }
 
     private void finalizeResults() {
+        if (mFingerprintFailure) {
+            CLog.w("Failed the fingerprint check. Skip result reporting.");
+            return;
+        }
         // Add all device serials into the result to be serialized
         for (String deviceSerial : mMasterDeviceSerials) {
             mResult.addDeviceSerial(deviceSerial);
@@ -644,6 +651,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     public void invocationFailed(Throwable cause) {
         warn("Invocation failed: %s", cause);
         InvocationFailureHandler.setFailed(mBuildHelper, cause);
+        if (cause instanceof FingerprintComparisonException) {
+            mFingerprintFailure = true;
+        }
     }
 
     /**
