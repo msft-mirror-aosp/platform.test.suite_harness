@@ -530,6 +530,15 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         }
     }
 
+    /**
+     * Returns whether a report creation should be skipped.
+     */
+    protected boolean shouldSkipReportCreation() {
+        // This value is always false here for backwards compatibility.
+        // Extended classes have the option to override this.
+        return false;
+    }
+
     private void finalizeResults() {
         // Add all device serials into the result to be serialized
         for (String deviceSerial : mMasterDeviceSerials) {
@@ -558,6 +567,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         String moduleProgress = String.format("%d of %d",
                 mResult.getModuleCompleteCount(), mResult.getModules().size());
 
+
+        if (shouldSkipReportCreation()) {
+            return;
+        }
 
         try {
             // Zip the full test results directory.
