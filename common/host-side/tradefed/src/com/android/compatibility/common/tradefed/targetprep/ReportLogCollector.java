@@ -30,6 +30,7 @@ import com.android.tradefed.util.FileUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * An {@link ITargetCleaner} that prepares and pulls report logs.
@@ -54,10 +55,10 @@ public class ReportLogCollector implements ITargetCleaner {
     @Override
     public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
             BuildError, DeviceNotAvailableException {
-        prepareReportLogContainers(device, buildInfo);
+        prepareReportLogContainers(buildInfo);
     }
 
-    private void prepareReportLogContainers(ITestDevice device, IBuildInfo buildInfo) {
+    private void prepareReportLogContainers(IBuildInfo buildInfo) {
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         try {
             File resultDir = buildHelper.getResultDir();
@@ -70,12 +71,16 @@ public class ReportLogCollector implements ITargetCleaner {
                 return;
             }
         } catch (FileNotFoundException fnfe) {
-            fnfe.printStackTrace();
+            CLog.e(fnfe);
         }
     }
 
     @Override
     public void tearDown(ITestDevice device, IBuildInfo buildInfo, Throwable e) {
+        if (e instanceof DeviceNotAvailableException) {
+            CLog.e("Invocation finished with DeviceNotAvailable, skipping collecting logs.");
+            return;
+        }
         // Pull report log files from device.
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         try {
@@ -102,8 +107,8 @@ public class ReportLogCollector implements ITargetCleaner {
             CollectorUtil.pullFromDevice(device, mSrcDir, resultPath);
             CollectorUtil.pullFromHost(hostReportDir, resultDir);
             CollectorUtil.reformatRepeatedStreams(resultDir);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (IOException exception) {
+            CLog.e(exception);
         }
     }
 }
