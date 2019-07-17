@@ -74,6 +74,12 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
     @Option(name="build-flavor", description="build flavor name to supply.")
     private String mBuildFlavor = null;
 
+    @Option(
+        name = "build-flavor-prefix",
+        description = "allow for a prefix to be inserted into build flavor."
+    )
+    private String mBuildFlavorPrefix = null;
+
     @Option(name="build-target", description="build target name to supply.")
     private String mBuildTarget = null;
 
@@ -142,7 +148,11 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
             ctsBuild.setBuildBranch(mBranch);
         }
         if (mBuildFlavor != null) {
-            ctsBuild.setBuildFlavor(mBuildFlavor);
+            String buildFlavor = mBuildFlavor;
+            if (mBuildFlavorPrefix != null) {
+                buildFlavor = mBuildFlavorPrefix + buildFlavor;
+            }
+            ctsBuild.setBuildFlavor(buildFlavor);
         }
         injectBuildAttributes(ctsBuild);
         addCompatibilitySuiteInfo(ctsBuild);
@@ -163,8 +173,12 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
             if (mBuildId == null) {
                 mBuildId = device.getBuildId();
             }
-            if (mBuildFlavor == null) {
-                mBuildFlavor = device.getBuildFlavor();
+            String buildFlavor = mBuildFlavor;
+            if (buildFlavor == null) {
+                buildFlavor = device.getBuildFlavor();
+            }
+            if (mBuildFlavorPrefix != null) {
+                buildFlavor = mBuildFlavorPrefix + buildFlavor;
             }
             if (mBuildTarget == null) {
                 String name = device.getProperty("ro.product.name");
@@ -182,7 +196,7 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
                         device.getProperty("ro.build.version.release"));
             }
             info.setBuildBranch(mBranch);
-            info.setBuildFlavor(mBuildFlavor);
+            info.setBuildFlavor(buildFlavor);
             String buildAlias = device.getBuildAlias();
             if (RELEASE_BUILD.matcher(buildAlias).matches()) {
                 info.addBuildAttribute("build_alias", buildAlias);

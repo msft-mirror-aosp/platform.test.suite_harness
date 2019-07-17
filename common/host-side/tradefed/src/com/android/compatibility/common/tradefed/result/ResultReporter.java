@@ -530,6 +530,15 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         }
     }
 
+    /**
+     * Returns whether a report creation should be skipped.
+     */
+    protected boolean shouldSkipReportCreation() {
+        // This value is always false here for backwards compatibility.
+        // Extended classes have the option to override this.
+        return false;
+    }
+
     private void finalizeResults() {
         // Add all device serials into the result to be serialized
         for (String deviceSerial : mMasterDeviceSerials) {
@@ -558,6 +567,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         String moduleProgress = String.format("%d of %d",
                 mResult.getModuleCompleteCount(), mResult.getModules().size());
 
+
+        if (shouldSkipReportCreation()) {
+            return;
+        }
 
         try {
             // Zip the full test results directory.
@@ -787,7 +800,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     protected File generateResultXmlFile()
             throws IOException, XmlPullParserException {
         return ResultHandler.writeResults(mBuildHelper.getSuiteName(),
-                mBuildHelper.getSuiteVersion(), mBuildHelper.getSuitePlan(),
+                mBuildHelper.getSuiteVersion(), getSuitePlan(mBuildHelper),
                 mBuildHelper.getSuiteBuild(), mResult, mResultDir, mResult.getStartTime(),
                 mElapsedTime + mResult.getStartTime(), mReferenceUrl, getLogUrl(),
                 mBuildHelper.getCommandLineArgs());
@@ -856,6 +869,17 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             IInvocationResult invocationResult) {
         buildProperties.entrySet().stream().forEach(entry ->
                 invocationResult.addInvocationInfo(entry.getKey(), entry.getValue()));
+    }
+
+    /**
+     * Get the suite plan. This protected method was created for overrides.
+     * Extending classes can decide on the content of the output's suite_plan field.
+     *
+     * @param mBuildHelper Helper that contains build information.
+     * @return string Suite plan to use.
+     */
+    protected String getSuitePlan(CompatibilityBuildHelper mBuildHelper) {
+        return mBuildHelper.getSuitePlan();
     }
 
     /**
