@@ -18,6 +18,7 @@ package com.android.compatibility.common.tradefed.result;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
+import com.android.compatibility.common.tradefed.util.FingerprintComparisonException;
 import com.android.compatibility.common.tradefed.util.RetryType;
 import com.android.compatibility.common.util.ChecksumReporter;
 import com.android.compatibility.common.util.DeviceInfo;
@@ -33,6 +34,8 @@ import com.android.compatibility.common.util.ResultUploader;
 import com.android.compatibility.common.util.TestStatus;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.Option.Importance;
 import com.android.tradefed.config.OptionClass;
@@ -85,7 +88,7 @@ import java.util.concurrent.TimeUnit;
  */
 @OptionClass(alias="result-reporter")
 public class ResultReporter implements ILogSaverListener, ITestInvocationListener,
-       ITestSummaryListener, IShardableListener {
+       ITestSummaryListener, IShardableListener, IConfigurationReceiver {
 
     public static final String INCLUDE_HTML_IN_ZIP = "html-in-zip";
     private static final String UNKNOWN_DEVICE = "unknown_device";
@@ -157,6 +160,8 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     private String mDeviceSerial = UNKNOWN_DEVICE;
     private Set<String> mMasterDeviceSerials = new HashSet<>();
     private Set<IBuildInfo> mMasterBuildInfos = new HashSet<>();
+    // Whether or not we failed the fingerprint check
+    private boolean mFingerprintFailure = false;
 
     // mCurrentTestNum and mTotalTestsInModule track the progress within the module
     // Note that this count is not necessarily equal to the count of tests contained
@@ -182,6 +187,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     // Elapsed time from invocation started to ended.
     private long mElapsedTime;
 
+    /** Invocation level configuration */
+    private IConfiguration mConfiguration = null;
+
     /**
      * Default constructor.
      */
@@ -196,6 +204,12 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     public ResultReporter(ResultReporter masterResultReporter) {
         mMasterResultReporter = masterResultReporter;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mConfiguration = configuration;
     }
 
     /**
@@ -519,6 +533,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     }
 
     private void finalizeResults() {
+        if (mFingerprintFailure) {
+            CLog.w("Failed the fingerprint check. Skip result reporting.");
+            return;
+        }
         // Add all device serials into the result to be serialized
         for (String deviceSerial : mMasterDeviceSerials) {
             mResult.addDeviceSerial(deviceSerial);
@@ -632,6 +650,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     public void invocationFailed(Throwable cause) {
         warn("Invocation failed: %s", cause);
         InvocationFailureHandler.setFailed(mBuildHelper, cause);
+        if (cause instanceof FingerprintComparisonException) {
+            mFingerprintFailure = true;
+        }
     }
 
     /**
@@ -728,6 +749,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             fis = new FileInputStream(resultFile);
             logFile = mLogSaver.saveLogData("log-result", LogDataType.XML, fis);
             debug("Result XML URL: %s", logFile.getUrl());
+            logReportFiles(mConfiguration, resultFile, resultFile.getName(), LogDataType.XML);
         } catch (IOException ioe) {
             CLog.e("[%s] error saving XML with log saver", mDeviceSerial);
             CLog.e(ioe);
@@ -741,6 +763,8 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 debug("Result zip URL: %s", logFile.getUrl());
+                logReportFiles(
+                        mConfiguration, zippedResults, "results", LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }
@@ -1043,5 +1067,23 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     @VisibleForTesting
     public boolean waitForFinalized(long timeout, TimeUnit unit) throws InterruptedException {
         return mFinalized.await(timeout, unit);
+    }
+
+    /** Re-log a result file to all reporters so they are aware of it. */
+    private void logReportFiles(
+            IConfiguration configuration, File resultFile, String dataName, LogDataType type) {
+        if (configuration == null) {
+            return;
+        }
+        List<ITestInvocationListener> listeners = configuration.getTestInvocationListeners();
+        try (FileInputStreamSource source = new FileInputStreamSource(resultFile)) {
+            for (ITestInvocationListener listener : listeners) {
+                if (listener.equals(this)) {
+                    // Avoid logging agaisnt itself
+                    continue;
+                }
+                listener.testLog(dataName, type, source);
+            }
+        }
     }
 }
