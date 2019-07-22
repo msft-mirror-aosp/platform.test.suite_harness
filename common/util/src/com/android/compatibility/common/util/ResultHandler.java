@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -104,6 +105,9 @@ public class ResultHandler {
     private static final String RESULT_ATTR = "result";
     private static final String RESULT_TAG = "Result";
     private static final String RUNTIME_ATTR = "runtime";
+    private static final String RUN_HISTORY_ATTR = "run_history";
+    private static final String RUN_HISTORY_TAG = "RunHistory";
+    private static final String RUN_TAG = "Run";
     private static final String SCREENSHOT_TAG = "Screenshot";
     private static final String SKIPPED_ATTR = "skipped";
     private static final String STACK_TAG = "StackTrace";
@@ -198,6 +202,10 @@ public class ResultHandler {
             invocation.addInvocationInfo(BUILD_ID, parser.getAttributeValue(NS, BUILD_ID));
             invocation.addInvocationInfo(BUILD_PRODUCT, parser.getAttributeValue(NS,
                     BUILD_PRODUCT));
+            String runHistoryValue = parser.getAttributeValue(NS, RUN_HISTORY_ATTR);
+            if (runHistoryValue != null) {
+                invocation.addInvocationInfo(RUN_HISTORY_ATTR, runHistoryValue);
+            }
 
             // The build fingerprint needs to reflect the true fingerprint of the device under test,
             // ignoring potential overrides made by test suites (namely STS) for APFE build
@@ -212,7 +220,19 @@ public class ResultHandler {
             // --skip-device-info flag
             parser.nextTag();
             parser.require(XmlPullParser.END_TAG, NS, BUILD_TAG);
+
+            // Parse RunHistory tag.
             parser.nextTag();
+            boolean hasRunHistoryTag = true;
+            try {
+                parser.require(parser.START_TAG, NS, RUN_HISTORY_TAG);
+            } catch (XmlPullParserException e) {
+                hasRunHistoryTag = false;
+            }
+            if (hasRunHistoryTag) {
+                parseRunHistory(parser);
+            }
+
             parser.require(XmlPullParser.START_TAG, NS, SUMMARY_TAG);
             parser.nextTag();
             parser.require(XmlPullParser.END_TAG, NS, SUMMARY_TAG);
@@ -308,6 +328,18 @@ public class ResultHandler {
         }
     }
 
+    /** Parse and replay all run history information. */
+    private static void parseRunHistory(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        while (parser.nextTag() == XmlPullParser.START_TAG) {
+            parser.require(XmlPullParser.START_TAG, NS, RUN_TAG);
+            parser.nextTag();
+            parser.require(XmlPullParser.END_TAG, NS, RUN_TAG);
+        }
+        parser.require(XmlPullParser.END_TAG, NS, RUN_HISTORY_TAG);
+        parser.nextTag();
+    }
+
     /**
      * @param result
      * @param resultDir
@@ -391,6 +423,21 @@ public class ResultHandler {
             }
         }
         serializer.endTag(NS, BUILD_TAG);
+
+        // Run history - this contains a list of start and end times of previous runs. More
+        // information may be added in the future.
+        Collection<InvocationResult.RunHistory> runHistories =
+                ((InvocationResult) result).getRunHistories();
+        if (!runHistories.isEmpty()) {
+            serializer.startTag(NS, RUN_HISTORY_TAG);
+            for (InvocationResult.RunHistory runHistory : runHistories) {
+                serializer.startTag(NS, RUN_TAG);
+                serializer.attribute(NS, START_TIME_ATTR, String.valueOf(runHistory.startTime));
+                serializer.attribute(NS, END_TIME_ATTR, String.valueOf(runHistory.endTime));
+                serializer.endTag(NS, RUN_TAG);
+            }
+            serializer.endTag(NS, RUN_HISTORY_TAG);
+        }
 
         // Summary
         serializer.startTag(NS, SUMMARY_TAG);
