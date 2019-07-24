@@ -18,17 +18,28 @@ package com.android.compatibility.common.util;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.AbiUtils;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 /**
  * Unit tests for {@link ResultHandler}
@@ -59,10 +70,14 @@ public class ResultHandlerTest extends TestCase {
     private static final String BUILD_FINGERPRINT_UNALTERED = "build_fingerprint_unaltered";
     private static final String BUILD_ID = "build_id";
     private static final String BUILD_PRODUCT = "build_product";
+    private static final String RUN_HISTORY = "run_history";
     private static final String EXAMPLE_BUILD_ID = "XYZ";
     private static final String EXAMPLE_BUILD_PRODUCT = "wolverine";
     private static final String EXAMPLE_BUILD_FINGERPRINT = "example_build_fingerprint";
     private static final String EXAMPLE_BUILD_FINGERPRINT_UNALTERED = "example_build_fingerprint_unaltered";
+    private static final String EXAMPLE_RUN_HISTORY =
+            "[{\"startTime\":10000000000000,\"endTime\":10000000000001},"
+                    + "{\"startTime\":10000000000002,\"endTime\":10000000000003}]";
 
     private static final String DEVICE_A = "device123";
     private static final String DEVICE_B = "device456";
@@ -176,6 +191,18 @@ public class ResultHandlerTest extends TestCase {
         result.addInvocationInfo(BUILD_FINGERPRINT, EXAMPLE_BUILD_FINGERPRINT);
         result.addInvocationInfo(BUILD_ID, EXAMPLE_BUILD_ID);
         result.addInvocationInfo(BUILD_PRODUCT, EXAMPLE_BUILD_PRODUCT);
+        result.addInvocationInfo(RUN_HISTORY, EXAMPLE_RUN_HISTORY);
+        Collection<InvocationResult.RunHistory> runHistories =
+                ((InvocationResult) result).getRunHistories();
+        InvocationResult.RunHistory runHistory1 = new InvocationResult.RunHistory();
+        runHistory1.startTime = 10000000000000L;
+        runHistory1.endTime = 10000000000001L;
+        runHistories.add(runHistory1);
+        InvocationResult.RunHistory runHistory2 = new InvocationResult.RunHistory();
+        runHistory2.startTime = 10000000000002L;
+        runHistory2.endTime = 10000000000003L;
+        runHistories.add(runHistory2);
+
         // Module A: test1 passes, test2 not executed
         IModuleResult moduleA = result.getOrCreateModule(ID_A);
         moduleA.setDone(false);
@@ -208,12 +235,31 @@ public class ResultHandlerTest extends TestCase {
         moduleBTest5.skipped();
 
         // Serialize to file
-        ResultHandler.writeResults(SUITE_NAME, SUITE_VERSION, SUITE_PLAN, SUITE_BUILD,
-                result, resultDir, START_MS, END_MS, REFERENCE_URL, LOG_URL,
-                COMMAND_LINE_ARGS);
+        File res =
+                ResultHandler.writeResults(
+                        SUITE_NAME,
+                        SUITE_VERSION,
+                        SUITE_PLAN,
+                        SUITE_BUILD,
+                        result,
+                        resultDir,
+                        START_MS,
+                        END_MS,
+                        REFERENCE_URL,
+                        LOG_URL,
+                        COMMAND_LINE_ARGS);
+        String content = FileUtil.readStringFromFile(res);
+        assertXmlContainsAttribute(content, "Result/Build", "run_history", EXAMPLE_RUN_HISTORY);
+        assertXmlContainsNode(content, "Result/RunHistory");
+        assertXmlContainsAttribute(content, "Result/RunHistory/Run", "start", "10000000000000");
+        assertXmlContainsAttribute(content, "Result/RunHistory/Run", "end", "10000000000001");
+        assertXmlContainsAttribute(content, "Result/RunHistory/Run", "start", "10000000000002");
+        assertXmlContainsAttribute(content, "Result/RunHistory/Run", "end", "10000000000003");
 
         // Parse the results and assert correctness
-        checkResult(ResultHandler.getResultFromDir(resultDir), false);
+        result = ResultHandler.getResultFromDir(resultDir);
+        checkResult(result, false);
+        checkRunHistory(result);
     }
 
     public void testParsing() throws Exception {
@@ -350,6 +396,11 @@ public class ResultHandlerTest extends TestCase {
         checkResult(result, EXAMPLE_BUILD_FINGERPRINT, newTestFormat);
     }
 
+    static void checkRunHistory(IInvocationResult result) {
+        Map<String, String> buildInfo = result.getInvocationInfo();
+        assertEquals("Incorrect run history", EXAMPLE_RUN_HISTORY, buildInfo.get(RUN_HISTORY));
+    }
+
     static void checkResult(
             IInvocationResult result, String expectedBuildFingerprint, boolean newTestFormat)
             throws Exception {
@@ -449,5 +500,56 @@ public class ResultHandlerTest extends TestCase {
         assertNull("Unexpected message", moduleBTest5.getMessage());
         assertNull("Unexpected stack trace", moduleBTest5.getStackTrace());
         assertNull("Unexpected report", moduleBTest5.getReportLog());
+    }
+
+    /** Return all XML nodes that match the given xPathExpression. */
+    private NodeList getXmlNodes(String xml, String xPathExpression)
+            throws XPathExpressionException {
+
+        InputSource inputSource = new InputSource(new StringReader(xml));
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        return (NodeList) xpath.evaluate(xPathExpression, inputSource, XPathConstants.NODESET);
+    }
+
+    /** Assert that the XML contains a node matching the given xPathExpression. */
+    private NodeList assertXmlContainsNode(String xml, String xPathExpression)
+            throws XPathExpressionException {
+        NodeList nodes = getXmlNodes(xml, xPathExpression);
+        assertNotNull(
+                String.format("XML '%s' returned null for xpath '%s'.", xml, xPathExpression),
+                nodes);
+        assertTrue(
+                String.format(
+                        "XML '%s' should have returned at least 1 node for xpath '%s', "
+                                + "but returned %s nodes instead.",
+                        xml, xPathExpression, nodes.getLength()),
+                nodes.getLength() >= 1);
+        return nodes;
+    }
+
+    /**
+     * Assert that the XML contains a node matching the given xPathExpression and that the node has
+     * a given value.
+     */
+    private void assertXmlContainsAttribute(
+            String xml, String xPathExpression, String attributeName, String attributeValue)
+            throws XPathExpressionException {
+        NodeList nodes = assertXmlContainsNode(xml, xPathExpression);
+        boolean found = false;
+
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Element element = (Element) nodes.item(i);
+            String value = element.getAttribute(attributeName);
+            if (attributeValue.equals(value)) {
+                found = true;
+                break;
+            }
+        }
+
+        assertTrue(
+                String.format(
+                        "xPath '%s' should contain attribute '%s' but does not. XML: '%s'",
+                        xPathExpression, attributeName, xml),
+                found);
     }
 }
