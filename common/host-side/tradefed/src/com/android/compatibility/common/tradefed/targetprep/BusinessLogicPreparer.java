@@ -386,7 +386,7 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
                 extendedDeviceInfo
                     .add(String.format("%s:%s:%s", fileAndKey[0], fileAndKey[1], value));
             }
-        }catch(JSONException | IOException e){
+        }catch(JSONException | IOException | RuntimeException e){
             CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
                 ediFile.getAbsolutePath(), e);
             return new ArrayList<>();
