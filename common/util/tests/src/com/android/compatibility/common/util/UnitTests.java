@@ -37,6 +37,7 @@ import org.junit.runners.Suite.SuiteClasses;
     ReportLogTest.class,
     ResultHandlerTest.class,
     StatTest.class,
+    TestResultHistoryTest.class,
     TestResultTest.class,
     ReadElfTest.class,
 })
