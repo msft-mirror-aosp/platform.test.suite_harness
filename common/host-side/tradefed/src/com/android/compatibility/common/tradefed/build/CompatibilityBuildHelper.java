@@ -328,21 +328,34 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the test file cannot be found
      */
     public File getTestFile(String filename, IAbi abi) throws FileNotFoundException {
-        File[] testDirs = {getTestsDir()};
+        File testsDir = getTestsDir();
 
-        // The file may be in a subdirectory so do a more through search
+        // The file may be in a subdirectory so do a more thorough search
         // if it did not exist.
         File testFile = null;
-        for (File testDir: testDirs) {
-            try {
-                testFile = FileUtil.findFile(filename, abi, testDir);
-            } catch (IOException e) {
-                throw new FileNotFoundException(String.format(
-                        "Failure in finding compatibility test file %s due to %s", filename, e));
-            }
+        try {
+            testFile = FileUtil.findFile(filename, abi, testsDir);
             if (testFile != null) {
                 return testFile;
             }
+
+            // TODO(b/138416078): Once build dependency can be fixed and test required APKs are all
+            // under the test module directory, we can remove this fallback approach to do
+            // individual download from remote artifact.
+            // Try to stage the files from remote zip files.
+            testFile = mBuildInfo.stageRemoteFile(filename, testsDir);
+            if (testFile != null) {
+                // Search again to match the given abi.
+                testFile = FileUtil.findFile(filename, abi, testsDir);
+                if (testFile != null) {
+                    return testFile;
+                }
+            }
+        } catch (IOException e) {
+            throw new FileNotFoundException(
+                    String.format(
+                            "Failure in finding compatibility test file %s due to %s",
+                            filename, e));
         }
 
         throw new FileNotFoundException(String.format(
