@@ -44,6 +44,7 @@ public class CompatibilityProtoResultReporter extends FileProtoResultReporter {
             File protoFile = new File(mResultDir, PROTO_FILE_NAME);
             setFileOutput(protoFile);
         }
+        super.processStartInvocation(invocationStartRecord, invocationContext);
     }
 
     private File getProtoResultDirectory() {
