@@ -15,12 +15,11 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
+import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IBuildProvider;
@@ -33,6 +32,7 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
+import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.util.FileUtil;
@@ -76,6 +76,7 @@ public class PreviousResultLoaderTest {
         mContext.setConfigurationDescriptor(new ConfigurationDescriptor());
         mContext.addInvocationAttribute(TestInvocation.COMMAND_ARGS_KEY,
                 "cts -m CtsGesture --skip-all-system-status-check");
+        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, new BuildInfo());
         mMockDevice = EasyMock.createMock(ITestDevice.class);
     }
 
@@ -89,7 +90,7 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests_failed() throws Exception {
-        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(""));
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild("", false));
         // Delete the proto file
         mProtoFile.delete();
         try {
@@ -98,9 +99,7 @@ public class PreviousResultLoaderTest {
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
-            assertEquals(
-                    String.format("java.io.FileNotFoundException: %s (No such file or directory)",
-                            mProtoFile.getAbsolutePath()), expected.getMessage());
+            assertEquals("Could not find any test-record.pb to load.", expected.getMessage());
         }
         EasyMock.verify(mMockProvider);
     }
@@ -112,13 +111,41 @@ public class PreviousResultLoaderTest {
     public void testReloadTests() throws Exception {
         final String EXPECTED_RUN_HISTORY =
                 "[{\"startTime\":1530218251501," + "\"endTime\":1530218261061}]";
-        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
+        EasyMock.expect(mMockProvider.getBuild())
+                .andReturn(createFakeBuild(createBasicResults(), false));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
         EasyMock.replay(mMockDevice, mMockProvider);
         mLoader.init();
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
-        mLoader.loadPreviousRecord();
+        IConfiguration config = new Configuration("name", "desc");
+        assertEquals(0, config.getTargetPreparers().size());
+        mLoader.customizeConfiguration(config);
+        // A special preparer was added for fingerprint
+        assertEquals(1, config.getTargetPreparers().size());
+        ITargetPreparer preparer = config.getTargetPreparers().get(0);
+        assertTrue(preparer instanceof BuildFingerPrintPreparer);
+        assertEquals(
+                "testfingerprint", ((BuildFingerPrintPreparer) preparer).getExpectedFingerprint());
+        String runHistory =
+                config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
+        assertEquals(EXPECTED_RUN_HISTORY, runHistory);
+        EasyMock.verify(mMockDevice, mMockProvider);
+    }
+
+    @Test
+    public void testReloadTests_withMultiProto() throws Exception {
+        final String EXPECTED_RUN_HISTORY =
+                "[{\"startTime\":1530218251501," + "\"endTime\":1530218261061}]";
+        EasyMock.expect(mMockProvider.getBuild())
+                .andReturn(createFakeBuild(createBasicResults(), true));
+        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
+
+        EasyMock.replay(mMockDevice, mMockProvider);
+        mLoader.init();
+        assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
+        CollectingTestListener listener = mLoader.loadPreviousResults();
+        assertNotNull(listener);
         IConfiguration config = new Configuration("name", "desc");
         assertEquals(0, config.getTargetPreparers().size());
         mLoader.customizeConfiguration(config);
@@ -145,7 +172,7 @@ public class PreviousResultLoaderTest {
                 "[{\"startTime\":10000000000000,\"endTime\":10000000100000}]";
         mContext.addInvocationAttribute(RUN_HISTORY_KEY, OLD_RUN_HISTORY);
         EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createResultsWithRunHistory()));
+                .andReturn(createFakeBuild(createResultsWithRunHistory(), false));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
         EasyMock.replay(mMockDevice, mMockProvider);
 
@@ -159,7 +186,7 @@ public class PreviousResultLoaderTest {
         EasyMock.verify(mMockDevice, mMockProvider);
     }
 
-    private IBuildInfo createFakeBuild(String resultContent) throws Exception {
+    private IBuildInfo createFakeBuild(String resultContent, boolean index) throws Exception {
         DeviceBuildInfo build = new DeviceBuildInfo();
         build.addBuildAttribute(CompatibilityBuildHelper.SUITE_NAME, "CTS");
         mRootDir = FileUtil.createTempDir("cts-root-dir");
@@ -179,7 +206,11 @@ public class PreviousResultLoaderTest {
                         new CompatibilityBuildHelper(build).getResultDir(),
                         CompatibilityProtoResultReporter.PROTO_DIR);
         protoDir.mkdir();
-        mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME);
+        if (index) {
+            mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME + "0");
+        } else {
+            mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME);
+        }
         TestRecord.Builder builder = TestRecord.newBuilder();
         builder.setDescription(Any.pack(mContext.toProto()));
         builder.build().writeDelimitedTo(new FileOutputStream(mProtoFile));
