@@ -19,6 +19,8 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.ddmlib.testrunner.TestResult.TestStatus;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
@@ -37,11 +39,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map.Entry;
 
-/**
- * Target preparer that instruments an APK.
- */
-@OptionClass(alias="apk-instrumentation-preparer")
-public class ApkInstrumentationPreparer extends PreconditionPreparer implements ITargetCleaner {
+/** Target preparer that instruments an APK. */
+@OptionClass(alias = "apk-instrumentation-preparer")
+public class ApkInstrumentationPreparer extends PreconditionPreparer
+        implements IConfigurationReceiver, ITargetCleaner {
 
     @Option(name = "apk", description = "Name of the apk to instrument", mandatory = true)
     protected String mApkFileName = null;
@@ -58,6 +59,14 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
 
     @Option(name = "throw-error", description = "Whether to throw error for device test failure")
     protected boolean mThrowError = true;
+
+    private IConfiguration mConfiguration = null;
+
+    /** {@inheritDoc} */
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mConfiguration = configuration;
+    }
 
     /**
      * {@inheritDoc}
@@ -118,6 +127,7 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer implements 
         CLog.i("Instrumenting package: %s", mPackageName);
         CollectingTestListener listener = new CollectingTestListener();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
+        instrTest.setConfiguration(mConfiguration);
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
         instrTest.setPackageName(mPackageName);
