@@ -183,8 +183,6 @@
     <!-- fails only on angler/bullhead userdebug -->
     <option name="compatibility:exclude-filter" value="CtsLiblogTestCases liblog#wrap_mode_blocks" />
 
-    <!-- b/80309889 -->
-    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testCpuActiveTime" />
     <!-- b/132274449 -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.validation.BatteryStatsValidationTests#testConnectivityStateChange" />
 
@@ -212,4 +210,11 @@
 
     <!-- b/126548816 -->
     <option name="compatibility:exclude-filter" value="CtsRcsTestCases" />
+
+    <!-- b/112688380 -->
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testAppOrientationRequestConfigClears" />
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+    <!-- b/112688380, b/139936670 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testAppOrientationRequestConfigClears" />
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
 </configuration>
