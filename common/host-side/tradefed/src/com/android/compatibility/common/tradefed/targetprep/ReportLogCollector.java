@@ -22,6 +22,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.StubDevice;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetCleaner;
@@ -79,6 +80,10 @@ public class ReportLogCollector implements ITargetCleaner {
     public void tearDown(ITestDevice device, IBuildInfo buildInfo, Throwable e) {
         if (e instanceof DeviceNotAvailableException) {
             CLog.e("Invocation finished with DeviceNotAvailable, skipping collecting logs.");
+            return;
+        }
+        if (device.getIDevice() instanceof StubDevice) {
+            CLog.d("Skipping ReportLogCollector, it requires a device.");
             return;
         }
         // Pull report log files from device.
