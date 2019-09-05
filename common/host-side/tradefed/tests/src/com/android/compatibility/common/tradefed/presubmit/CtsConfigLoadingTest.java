@@ -43,9 +43,12 @@ import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -66,6 +69,7 @@ public class CtsConfigLoadingTest {
             "bionic",
             "bluetooth",
             "camera",
+            "contentcapture",
             "deviceinfo",
             "deqp",
             "devtools",
@@ -146,6 +150,35 @@ public class CtsConfigLoadingTest {
     }
 
     /**
+     * Families of module parameterization that MUST be specified explicitly in the module
+     * AndroidTest.xml.
+     */
+    private static final Set<String> MANDATORY_PARAMETERS_FAMILY = new HashSet<>();
+
+    static {
+        MANDATORY_PARAMETERS_FAMILY.add(ModuleParameters.INSTANT_APP_FAMILY);
+        MANDATORY_PARAMETERS_FAMILY.add(ModuleParameters.MULTI_ABI_FAMILY);
+    }
+
+    /**
+     * Whitelist to start enforcing metadata on modules. No additional entry will be allowed! This
+     * is meant to burn down the remaining modules definition.
+     */
+    private static final Set<String> WHITELIST_MODULE_PARAMETERS = new HashSet<>();
+
+    static {
+        WHITELIST_MODULE_PARAMETERS.add("CtsWidgetTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsSimpleCpuTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsAppSecurityHostTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsMediaStressTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsTelephonySdk28TestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsHardwareTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsGestureTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsNetTestCases.config");
+        WHITELIST_MODULE_PARAMETERS.add("CtsPermissionTestCasesSdk28.config");
+    }
+
+    /**
      * Test that configuration shipped in Tradefed can be parsed.
      * -> Exclude deprecated ApkInstaller.
      * -> Check if host-side tests are non empty.
@@ -173,6 +206,7 @@ public class CtsConfigLoadingTest {
         stubFolder.setRootDir(new File(ctsRoot));
         stubFolder.addBuildAttribute(CompatibilityBuildHelper.SUITE_NAME, "CTS");
         stubFolder.addBuildAttribute("ROOT_DIR", ctsRoot);
+        List<String> missingMandatoryParameters = new ArrayList<>();
         // We expect to be able to load every single config in testcases/
         for (File config : listConfig) {
             IConfiguration c = ConfigurationFactory.getInstance()
@@ -262,7 +296,12 @@ public class CtsConfigLoadingTest {
             }
 
             // Check that specified parameters are expected
-            checkModuleParameters(config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+            boolean res =
+                    checkModuleParameters(
+                            config.getName(), cd.getMetaData(ITestSuite.PARAMETER_KEY));
+            if (!res) {
+                missingMandatoryParameters.add(config.getName());
+            }
             // Check that specified tokens are expected
             checkTokens(config.getName(), cd.getMetaData(ITestSuite.TOKEN_KEY));
 
@@ -286,25 +325,44 @@ public class CtsConfigLoadingTest {
             // Ensure options have been set
             c.validateOptions();
         }
+
+        // Exempt the whitelist
+        missingMandatoryParameters.removeAll(WHITELIST_MODULE_PARAMETERS);
+        // Ensure the mandatory fields are filled
+        if (!missingMandatoryParameters.isEmpty()) {
+            String msg =
+                    String.format(
+                            "The following %s modules are missing some of the mandatory "
+                                    + "parameters [instant_app, not_instant_app, "
+                                    + "multi_abi, not_multi_abi]: '%s'",
+                            missingMandatoryParameters.size(), missingMandatoryParameters);
+            throw new ConfigurationException(msg);
+        }
     }
 
-    /**
-     * Test that all parameter metadata can be resolved.
-     */
-    private void checkModuleParameters(String configName, List<String> parameters)
+    /** Test that all parameter metadata can be resolved. */
+    private boolean checkModuleParameters(String configName, List<String> parameters)
             throws ConfigurationException {
         if (parameters == null) {
-            return;
+            return false;
         }
+        Map<String, Boolean> families = createFamilyCheckMap();
         for (String param : parameters) {
             try {
-                ModuleParameters.valueOf(param.toUpperCase());
+                ModuleParameters p = ModuleParameters.valueOf(param.toUpperCase());
+                if (families.containsKey(p.getFamily())) {
+                    families.put(p.getFamily(), true);
+                }
             } catch (IllegalArgumentException e) {
                 throw new ConfigurationException(
                         String.format("Config: %s includes an unknown parameter '%s'.",
                                 configName, param));
             }
         }
+        if (families.containsValue(false)) {
+            return false;
+        }
+        return true;
     }
 
     /** Test that all tokens can be resolved. */
@@ -321,5 +379,13 @@ public class CtsConfigLoadingTest {
                                 "Config: %s includes an unknown token '%s'.", configName, token));
             }
         }
+    }
+
+    private Map<String, Boolean> createFamilyCheckMap() {
+        Map<String, Boolean> families = new HashMap<>();
+        for (String family : MANDATORY_PARAMETERS_FAMILY) {
+            families.put(family, false);
+        }
+        return families;
     }
 }
