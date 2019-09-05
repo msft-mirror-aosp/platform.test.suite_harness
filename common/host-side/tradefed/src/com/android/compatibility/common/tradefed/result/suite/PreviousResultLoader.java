@@ -204,6 +204,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     public String getCommandLine() {
         List<String> command = mPreviousContext.getAttributes().get(
                 TestInvocation.COMMAND_ARGS_KEY);
+        CLog.e("%s", mPreviousContext.getAttributes().getUniqueMap());
         if (command == null) {
             throw new RuntimeException("Couldn't find the command_line_args.");
         }
