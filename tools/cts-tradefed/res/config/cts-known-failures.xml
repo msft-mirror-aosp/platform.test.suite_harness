@@ -139,6 +139,10 @@
     <!-- b/62481870 -->
     <option name="compatibility:exclude-filter" value="CtsNativeMediaAAudioTestCases android.nativemedia.aaudio.AAudioOutputStreamCallbackTest#testPlayback" />
 
+    <!-- b/134654621 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testAppOrientationRequestConfigClears" />
+
     <!-- b/62976713 -->
     <option name="compatibility:exclude-filter" value="arm64-v8a CtsMediaBitstreamsTestCases" />
     <option name="compatibility:exclude-filter" value="x86_64 CtsMediaBitstreamsTestCases" />
