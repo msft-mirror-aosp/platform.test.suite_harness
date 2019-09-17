@@ -322,8 +322,10 @@ public abstract class BackupUtils {
     }
 
     /** Execute shell command "bmgr --user <id> activate <activate>." */
-    public void activateBackupForUser(boolean activate, int userId) throws IOException {
+    public boolean activateBackupForUser(boolean activate, int userId) throws IOException {
+        boolean previouslyActivated = isBackupActivatedForUser(userId);
         executeShellCommandSync(String.format("bmgr --user %d activate %b", userId, activate));
+        return previouslyActivated;
     }
 
     /**
