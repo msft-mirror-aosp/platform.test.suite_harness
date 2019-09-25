@@ -58,7 +58,7 @@ func tradefedBinaryLoadHook(tfb *TradefedBinaryProperties) func(ctx android.Load
 
 		// Create a submodule that generates the test-suite-info.properties file
 		// and copies DynamicConfig.xml if it is present.
-		ctx.CreateModule(android.ModuleFactoryAdaptor(tradefedBinaryGenFactory),
+		ctx.CreateModule(tradefedBinaryGenFactory,
 			&TradefedBinaryGenProperties{
 				Name:       &genName,
 				Short_name: tfb.Short_name,
