@@ -68,6 +68,8 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
     /** Used to get run history from the invocation context of last run. */
     public static final String RUN_HISTORY_KEY = "run_history";
 
+    private static final String COMMAND_LINE_ARGS = "command_line_args";
+
     @Option(name = RetryFactoryTest.RETRY_OPTION,
             shortName = 'r',
             description = "retry a previous session's failed and not executed tests.",
@@ -170,6 +172,12 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             RunHistory newRun = new RunHistory();
             newRun.startTime = holder.startTime;
             newRun.endTime = holder.endTime;
+            newRun.passedTests = holder.passedTests;
+            newRun.failedTests = holder.failedTests;
+            newRun.commandLineArgs =
+                    com.google.common.base.Strings.nullToEmpty(
+                            holder.context.getAttributes().getUniqueMap().get(COMMAND_LINE_ARGS));
+            newRun.hostName = holder.hostName;
             mRunHistories.add(newRun);
         } catch (IOException e) {
             throw new RuntimeException(e);

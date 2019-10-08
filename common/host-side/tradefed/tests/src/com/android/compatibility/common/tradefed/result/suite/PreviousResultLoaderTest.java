@@ -111,7 +111,13 @@ public class PreviousResultLoaderTest {
     @Test
     public void testReloadTests() throws Exception {
         final String EXPECTED_RUN_HISTORY =
-                "[{\"startTime\":1530218251501," + "\"endTime\":1530218261061}]";
+                "[{\"startTime\":1530218251501,"
+                        + "\"endTime\":1530218261061,"
+                        + "\"passedTests\":0,"
+                        + "\"failedTests\":0,"
+                        + "\"commandLineArgs\":\"cts -m CtsGesture "
+                        + "--skip-all-system-status-check\","
+                        + "\"hostName\":\"user.android.com\"}]";
         EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
@@ -137,12 +143,23 @@ public class PreviousResultLoaderTest {
     /** Test that the loader can correctly provide the run history back. */
     @Test
     public void testReloadTests_withRunHistory() throws Exception {
-        final String EXPECTED_RUN_HISTORY =
-                "[{\"startTime\":10000000000000,"
-                        + "\"endTime\":10000000100000},{\"startTime\":1530218251501,"
-                        + "\"endTime\":1530218261061}]";
-        final String OLD_RUN_HISTORY =
-                "[{\"startTime\":10000000000000,\"endTime\":10000000100000}]";
+        final String RUN_HISTORY_1 =
+                "{\"startTime\":1000000000000,"
+                        + "\"endTime\":1000000010000,"
+                        + "\"passedTests\":10,"
+                        + "\"failedTests\":5,"
+                        + "\"commandLineArgs\":\"cts -m CtsGesture --skip-all-system-status-check\","
+                        + "\"hostName\":\"user1.android.com\"}";
+        final String RUN_HISTORY_2 =
+                "{\"startTime\":1530218251501,"
+                        + "\"endTime\":1530218261061,"
+                        + "\"passedTests\":0,"
+                        + "\"failedTests\":0,"
+                        + "\"commandLineArgs\":\"cts -m CtsGesture --skip-all-system-status-check "
+                        + "--shard-count 5\","
+                        + "\"hostName\":\"user2.android.com\"}";
+        final String OLD_RUN_HISTORY = String.format("[%s]", RUN_HISTORY_1);
+        final String EXPECTED_RUN_HISTORY = String.format("[%s,%s]", RUN_HISTORY_1, RUN_HISTORY_2);
         mContext.addInvocationAttribute(RUN_HISTORY_KEY, OLD_RUN_HISTORY);
         EasyMock.expect(mMockProvider.getBuild())
                 .andReturn(createFakeBuild(createResultsWithRunHistory()));
@@ -187,13 +204,15 @@ public class PreviousResultLoaderTest {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n");
         sb.append("<?xml-stylesheet type=\"text/xsl\" href=\"compatibility_result.xsl\"?>\n");
-        sb.append("<Result start=\"1530218251501\" end=\"1530218261061\" "
-                + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
-                + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
-                + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
-                + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
-                + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
-                + "devices=\"HT6570300047\"  >\n");
+        sb.append(
+                "<Result start=\"1530218251501\" end=\"1530218261061\" "
+                        + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
+                        + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
+                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
+                        + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
+                        + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
+                        + "devices=\"HT6570300047\" "
+                        + "host_name=\"user.android.com\">\n");
         sb.append(
                 "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
                         + " build_vendor_fingerprint=\"vendorFingerprint\" "
@@ -220,21 +239,32 @@ public class PreviousResultLoaderTest {
                 "<Result start=\"1530218251501\" end=\"1530218261061\" "
                         + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
                         + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
-                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
+                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check "
+                        + "--shard-count 5\" "
                         + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
                         + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
-                        + "devices=\"HT6570300047\"  >\n");
+                        + "devices=\"HT6570300047\" "
+                        + "host_name=\"user2.android.com\" >\n");
+        final String RUN_HISTORY_JSON =
+                "[{'startTime':1000000000000,'endTime':1000000010000,"
+                        + "'pass':10,'failed':5,"
+                        + "'commandLineArgs':'cts -m CtsGesture --skip-all-system-status-check',"
+                        + "'hostName':'user1.android.com'}]";
         sb.append(
                 "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
                         + " build_vendor_fingerprint=\"vendorFingerprint\" "
                         + " build_reference_fingerprint=\"\" "
                         + " build_fingerprint=\"testfingerprint\""
-                        + " run_history=\"[{'startTime':10000000000000,"
-                        + "'endTime':10000000100000}]\"/>\n");
+                        + " run_history=\""
+                        + RUN_HISTORY_JSON
+                        + "\"/>\n");
         // Run history
         sb.append(
                 "  <RunHistory>\n"
-                        + "    <Run start=\"10000000000000\" end=\"10000000100000\"/>\n"
+                        + "    <Run start=\"1000000000000\" end=\"1000000010000\" "
+                        + "pass=\"10\" failed=\"5\" "
+                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
+                        + "hostName=\"user1.android.com\" />\n"
                         + "  </RunHistory>\n");
         // Summary
         sb.append("  <Summary pass=\"0\" failed=\"0\" modules_done=\"2\" modules_total=\"2\" />\n");
