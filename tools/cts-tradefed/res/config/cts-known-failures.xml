@@ -230,4 +230,10 @@
 
     <!-- b/133377378 -->
     <option name="compatibility:exclude-filter" value="CtsBackupTestCases android.backup.cts.FullBackupQuotaTest#testQuotaExceeded" />
+
+    <!-- b/134350276 -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testResetPasswordWithTokenBeforeUnlock" />
+
+    <!-- b/139334624 -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testResetPasswordTokenUsableAfterClearingLock" />
 </configuration>
