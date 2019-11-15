@@ -44,7 +44,7 @@ public abstract class BackupUtils {
 
     private static final int BACKUP_PROVISIONING_TIMEOUT_SECONDS = 30;
     private static final int BACKUP_PROVISIONING_POLL_INTERVAL_SECONDS = 1;
-    private static final int BACKUP_SERVICE_INIT_TIMEOUT_SECS = 30;
+    private static final long BACKUP_SERVICE_INIT_TIMEOUT_SECS = TimeUnit.MINUTES.toSeconds(2);
 
     private static final Pattern BACKUP_MANAGER_CURRENTLY_ENABLE_STATUS_PATTERN =
             Pattern.compile("^Backup Manager currently (enabled|disabled)$");
@@ -322,8 +322,10 @@ public abstract class BackupUtils {
     }
 
     /** Execute shell command "bmgr --user <id> activate <activate>." */
-    public void activateBackupForUser(boolean activate, int userId) throws IOException {
+    public boolean activateBackupForUser(boolean activate, int userId) throws IOException {
+        boolean previouslyActivated = isBackupActivatedForUser(userId);
         executeShellCommandSync(String.format("bmgr --user %d activate %b", userId, activate));
+        return previouslyActivated;
     }
 
     /**
@@ -371,7 +373,7 @@ public abstract class BackupUtils {
     }
 
     @VisibleForTesting
-    void waitUntilBackupServiceIsRunning(int userId, int timeout)
+    void waitUntilBackupServiceIsRunning(int userId, long timeout)
             throws IOException, InterruptedException {
         CommonTestUtils.waitUntil(
                 "Backup Manager init timed out",
