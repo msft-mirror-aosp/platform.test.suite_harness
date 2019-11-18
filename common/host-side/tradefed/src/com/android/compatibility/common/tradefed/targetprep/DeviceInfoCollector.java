@@ -137,12 +137,24 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
         try {
             deviceInfoDir = FileUtil.createTempDir(DeviceInfo.RESULT_DIR_NAME);
             if (device.pullDir(mSrcDir, deviceInfoDir)) {
-                for (File deviceInfoFile : deviceInfoDir.listFiles()) {
-                    try (FileInputStreamSource source = new FileInputStreamSource(deviceInfoFile)) {
-                        mLogger.testLog(deviceInfoFile.getName(), LogDataType.TEXT, source);
+                if (!deviceInfoDir.exists() || deviceInfoDir.listFiles() == null) {
+                    CLog.e(
+                            "Pulled device-info, but local dir '%s' is not valid. "
+                                    + "[exists=%s, isDir=%s].",
+                            deviceInfoDir, deviceInfoDir.exists(), deviceInfoDir.isDirectory());
+                } else {
+                    for (File deviceInfoFile : deviceInfoDir.listFiles()) {
+                        try (FileInputStreamSource source =
+                                new FileInputStreamSource(deviceInfoFile)) {
+                            mLogger.testLog(deviceInfoFile.getName(), LogDataType.TEXT, source);
+                        }
                     }
+                    buildInfo.setFile(
+                            DEVICE_INFO_DIR,
+                            deviceInfoDir,
+                            /** version */
+                            "v1");
                 }
-                buildInfo.setFile(DEVICE_INFO_DIR, deviceInfoDir, /** version */ "v1");
             } else {
                 CLog.e("Failed to pull device-info files from device %s", device.getSerialNumber());
             }
