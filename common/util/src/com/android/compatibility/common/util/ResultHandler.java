@@ -284,6 +284,10 @@ public class ResultHandler {
                                 parser.require(XmlPullParser.END_TAG, NS, SCREENSHOT_TAG);
                             } else if (SUMMARY_TAG.equals(parser.getName())) {
                                 test.setReportLog(ReportLog.parse(parser));
+                            } else if (RUN_HISTORY_TAG.equals(parser.getName())) {
+                                // Ignore the test result history since it only exists in
+                                // CTS Verifier, which will not use parsing feature.
+                                skipCurrentTag(parser);
                             } else {
                                 parser.nextTag();
                             }
@@ -333,6 +337,22 @@ public class ResultHandler {
         }
         parser.require(XmlPullParser.END_TAG, NS, RUN_HISTORY_TAG);
         parser.nextTag();
+    }
+
+    /** Skip the current XML tags. */
+    private static void skipCurrentTag(XmlPullParser parser)
+            throws XmlPullParserException, IOException {
+        int depth = 1;
+        while (depth != 0) {
+            switch (parser.next()) {
+                case XmlPullParser.END_TAG:
+                    depth--;
+                    break;
+                case XmlPullParser.START_TAG:
+                    depth++;
+                    break;
+            }
+        }
     }
 
     /**
@@ -501,6 +521,15 @@ public class ResultHandler {
                     if (report != null) {
                         ReportLog.serialize(serializer, report);
                     }
+
+                    // Test result history contains a list of execution time for each test item.
+                    List<TestResultHistory> testResultHistories = r.getTestResultHistories();
+                    if (testResultHistories != null) {
+                        for (TestResultHistory resultHistory : testResultHistories) {
+                            TestResultHistory.serialize(serializer, resultHistory, r.getName());
+                        }
+                    }
+
                     serializer.endTag(NS, TEST_TAG);
                 }
                 serializer.endTag(NS, CASE_TAG);
