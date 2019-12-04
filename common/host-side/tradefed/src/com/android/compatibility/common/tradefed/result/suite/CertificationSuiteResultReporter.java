@@ -75,6 +75,8 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
+    public static final String HTLM_REPORT_NAME = "test_result.html";
+    public static final String REPORT_XSL_FILE_NAME = "compatibility_result.xsl";
     public static final String FAILURE_REPORT_NAME = "test_result_failures_suite.html";
     public static final String FAILURE_XSL_FILE_NAME = "compatibility_failures.xsl";
 
@@ -124,7 +126,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
     private static final String[] RESULT_RESOURCES = {
         "compatibility_result.css",
-        "compatibility_result.xsd",
         "compatibility_result.xsl",
         "logo.png"
     };
@@ -321,16 +322,21 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     public void postFormattingStep(File resultDir, File reportFile) {
         super.postFormattingStep(resultDir,reportFile);
 
-        createChecksum(resultDir, getRunResults(),
+        createChecksum(
+                resultDir,
+                getMergedTestRunResults(),
                 getPrimaryBuildInfo().getBuildAttributes().get(BUILD_FINGERPRINT));
 
+        File report = createReport(reportFile);
+        if (report != null) {
+            CLog.i("Viewable report: %s", report.getAbsolutePath());
+        }
         File failureReport = null;
         if (mIncludeHtml) {
             // Create the html report before the zip file.
             failureReport = createFailureReport(reportFile);
         }
         File zippedResults = zipResults(mResultDir);
-        // TODO: calculate results checksum file
         if (!mIncludeHtml) {
             // Create failure report after zip file so extra data is not uploaded
             failureReport = createFailureReport(reportFile);
@@ -525,6 +531,24 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 CLog.e(ioe);
             }
         }
+    }
+
+    /** Generate html report. */
+    private File createReport(File inputXml) {
+        File report = new File(inputXml.getParentFile(), HTLM_REPORT_NAME);
+        try (InputStream xslStream =
+                        new FileInputStream(
+                                new File(inputXml.getParentFile(), REPORT_XSL_FILE_NAME));
+                OutputStream outputStream = new FileOutputStream(report)) {
+            Transformer transformer =
+                    TransformerFactory.newInstance().newTransformer(new StreamSource(xslStream));
+            transformer.transform(new StreamSource(inputXml), new StreamResult(outputStream));
+        } catch (IOException | TransformerException ignored) {
+            CLog.e(ignored);
+            FileUtil.deleteFile(report);
+            return null;
+        }
+        return report;
     }
 
     /**
