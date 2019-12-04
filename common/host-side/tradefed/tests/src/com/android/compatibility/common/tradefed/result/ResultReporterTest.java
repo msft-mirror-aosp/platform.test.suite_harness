@@ -71,7 +71,6 @@ public class ResultReporterTest extends TestCase {
     private static final String RESULT_DIR = "result123";
     private static final String[] FORMATTING_FILES = {
         "compatibility_result.css",
-        "compatibility_result.xsd",
         "compatibility_result.xsl",
         "logo.png"};
 
