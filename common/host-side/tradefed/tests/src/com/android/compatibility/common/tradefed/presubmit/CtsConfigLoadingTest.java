@@ -235,8 +235,10 @@ public class CtsConfigLoadingTest {
                 // Check that all the tests runners are well supported.
                 if (!SUPPORTED_CTS_TEST_TYPE.contains(test.getClass().getCanonicalName())) {
                     throw new ConfigurationException(
-                            String.format("testtype %s is not officially supported by CTS.",
-                                    test.getClass().getCanonicalName()));
+                            String.format(
+                                    "testtype %s is not officially supported by CTS. "
+                                            + "The supported ones are: %s",
+                                    test.getClass().getCanonicalName(), SUPPORTED_CTS_TEST_TYPE));
                 }
                 if (test instanceof HostTest) {
                     HostTest hostTest = (HostTest) test;
