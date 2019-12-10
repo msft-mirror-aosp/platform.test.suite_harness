@@ -31,6 +31,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
@@ -186,6 +187,8 @@ public class RetryFactoryTestTest {
         mFactory.setSystemStatusChecker(mCheckers);
         mFactory.setConfiguration(mMockMainConfiguration);
         mFactory.setInvocationContext(mMockContext);
+        TestInformation testInfo =
+                TestInformation.newBuilder().setInvocationContext(mMockContext).build();
 
         mMockListener.testModuleStarted(EasyMock.anyObject());
         mMockListener.testRunStarted(
@@ -195,7 +198,7 @@ public class RetryFactoryTestTest {
         mMockListener.testModuleEnded();
 
         EasyMock.replay(mMockListener, mMockInfo, mMockDevice);
-        mFactory.run(mMockListener);
+        mFactory.run(testInfo, mMockListener);
         EasyMock.verify(mMockListener, mMockInfo, mMockDevice);
     }
 }
