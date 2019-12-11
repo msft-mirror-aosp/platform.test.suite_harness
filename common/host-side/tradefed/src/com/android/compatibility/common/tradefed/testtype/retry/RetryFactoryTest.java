@@ -30,6 +30,7 @@ import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
@@ -201,14 +202,13 @@ public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceive
         mMainConfiguration = configuration;
     }
 
-    /**
-     * Build a CompatibilityTest with appropriate filters to run only the tests of interests.
-     */
+    /** Build a CompatibilityTest with appropriate filters to run only the tests of interests. */
     @Override
-    public void run(ITestInvocationListener listener) throws DeviceNotAvailableException {
+    public void run(TestInformation testInfo, ITestInvocationListener listener)
+            throws DeviceNotAvailableException {
         CompatibilityTestSuite test = loadSuite();
         // run the retry run.
-        test.run(listener);
+        test.run(testInfo, listener);
     }
 
     @Override
