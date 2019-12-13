@@ -98,11 +98,10 @@ public abstract class BusinessLogicExecutor {
 
     /** Substitute sensitive information with REDACTED_PLACEHOLDER if necessary. */
     protected static String[] formatArgs(String[] args) {
-        List<String> formattedArgs = new ArrayList<>();
-        for (String arg : args) {
-            formattedArgs.add(formatArg(arg));
+        for (int i = 0; i < args.length; i++) {
+            args[i] = formatArg(args[i]);
         }
-        return formattedArgs.toArray(new String[0]);
+        return args;
     }
 
     private static String formatArg(String arg) {
