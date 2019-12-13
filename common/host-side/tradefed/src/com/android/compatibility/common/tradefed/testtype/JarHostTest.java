@@ -34,15 +34,6 @@ public class JarHostTest extends HostTest {
 
     /** {@inheritDoc} */
     @Override
-    public void run(ITestInvocationListener listener) throws DeviceNotAvailableException {
-        // For temporary suites compatibility
-        TestInformation testInfo =
-                TestInformation.newBuilder().setInvocationContext(getContext()).build();
-        run(testInfo, listener);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void run(TestInformation testInfo, ITestInvocationListener listener)
             throws DeviceNotAvailableException {
         int numTests = 0;
