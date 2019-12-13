@@ -175,4 +175,19 @@ public class CompatibilityBuildProviderTest {
         assertTrue(String.format("URL was %s and should have contained %s", url, uniquePattern),
                 url.contains(uniquePattern));
     }
+
+    /* Test that getRootDirPath can handle suite name containing `-`. */
+    @Test
+    public void testGetRootDirPath() throws Exception {
+        CompatibilityBuildProvider provider =
+                new CompatibilityBuildProvider() {
+                    @Override
+                    protected String getSuiteInfoName() {
+                        return "VTS-CORE";
+                    }
+                };
+        final String path = "test/path";
+        System.setProperty("VTS_CORE_ROOT", path);
+        assertEquals(path, provider.getRootDirPath());
+    }
 }
