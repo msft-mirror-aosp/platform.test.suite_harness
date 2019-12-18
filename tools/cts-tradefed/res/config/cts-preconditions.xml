@@ -41,13 +41,6 @@
         <option name="set-value" value="0"/>
     </target_preparer>
 
-    <!-- Disable crash error dialogs to avoid affecting following tests -->
-    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.SettingsPreparer">
-        <option name="device-setting" value="hide_error_dialogs"/>
-        <option name="setting-type" value="global"/>
-        <option name="set-value" value="1"/>
-    </target_preparer>
-
     <target_preparer class="com.android.compatibility.common.tradefed.targetprep.ApkPreconditionCheck">
         <option name="apk" value="CtsPreconditions.apk"/>
         <option name="package" value="com.android.preconditions.cts"/>

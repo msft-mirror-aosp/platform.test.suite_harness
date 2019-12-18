@@ -101,7 +101,6 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     /** Used to get run history from the test result of last run. */
     private static final String RUN_HISTORY_KEY = "run_history";
 
-
     public static final String BUILD_BRAND = "build_brand";
     public static final String BUILD_DEVICE = "build_device";
     public static final String BUILD_FINGERPRINT = "build_fingerprint";
@@ -569,11 +568,6 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         String moduleProgress = String.format("%d of %d",
                 mResult.getModuleCompleteCount(), mResult.getModules().size());
 
-
-        if (shouldSkipReportCreation()) {
-            return;
-        }
-
         // Get run history from the test result of last run and add the run history of the current
         // run to it.
         // TODO(b/137973382): avoid casting by move the method to interface level.
@@ -589,6 +583,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         newRun.endTime = newRun.startTime + mElapsedTime;
         runHistories.add(newRun);
         mResult.addInvocationInfo(RUN_HISTORY_KEY, gson.toJson(runHistories));
+
+        if (shouldSkipReportCreation()) {
+            return;
+        }
 
         try {
             // Zip the full test results directory.

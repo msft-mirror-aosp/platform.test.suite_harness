@@ -21,7 +21,6 @@ import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
@@ -442,9 +441,6 @@ public class MediaPreparer extends BaseTargetPreparer {
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
         instrTest.setPackageName(APP_PKG_NAME);
-        // AndroidJUnitTest requires a IConfiguration to work properly, add a stub to this
-        // implementation to avoid an NPE.
-        instrTest.setConfiguration(new Configuration("stub", "stub"));
         instrTest.run(listener);
         if (mFailureStackTrace != null) {
             mMaxRes = DEFAULT_MAX_RESOLUTION;

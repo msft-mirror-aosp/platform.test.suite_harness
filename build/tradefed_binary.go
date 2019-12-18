@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/google/blueprint"
-	"github.com/google/blueprint/proptools"
 
 	"android/soong/android"
 	"android/soong/java"
@@ -127,7 +126,7 @@ func (tfg *tradefedBinaryGen) GenerateAndroidBuildActions(ctx android.ModuleCont
 		Rule:   tradefedBinaryGenRule,
 		Output: outputFile,
 		Args: map[string]string{
-			"buildNumber": proptools.NinjaEscape(ctx.Config().BuildNumberFromFile()),
+			"buildNumber": ctx.Config().BuildNumberFromFile(),
 			"arch":        ctx.Config().DevicePrimaryArchType().String(),
 			"name":        tfg.properties.Short_name,
 			"fullname":    tfg.properties.Full_name,
