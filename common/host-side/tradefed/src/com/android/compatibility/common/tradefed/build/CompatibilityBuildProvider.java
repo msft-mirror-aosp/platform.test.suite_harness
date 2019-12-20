@@ -281,8 +281,7 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
      */
     @VisibleForTesting
     String getRootDirPath() {
-        // Replace - in the suite name with _, as environment variable can't have - in name.
-        String varName = String.format("%s_ROOT", getSuiteInfoName().replace('-', '_'));
+        String varName = String.format("%s_ROOT", getSuiteInfoName());
         String rootDirVariable = System.getProperty(varName);
         if (rootDirVariable != null) {
             return rootDirVariable;

@@ -128,7 +128,7 @@ public class CrashUtils {
                     continue;
                 }
                 securityCrashes.put(crash);
-            } catch (JSONException e) {}
+            } catch (JSONException | NullPointerException e) {}
         }
         return securityCrashes;
     }
