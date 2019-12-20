@@ -23,12 +23,16 @@ import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 
-/** Checks that location is enabled before running a compatibility test */
-@OptionClass(alias = "location-check")
+/**
+ * Checks that location is enabled for GPS or Network before running a compatibility test
+ */
+@OptionClass(alias="location-check")
 public class LocationCheck extends SettingsPreparer {
 
-    private static final String LOCATION_SETTING = "location_mode";
-    private static final String LOCATION_MODE_ON = "3";
+    private static final String LOCATION_SETTING = "location_providers_allowed";
+
+    private static final String GPS = "gps";
+    private static final String NETWORK = "network";
 
     private static final String GPS_FEATURE = "android.hardware.location.gps";
     private static final String NETWORK_FEATURE = "android.hardware.location.network";
@@ -50,10 +54,12 @@ public class LocationCheck extends SettingsPreparer {
         CLog.i("Verifying location setting");
         mSettingName = LOCATION_SETTING;
         mSettingType = SettingsPreparer.SettingType.SECURE;
-        mExpectedSettingValues.add(LOCATION_MODE_ON);
-        mFailureMessage =
-                "Location services must be enabled in order to "
-                        + "successfully run the test suite";
+        mExpectedSettingValues.add(NETWORK);
+        mExpectedSettingValues.add(GPS);
+        mExpectedSettingValues.add(String.format("%s,%s", GPS, NETWORK));
+        mExpectedSettingValues.add(String.format("%s,%s", NETWORK, GPS));
+        mFailureMessage = "Location services must be enabled via GPS or Network in order to " +
+                "successfully run the test suite";
         super.run(device, buildInfo);
     }
 }
