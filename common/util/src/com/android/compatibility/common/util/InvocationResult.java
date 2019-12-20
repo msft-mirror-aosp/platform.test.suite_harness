@@ -38,6 +38,7 @@ public class InvocationResult implements IInvocationResult {
     }
 
     private Collection<RunHistory> mRunHistories = new ArrayList<>();
+
     private long mTimestamp;
     private Map<String, IModuleResult> mModuleResults = new LinkedHashMap<>();
     private Map<String, String> mInvocationInfo = new HashMap<>();

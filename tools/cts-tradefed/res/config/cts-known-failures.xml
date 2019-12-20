@@ -21,6 +21,7 @@
 
     <!-- b/38182235 -->
     <option name="compatibility:exclude-filter" value="CtsLocationTestCases android.location.cts.GnssTtffTests#testTtffWithNetwork" />
+    <option name="compatibility:exclude-filter" value="CtsLocationTestCases[instant] android.location.cts.GnssTtffTests#testTtffWithNetwork" />
 
     <!-- b/17989532 -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.SurfaceViewPreviewTest#testPreparePerformance" />
@@ -207,4 +208,17 @@
 
     <!-- b/129859594 -->
     <option name="compatibility:exclude-filter" value="CtsAtomicInstallTestCases com.android.tests.atomicinstall.AtomicInstallTest#testFailInconsistentMultiPackageCommit" />
+<<<<<<< HEAD   (4849a6 resolve merge conflicts of 6a5831281a690078d87835443cd9899b7)
+=======
+
+    <!-- b/126548816 -->
+    <option name="compatibility:exclude-filter" value="CtsRcsTestCases" />
+
+    <!-- b/112688380 -->
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testAppOrientationRequestConfigClears" />
+    <option name="compatibility:exclude-filter" value="CtsActivityManagerDeviceTestCases android.server.am.ActivityManagerAppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+    <!-- b/112688380, b/139936670 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testAppOrientationRequestConfigClears" />
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+>>>>>>> CHANGE (ef261c DO NOT MERGE: Merging test/suite_harness into qt-dev.)
 </configuration>
