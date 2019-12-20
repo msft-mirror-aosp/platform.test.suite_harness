@@ -39,7 +39,7 @@ public class ConsoleReporter implements IShardableListener {
     private static final String UNKNOWN_DEVICE = "unknown_device";
 
     @Option(name = "quiet-output", description = "Mute display of test results.")
-    private boolean mQuietOutput = true;
+    private boolean mQuietOutput = false;
 
     private String mDeviceSerial = UNKNOWN_DEVICE;
     private boolean mTestFailed;
