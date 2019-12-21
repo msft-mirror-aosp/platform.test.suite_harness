@@ -15,11 +15,12 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
-import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IBuildProvider;
@@ -32,7 +33,6 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInvocation;
-import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.util.FileUtil;
@@ -76,7 +76,6 @@ public class PreviousResultLoaderTest {
         mContext.setConfigurationDescriptor(new ConfigurationDescriptor());
         mContext.addInvocationAttribute(TestInvocation.COMMAND_ARGS_KEY,
                 "cts -m CtsGesture --skip-all-system-status-check");
-        mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, new BuildInfo());
         mMockDevice = EasyMock.createMock(ITestDevice.class);
     }
 
@@ -90,7 +89,7 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests_failed() throws Exception {
-        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild("", false));
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(""));
         // Delete the proto file
         mProtoFile.delete();
         try {
@@ -99,7 +98,9 @@ public class PreviousResultLoaderTest {
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
-            assertEquals("Could not find any test-record.pb to load.", expected.getMessage());
+            assertEquals(
+                    String.format("java.io.FileNotFoundException: %s (No such file or directory)",
+                            mProtoFile.getAbsolutePath()), expected.getMessage());
         }
         EasyMock.verify(mMockProvider);
     }
@@ -110,54 +111,14 @@ public class PreviousResultLoaderTest {
     @Test
     public void testReloadTests() throws Exception {
         final String EXPECTED_RUN_HISTORY =
-                "[{\"startTime\":1530218251501,"
-                        + "\"endTime\":1530218261061,"
-                        + "\"passedTests\":0,"
-                        + "\"failedTests\":0,"
-                        + "\"commandLineArgs\":\"cts -m CtsGesture "
-                        + "--skip-all-system-status-check\","
-                        + "\"hostName\":\"user.android.com\"}]";
-        EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createBasicResults(), false));
+                "[{\"startTime\":1530218251501," + "\"endTime\":1530218261061}]";
+        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild(createBasicResults()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
         EasyMock.replay(mMockDevice, mMockProvider);
         mLoader.init();
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
-        IConfiguration config = new Configuration("name", "desc");
-        assertEquals(0, config.getTargetPreparers().size());
-        mLoader.customizeConfiguration(config);
-        // A special preparer was added for fingerprint
-        assertEquals(1, config.getTargetPreparers().size());
-        ITargetPreparer preparer = config.getTargetPreparers().get(0);
-        assertTrue(preparer instanceof BuildFingerPrintPreparer);
-        assertEquals(
-                "testfingerprint", ((BuildFingerPrintPreparer) preparer).getExpectedFingerprint());
-        String runHistory =
-                config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
-        assertEquals(EXPECTED_RUN_HISTORY, runHistory);
-        EasyMock.verify(mMockDevice, mMockProvider);
-    }
-
-    @Test
-    public void testReloadTests_withMultiProto() throws Exception {
-        final String EXPECTED_RUN_HISTORY =
-                "[{\"startTime\":1530218251501,"
-                        + "\"endTime\":1530218261061,"
-                        + "\"passedTests\":0,"
-                        + "\"failedTests\":0,"
-                        + "\"commandLineArgs\":\"cts -m CtsGesture "
-                        + "--skip-all-system-status-check\","
-                        + "\"hostName\":\"user.android.com\"}]";
-        EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createBasicResults(), true));
-        mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
-
-        EasyMock.replay(mMockDevice, mMockProvider);
-        mLoader.init();
-        assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
-        CollectingTestListener listener = mLoader.loadPreviousResults();
-        assertNotNull(listener);
+        mLoader.loadPreviousRecord();
         IConfiguration config = new Configuration("name", "desc");
         assertEquals(0, config.getTargetPreparers().size());
         mLoader.customizeConfiguration(config);
@@ -176,26 +137,15 @@ public class PreviousResultLoaderTest {
     /** Test that the loader can correctly provide the run history back. */
     @Test
     public void testReloadTests_withRunHistory() throws Exception {
-        final String RUN_HISTORY_1 =
-                "{\"startTime\":1000000000000,"
-                        + "\"endTime\":1000000010000,"
-                        + "\"passedTests\":10,"
-                        + "\"failedTests\":5,"
-                        + "\"commandLineArgs\":\"cts -m CtsGesture --skip-all-system-status-check\","
-                        + "\"hostName\":\"user1.android.com\"}";
-        final String RUN_HISTORY_2 =
-                "{\"startTime\":1530218251501,"
-                        + "\"endTime\":1530218261061,"
-                        + "\"passedTests\":0,"
-                        + "\"failedTests\":0,"
-                        + "\"commandLineArgs\":\"cts -m CtsGesture --skip-all-system-status-check "
-                        + "--shard-count 5\","
-                        + "\"hostName\":\"user2.android.com\"}";
-        final String OLD_RUN_HISTORY = String.format("[%s]", RUN_HISTORY_1);
-        final String EXPECTED_RUN_HISTORY = String.format("[%s,%s]", RUN_HISTORY_1, RUN_HISTORY_2);
+        final String EXPECTED_RUN_HISTORY =
+                "[{\"startTime\":10000000000000,"
+                        + "\"endTime\":10000000100000},{\"startTime\":1530218251501,"
+                        + "\"endTime\":1530218261061}]";
+        final String OLD_RUN_HISTORY =
+                "[{\"startTime\":10000000000000,\"endTime\":10000000100000}]";
         mContext.addInvocationAttribute(RUN_HISTORY_KEY, OLD_RUN_HISTORY);
         EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createResultsWithRunHistory(), false));
+                .andReturn(createFakeBuild(createResultsWithRunHistory()));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
         EasyMock.replay(mMockDevice, mMockProvider);
 
@@ -209,11 +159,11 @@ public class PreviousResultLoaderTest {
         EasyMock.verify(mMockDevice, mMockProvider);
     }
 
-    private IBuildInfo createFakeBuild(String resultContent, boolean index) throws Exception {
+    private IBuildInfo createFakeBuild(String resultContent) throws Exception {
         DeviceBuildInfo build = new DeviceBuildInfo();
         build.addBuildAttribute(CompatibilityBuildHelper.SUITE_NAME, "CTS");
         mRootDir = FileUtil.createTempDir("cts-root-dir");
-        new File(mRootDir, "android-cts/results/").mkdirs();
+        new File(mRootDir, "android-cts/results").mkdirs();
         build.addBuildAttribute(CompatibilityBuildHelper.ROOT_DIR, mRootDir.getAbsolutePath());
         // Create fake result dir
         long time = System.currentTimeMillis();
@@ -224,16 +174,8 @@ public class PreviousResultLoaderTest {
                 "test_result.xml");
         testResult.createNewFile();
         // Populate a proto result
-        File protoDir =
-                new File(
-                        new CompatibilityBuildHelper(build).getResultDir(),
-                        CompatibilityProtoResultReporter.PROTO_DIR);
-        protoDir.mkdir();
-        if (index) {
-            mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME + "0");
-        } else {
-            mProtoFile = new File(protoDir, CompatibilityProtoResultReporter.PROTO_FILE_NAME);
-        }
+        mProtoFile = new File(new CompatibilityBuildHelper(build).getResultDir(),
+                CompatibilityProtoResultReporter.PROTO_FILE_NAME);
         TestRecord.Builder builder = TestRecord.newBuilder();
         builder.setDescription(Any.pack(mContext.toProto()));
         builder.build().writeDelimitedTo(new FileOutputStream(mProtoFile));
@@ -245,15 +187,13 @@ public class PreviousResultLoaderTest {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n");
         sb.append("<?xml-stylesheet type=\"text/xsl\" href=\"compatibility_result.xsl\"?>\n");
-        sb.append(
-                "<Result start=\"1530218251501\" end=\"1530218261061\" "
-                        + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
-                        + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
-                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
-                        + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
-                        + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
-                        + "devices=\"HT6570300047\" "
-                        + "host_name=\"user.android.com\">\n");
+        sb.append("<Result start=\"1530218251501\" end=\"1530218261061\" "
+                + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
+                + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
+                + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
+                + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
+                + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
+                + "devices=\"HT6570300047\"  >\n");
         sb.append(
                 "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
                         + " build_vendor_fingerprint=\"vendorFingerprint\" "
@@ -280,32 +220,21 @@ public class PreviousResultLoaderTest {
                 "<Result start=\"1530218251501\" end=\"1530218261061\" "
                         + "start_display=\"Thu Jun 28 13:37:31 PDT 2018\" "
                         + "end_display=\"Thu Jun 28 13:37:41 PDT 2018\" "
-                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check "
-                        + "--shard-count 5\" "
+                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
                         + "suite_name=\"CTS\" suite_version=\"9.0_r1\" "
                         + "suite_plan=\"cts\" suite_build_number=\"8888\" report_version=\"5.0\" "
-                        + "devices=\"HT6570300047\" "
-                        + "host_name=\"user2.android.com\" >\n");
-        final String RUN_HISTORY_JSON =
-                "[{'startTime':1000000000000,'endTime':1000000010000,"
-                        + "'pass':10,'failed':5,"
-                        + "'commandLineArgs':'cts -m CtsGesture --skip-all-system-status-check',"
-                        + "'hostName':'user1.android.com'}]";
+                        + "devices=\"HT6570300047\"  >\n");
         sb.append(
                 "  <Build command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\""
                         + " build_vendor_fingerprint=\"vendorFingerprint\" "
                         + " build_reference_fingerprint=\"\" "
                         + " build_fingerprint=\"testfingerprint\""
-                        + " run_history=\""
-                        + RUN_HISTORY_JSON
-                        + "\"/>\n");
+                        + " run_history=\"[{'startTime':10000000000000,"
+                        + "'endTime':10000000100000}]\"/>\n");
         // Run history
         sb.append(
                 "  <RunHistory>\n"
-                        + "    <Run start=\"1000000000000\" end=\"1000000010000\" "
-                        + "pass=\"10\" failed=\"5\" "
-                        + "command_line_args=\"cts -m CtsGesture --skip-all-system-status-check\" "
-                        + "hostName=\"user1.android.com\" />\n"
+                        + "    <Run start=\"10000000000000\" end=\"10000000100000\"/>\n"
                         + "  </RunHistory>\n");
         // Summary
         sb.append("  <Summary pass=\"0\" failed=\"0\" modules_done=\"2\" modules_total=\"2\" />\n");
