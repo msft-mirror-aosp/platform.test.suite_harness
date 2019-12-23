@@ -32,7 +32,6 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.testtype.IInvocationContextReceiver;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.util.FileUtil;
-import com.android.tradefed.util.VersionParser;
 
 import java.io.File;
 import java.io.IOException;
@@ -311,12 +310,7 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
      * Return the SuiteInfo build number generated at build time. Exposed for testing.
      */
     protected String getSuiteInfoBuildNumber() {
-        String buildNumber = TestSuiteInfo.getInstance().getBuildNumber();
-        String versionFile = VersionParser.fetchVersion();
-        if (versionFile != null) {
-            buildNumber = versionFile;
-        }
-        return buildNumber;
+        return TestSuiteInfo.getInstance().getBuildNumber();
     }
 
     /**

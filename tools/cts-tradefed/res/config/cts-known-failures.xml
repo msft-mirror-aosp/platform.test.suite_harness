@@ -139,6 +139,10 @@
     <!-- b/62481870 -->
     <option name="compatibility:exclude-filter" value="CtsNativeMediaAAudioTestCases android.nativemedia.aaudio.AAudioOutputStreamCallbackTest#testPlayback" />
 
+    <!-- b/134654621 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testAppOrientationRequestConfigClears" />
+
     <!-- b/62976713 -->
     <option name="compatibility:exclude-filter" value="arm64-v8a CtsMediaBitstreamsTestCases" />
     <option name="compatibility:exclude-filter" value="x86_64 CtsMediaBitstreamsTestCases" />
@@ -179,8 +183,6 @@
     <!-- fails only on angler/bullhead userdebug -->
     <option name="compatibility:exclude-filter" value="CtsLiblogTestCases liblog#wrap_mode_blocks" />
 
-    <!-- b/80309889 -->
-    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testCpuActiveTime" />
     <!-- b/132274449 -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.validation.BatteryStatsValidationTests#testConnectivityStateChange" />
 
@@ -205,7 +207,4 @@
 
     <!-- b/129859594 -->
     <option name="compatibility:exclude-filter" value="CtsAtomicInstallTestCases com.android.tests.atomicinstall.AtomicInstallTest#testFailInconsistentMultiPackageCommit" />
-
-    <!-- b/126548816 -->
-    <option name="compatibility:exclude-filter" value="CtsRcsTestCases" />
 </configuration>
