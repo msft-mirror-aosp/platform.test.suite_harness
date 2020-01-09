@@ -40,6 +40,7 @@ import com.android.compatibility.common.tradefed.targetprep.DynamicConfigPusherT
 import com.android.compatibility.common.tradefed.targetprep.MediaPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.PropertyCheckTest;
 import com.android.compatibility.common.tradefed.targetprep.SettingsPreparerTest;
+import com.android.compatibility.common.tradefed.targetprep.VtsDeviceInfoCollectorTest;
 import com.android.compatibility.common.tradefed.testtype.CompatibilityTestTest;
 import com.android.compatibility.common.tradefed.testtype.JarHostTestTest;
 import com.android.compatibility.common.tradefed.testtype.ModuleDefTest;
@@ -101,6 +102,7 @@ import org.junit.runners.Suite.SuiteClasses;
     MediaPreparerTest.class,
     PropertyCheckTest.class,
     SettingsPreparerTest.class,
+    VtsDeviceInfoCollectorTest.class,
 
     // testtype
     CompatibilityTestTest.class,
