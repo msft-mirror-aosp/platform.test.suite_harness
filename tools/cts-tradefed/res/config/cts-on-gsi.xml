@@ -23,7 +23,6 @@
     <option name="compatibility:enable-parameterized-modules" value="false" />
     <option name="compatibility:primary-abi-only" value="true" />
 
-    <include name="cts-on-gsi-base-filters" />
     <include name="cts-on-gsi-exclude" />
 
 </configuration>
