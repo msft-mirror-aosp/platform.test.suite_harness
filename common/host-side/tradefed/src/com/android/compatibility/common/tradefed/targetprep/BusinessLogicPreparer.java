@@ -375,11 +375,22 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
             return extendedDeviceInfo;
         }
         File ediFile = null;
+        String[] fileAndKey = null;
         try{
             for (String ediEntry: requiredDeviceInfo) {
-                String[] fileAndKey = ediEntry.split(":");
+                fileAndKey = ediEntry.split(":");
+                if (fileAndKey.length <= 1) {
+                    CLog.e("Dynamic config Extended DeviceInfo key has problem.");
+                    return new ArrayList<>();
+                }
                 ediFile = FileUtil
                     .findFile(deviceInfoPath, fileAndKey[0] + ".deviceinfo.json");
+                if (ediFile == null) {
+                    CLog.e(
+                            "Could not find Extended DeviceInfo JSON file: %s.",
+                            deviceInfoPath + fileAndKey[0] + ".deviceinfo.json");
+                    return new ArrayList<>();
+                }
                 String jsonString = FileUtil.readStringFromFile(ediFile);
                 JSONObject jsonObj = new JSONObject(jsonString);
                 String value = jsonObj.getString(fileAndKey[1]);
@@ -387,8 +398,9 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
                     .add(String.format("%s:%s:%s", fileAndKey[0], fileAndKey[1], value));
             }
         }catch(JSONException | IOException | RuntimeException e){
-            CLog.e("Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
-                ediFile.getAbsolutePath(), e);
+            CLog.e(
+                    "Failed to read or parse Extended DeviceInfo JSON file: %s. Error: %s",
+                    deviceInfoPath + fileAndKey[0] + ".deviceinfo.json", e);
             return new ArrayList<>();
         }
         return extendedDeviceInfo;
