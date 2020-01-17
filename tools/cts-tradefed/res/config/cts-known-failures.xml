@@ -186,6 +186,7 @@
 
     <!-- b/132274449 -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.validation.BatteryStatsValidationTests#testConnectivityStateChange" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases[instant] android.cts.statsd.validation.BatteryStatsValidationTests#testConnectivityStateChange" />
 
 
     <!-- b/110354076 -->
