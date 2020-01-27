@@ -52,15 +52,22 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Runner that creates a {@link CompatibilityTestSuite} to re-run some previous results.
- * Only the 'cts' plan is supported.
- * TODO: explore other new way to build the retry (instead of relying on one massive pair of
- * include/exclude filters)
+ * Runner that creates a {@link CompatibilityTestSuite} to re-run some previous results. Only the
+ * 'cts' plan is supported. TODO: explore other new way to build the retry (instead of relying on
+ * one massive pair of include/exclude filters)
+ *
+ * @deprecated A new retry has been implemented.
  */
+@Deprecated
 @OptionClass(alias = "compatibility")
-public class RetryFactoryTest implements IRemoteTest, IDeviceTest, IBuildReceiver,
-        ISystemStatusCheckerReceiver, IInvocationContextReceiver, IShardableTest,
-        IConfigurationReceiver {
+public class RetryFactoryTest
+        implements IRemoteTest,
+                IDeviceTest,
+                IBuildReceiver,
+                ISystemStatusCheckerReceiver,
+                IInvocationContextReceiver,
+                IShardableTest,
+                IConfigurationReceiver {
 
     /**
      * Mirror the {@link CompatibilityTestSuite} options in order to create it.
