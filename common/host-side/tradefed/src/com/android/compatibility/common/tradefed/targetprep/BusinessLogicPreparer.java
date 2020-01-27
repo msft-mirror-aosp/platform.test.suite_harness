@@ -28,9 +28,10 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
-import com.android.tradefed.targetprep.ITargetCleaner;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IAbiReceiver;
@@ -52,11 +53,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -70,8 +71,8 @@ import java.util.Set;
  * Pushes business Logic to the host and the test device, for use by test cases in the test suite.
  */
 @OptionClass(alias = "business-logic-preparer")
-public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextReceiver,
-        ITargetCleaner {
+public class BusinessLogicPreparer extends BaseTargetPreparer
+        implements IAbiReceiver, IInvocationContextReceiver {
 
     /* Placeholder in the service URL for the suite to be configured */
     private static final String SUITE_PLACEHOLDER = "{suite-name}";
@@ -99,8 +100,6 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
     private static final String DYNAMIC_CONFIG_PACKAGES_KEY = "business_logic_device_packages";
     private static final String DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY =
             "business_logic_extended_device_info";
-    private static final String DYNAMIC_CONFIG_CONDITIONAL_TESTS_ENABLED_KEY =
-            "conditional_business_logic_tests_enabled";
 
     @Option(name = "business-logic-url", description = "The URL to use when accessing the " +
             "business logic service, parameters not included", mandatory = true)
@@ -163,12 +162,12 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
         mModuleContext = invocationContext;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void setUp(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError, BuildError,
-            DeviceNotAvailableException {
+    public void setUp(TestInformation testInfo)
+            throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        IBuildInfo buildInfo = testInfo.getBuildInfo();
+        ITestDevice device = testInfo.getDevice();
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         if (buildHelper.hasBusinessLogicHostFile()) {
             CLog.i("Business logic file already collected, skipping BusinessLogicPreparer.");
@@ -490,18 +489,15 @@ public class BusinessLogicPreparer implements IAbiReceiver, IInvocationContextRe
         return StreamUtil.getStringFromStream(conn.getInputStream());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void tearDown(ITestDevice device, IBuildInfo buildInfo, Throwable e)
-            throws DeviceNotAvailableException {
+    public void tearDown(TestInformation testInfo, Throwable e) throws DeviceNotAvailableException {
         // Clean up existing host and device files unconditionally
         if (mHostFilePushed != null) {
             FileUtil.deleteFile(new File(mHostFilePushed));
         }
         if (mDeviceFilePushed != null && !(e instanceof DeviceNotAvailableException)) {
-            removeDeviceFile(device);
+            removeDeviceFile(testInfo.getDevice());
         }
     }
 
