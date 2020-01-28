@@ -29,6 +29,7 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.ExecutionFiles.FilesKey;
+import com.android.tradefed.invoker.ExecutionFiles;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.logger.CurrentInvocation;
 import com.android.tradefed.testtype.IInvocationContextReceiver;
@@ -259,12 +260,14 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
             File testDir = new File(rootDir, String.format("android-%s/testcases/",
                     getSuiteInfoName().toLowerCase()));
             ((IDeviceBuildInfo) info).setTestsDir(testDir, "0");
-            CurrentInvocation.getInvocationFiles()
-                    .put(
-                            FilesKey.TESTS_DIRECTORY,
-                            testDir,
-                            /** Should not delete */
-                            mArtificialRootDir == null);
+            if (getInvocationFiles() != null) {
+                getInvocationFiles()
+                        .put(
+                                FilesKey.TESTS_DIRECTORY,
+                                testDir,
+                                /** Should not delete */
+                                mArtificialRootDir == null);
+            }
         }
         if (mURL != null && !mURL.isEmpty()) {
             String suiteName = mUrlSuiteNameOverride;
@@ -318,6 +321,11 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
             buildNumber = versionFile;
         }
         return buildNumber;
+    }
+
+    @VisibleForTesting
+    ExecutionFiles getInvocationFiles() {
+        return CurrentInvocation.getInvocationFiles();
     }
 
     /**
