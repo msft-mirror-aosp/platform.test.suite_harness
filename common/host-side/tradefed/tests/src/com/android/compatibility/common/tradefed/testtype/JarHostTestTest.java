@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.config.OptionSetter;
+import com.android.tradefed.invoker.ExecutionFiles.FilesKey;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
@@ -87,6 +88,7 @@ public class JarHostTestTest {
         mStubBuildInfo = new DeviceBuildInfo();
         mStubBuildInfo.setTestsDir(mTestDir, "v1");
         mTestInfo = TestInformation.newBuilder().build();
+        mTestInfo.executionFiles().put(FilesKey.TESTS_DIRECTORY, mTestDir);
     }
 
     @After
@@ -143,7 +145,7 @@ public class JarHostTestTest {
         setter.setOptionValue("class", "com.android.compatibility.common.tradefed.testtype."
                 + "JarHostTestTest$Junit4TestClass2");
         // sharCount is ignored; will split by number of classes
-        List<IRemoteTest> res = (List<IRemoteTest>)mTest.split(1);
+        List<IRemoteTest> res = (List<IRemoteTest>) mTest.split(1, mTestInfo);
         assertEquals(2, res.size());
         assertTrue(res.get(0) instanceof JarHostTest);
         assertTrue(res.get(1) instanceof JarHostTest);
@@ -161,7 +163,7 @@ public class JarHostTestTest {
         setter.setOptionValue("enable-pretty-logs", "false");
         setter.setOptionValue("jar", testJar.getName());
         // sharCount is ignored; will split by number of classes
-        List<IRemoteTest> res = (List<IRemoteTest>)mTest.split(1);
+        List<IRemoteTest> res = (List<IRemoteTest>) mTest.split(1, mTestInfo);
         assertEquals(2, res.size());
         assertTrue(res.get(0) instanceof JarHostTest);
         assertEquals("[android.ui.cts.TaskSwitchingTest]",
