@@ -27,6 +27,8 @@ import com.android.tradefed.config.ConfigurationDescriptor;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.ConfigurationFactory;
 import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.invoker.ExecutionFiles.FilesKey;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.invoker.shard.token.TokenProperty;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.testtype.AndroidJUnitTest;
@@ -208,6 +210,9 @@ public class CtsConfigLoadingTest {
         stubFolder.setRootDir(new File(ctsRoot));
         stubFolder.addBuildAttribute(CompatibilityBuildHelper.SUITE_NAME, "CTS");
         stubFolder.addBuildAttribute("ROOT_DIR", ctsRoot);
+        TestInformation stubTestInfo = TestInformation.newBuilder().build();
+        stubTestInfo.executionFiles().put(FilesKey.TESTS_DIRECTORY, new File(ctsRoot));
+
         List<String> missingMandatoryParameters = new ArrayList<>();
         // We expect to be able to load every single config in testcases/
         for (File config : listConfig) {
@@ -244,6 +249,7 @@ public class CtsConfigLoadingTest {
                     HostTest hostTest = (HostTest) test;
                     // We inject a made up folder so that it can find the tests.
                     hostTest.setBuild(stubFolder);
+                    hostTest.setTestInformation(stubTestInfo);
                     int testCount = hostTest.countTestCases();
                     if (testCount == 0) {
                         throw new ConfigurationException(

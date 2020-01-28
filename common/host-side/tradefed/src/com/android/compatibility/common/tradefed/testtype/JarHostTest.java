@@ -36,6 +36,8 @@ public class JarHostTest extends HostTest {
     @Override
     public void run(TestInformation testInfo, ITestInvocationListener listener)
             throws DeviceNotAvailableException {
+        // Set test information otherwise it might fail to countTestCases.
+        setTestInformation(testInfo);
         int numTests = 0;
         RuntimeException bufferedException = null;
         try {
