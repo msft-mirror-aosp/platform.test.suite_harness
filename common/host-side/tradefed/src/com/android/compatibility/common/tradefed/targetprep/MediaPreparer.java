@@ -26,6 +26,7 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
@@ -382,8 +383,10 @@ public class MediaPreparer extends BaseTargetPreparer {
     }
 
     @Override
-    public void setUp(ITestDevice device, IBuildInfo buildInfo)
+    public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        ITestDevice device = testInfo.getDevice();
+        IBuildInfo buildInfo = testInfo.getBuildInfo();
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
                     "'images-only' and 'push-all' cannot be set to true together.",
@@ -396,7 +399,7 @@ public class MediaPreparer extends BaseTargetPreparer {
 
         setMountPoint(device);
         if (!mImagesOnly && !mPushAll) {
-            setMaxRes(device, buildInfo); // max resolution only applies to video files
+            setMaxRes(testInfo); // max resolution only applies to video files
         }
         if (mediaFilesExistOnDevice(device)) {
             // if files already on device, do nothing
@@ -416,9 +419,10 @@ public class MediaPreparer extends BaseTargetPreparer {
     }
 
     // Initialize maximum resolution of media files to copy
-    private void setMaxRes(ITestDevice device, IBuildInfo buildInfo)
-            throws DeviceNotAvailableException {
+    private void setMaxRes(TestInformation testInfo) throws DeviceNotAvailableException {
         ITestInvocationListener listener = new MediaPreparerListener();
+        ITestDevice device = testInfo.getDevice();
+        IBuildInfo buildInfo = testInfo.getBuildInfo();
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
         File apkFile = null;
         try {
@@ -445,7 +449,7 @@ public class MediaPreparer extends BaseTargetPreparer {
         // AndroidJUnitTest requires a IConfiguration to work properly, add a stub to this
         // implementation to avoid an NPE.
         instrTest.setConfiguration(new Configuration("stub", "stub"));
-        instrTest.run(listener);
+        instrTest.run(testInfo, listener);
         if (mFailureStackTrace != null) {
             mMaxRes = DEFAULT_MAX_RESOLUTION;
             CLog.w("Retrieving maximum resolution failed with trace:\n%s", mFailureStackTrace);

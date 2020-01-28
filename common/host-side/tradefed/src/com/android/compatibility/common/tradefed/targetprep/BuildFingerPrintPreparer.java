@@ -15,9 +15,9 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
-import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -39,8 +39,9 @@ public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
     private String mVendorFingerprintProperty = "ro.vendor.build.fingerprint";
 
     @Override
-    public void setUp(ITestDevice device, IBuildInfo buildInfo)
+    public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        ITestDevice device = testInfo.getDevice();
         if (mExpectedFingerprint == null) {
             throw new TargetSetupError("build fingerprint shouldn't be null",
                     device.getDeviceDescriptor());
