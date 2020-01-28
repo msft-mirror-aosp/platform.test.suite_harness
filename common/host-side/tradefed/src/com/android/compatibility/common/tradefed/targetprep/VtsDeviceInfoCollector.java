@@ -20,11 +20,14 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.ArrayUtil;
+
 import com.google.api.client.util.Strings;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +40,6 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
     // TODO(trong): remove "cts:" prefix, will need a custom ResultReporter.
     private static final Map<String, String> BUILD_KEYS = new HashMap<>();
     private static final Map<String, String> BUILD_LEGACY_PROPERTIES = new HashMap<>();
-    private static final long REBOOT_TIMEOUT = 1000 * 60 * 2; // 2 minutes.
 
     // The name of a system property which tells whether to stop properly configured
     // native servers where properly configured means a server's init.rc is
@@ -85,8 +87,10 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
     }
 
     @Override
-    public void setUp(ITestDevice device, IBuildInfo buildInfo)
+    public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        ITestDevice device = testInfo.getDevice();
+        IBuildInfo buildInfo = testInfo.getBuildInfo();
         for (Entry<String, String> entry : BUILD_KEYS.entrySet()) {
             String propertyValue = device.getProperty(entry.getValue());
             if ((propertyValue == null || propertyValue.length() == 0)
