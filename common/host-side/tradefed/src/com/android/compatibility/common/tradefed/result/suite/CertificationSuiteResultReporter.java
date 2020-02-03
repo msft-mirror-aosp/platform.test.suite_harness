@@ -430,8 +430,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
      */
     private void copyDynamicConfigFiles() {
         File configDir = new File(mResultDir, "config");
-        if (!configDir.mkdir()) {
-            CLog.w("Failed to make dynamic config directory \"%s\" in the result",
+        if (!configDir.exists() && !configDir.mkdir()) {
+            CLog.w(
+                    "Failed to make dynamic config directory \"%s\" in the result.",
                     configDir.getAbsolutePath());
         }
 
@@ -445,6 +446,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 if (!uniqueModules.contains(moduleName)) {
                     // have not seen config for this module yet, copy into result
                     File destFile = new File(configDir, moduleName + ".dynamic");
+                    if (destFile.exists()) {
+                        continue;
+                    }
                     try {
                         FileUtil.copyFile(srcFile, destFile);
                         uniqueModules.add(moduleName); // Add to uniqueModules if copy succeeds
