@@ -21,7 +21,6 @@ import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.IConfiguration;
-import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
@@ -73,7 +72,7 @@ import javax.xml.transform.stream.StreamSource;
  */
 @OptionClass(alias = "result-reporter")
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
-        implements IConfigurationReceiver, ITestSummaryListener {
+        implements ITestSummaryListener {
 
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
@@ -122,8 +121,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     private Map<LogFile, InputStreamSource> mPreInvocationLogs = new HashMap<>();
     /** Invocation level Log saver to receive when files are logged */
     private ILogSaver mLogSaver;
-    /** Invocation level configuration */
-    private IConfiguration mConfiguration = null;
 
     private String mReferenceUrl;
 
@@ -243,12 +240,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Override
     public void setLogSaver(ILogSaver saver) {
         mLogSaver = saver;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setConfiguration(IConfiguration configuration) {
-        mConfiguration = configuration;
     }
 
     /**
@@ -500,7 +491,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
             fis = new FileInputStream(resultFile);
             logFile = mLogSaver.saveLogData("log-result", LogDataType.XML, fis);
             CLog.d("Result XML URL: %s", logFile.getUrl());
-            logReportFiles(mConfiguration, resultFile, resultFile.getName(), LogDataType.XML);
+            logReportFiles(getConfiguration(), resultFile, resultFile.getName(), LogDataType.XML);
         } catch (IOException ioe) {
             CLog.e("error saving XML with log saver");
             CLog.e(ioe);
@@ -514,7 +505,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 CLog.d("Result zip URL: %s", logFile.getUrl());
-                logReportFiles(mConfiguration, zippedResults, "results", LogDataType.ZIP);
+                logReportFiles(getConfiguration(), zippedResults, "results", LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }
