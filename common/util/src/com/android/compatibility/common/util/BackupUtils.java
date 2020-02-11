@@ -256,32 +256,6 @@ public abstract class BackupUtils {
         }
     }
 
-    /** Executes "dumpsys backup" and returns an {@link InputStream} for its output. */
-    private InputStream dumpsysBackup() throws IOException {
-        return executeShellCommand("dumpsys backup");
-    }
-
-    /**
-     * Parses the output of "dumpsys backup" command to get token. Closes the input stream finally.
-     *
-     * Expected format: "Current: token"
-     */
-    private String getCurrentTokenOrFail(InputStream dumpsysOutput) throws IOException {
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(dumpsysOutput, StandardCharsets.UTF_8));
-        try {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains(BACKUP_DUMPSYS_CURRENT_TOKEN_FIELD)) {
-                    return line.split(BACKUP_DUMPSYS_CURRENT_TOKEN_FIELD)[1].trim();
-                }
-            }
-            throw new AssertionError("Couldn't find token in output");
-        } finally {
-            StreamUtil.drainAndClose(reader);
-        }
-    }
-
     /**
      * Execute shell command and return output from this command.
      */

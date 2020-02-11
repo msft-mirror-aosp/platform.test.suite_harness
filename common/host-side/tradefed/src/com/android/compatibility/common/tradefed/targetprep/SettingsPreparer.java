@@ -15,11 +15,11 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
-import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -60,9 +60,9 @@ public class SettingsPreparer extends PreconditionPreparer {
     protected String mFailureMessage = null;
 
     @Override
-    public void run(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
-            BuildError, DeviceNotAvailableException {
-
+    public void run(TestInformation testInfo)
+            throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        ITestDevice device = testInfo.getDevice();
         if (mSettingName == null) {
             throw new TargetSetupError("The \"device-setting\" option must be defined for the " +
                     "SettingsPreparer class", device.getDeviceDescriptor());

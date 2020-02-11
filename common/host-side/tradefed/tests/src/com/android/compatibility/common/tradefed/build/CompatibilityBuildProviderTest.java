@@ -23,6 +23,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IDeviceBuildInfo;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.ExecutionFiles;
 import com.android.tradefed.util.FileUtil;
 
 import org.easymock.EasyMock;
@@ -48,16 +49,23 @@ public class CompatibilityBuildProviderTest {
     public void setUp() throws Exception {
         mMockDevice = EasyMock.createMock(ITestDevice.class);
         mRootDir = FileUtil.createTempDir("cts-root-dir");
-        mProvider = new CompatibilityBuildProvider() {
-            @Override
-            String getRootDirPath() {
-                return mRootDir.getAbsolutePath();
-            }
-            @Override
-            protected String getSuiteInfoName() {
-                return "CTS";
-            }
-        };
+        mProvider =
+                new CompatibilityBuildProvider() {
+                    @Override
+                    String getRootDirPath() {
+                        return mRootDir.getAbsolutePath();
+                    }
+
+                    @Override
+                    protected String getSuiteInfoName() {
+                        return "CTS";
+                    }
+
+                    @Override
+                    ExecutionFiles getInvocationFiles() {
+                        return null;
+                    }
+                };
     }
 
     @After

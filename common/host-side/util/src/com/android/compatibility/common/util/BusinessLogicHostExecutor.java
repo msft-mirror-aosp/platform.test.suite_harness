@@ -70,7 +70,7 @@ public class BusinessLogicHostExecutor extends BusinessLogicExecutor {
      */
     @Override
     protected String formatExecutionString(String method, String... args) {
-        return String.format("%s(%s)", method, String.join(", ", args));
+        return String.format("%s(%s)", method, String.join(", ", formatArgs(args)));
     }
 
     /**

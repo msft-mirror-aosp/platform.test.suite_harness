@@ -31,6 +31,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.suite.checker.ISystemStatusChecker;
@@ -64,6 +65,7 @@ public class RetryFactoryTestTest {
     private ITestDevice mMockDevice;
     private IConfiguration mMockMainConfiguration;
     private IInvocationContext mMockContext;
+    private TestInformation mTestInfo;
 
     /**
      * A {@link CompatibilityTestSuite} that does not run anything.
@@ -107,6 +109,7 @@ public class RetryFactoryTestTest {
         mMockContext = new InvocationContext();
         mMockContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
         mMockContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockInfo);
+        mTestInfo = TestInformation.newBuilder().setInvocationContext(mMockContext).build();
 
         mSpyFilter = new RetryFilterHelper() {
             @Override
@@ -149,7 +152,7 @@ public class RetryFactoryTestTest {
         setter.setOptionValue("retry", "10599");
         setter.setOptionValue("test-arg", "abcd");
         EasyMock.replay(mMockListener);
-        mFactory.run(mMockListener);
+        mFactory.run(mTestInfo, mMockListener);
         EasyMock.verify(mMockListener);
     }
 
@@ -195,7 +198,7 @@ public class RetryFactoryTestTest {
         mMockListener.testModuleEnded();
 
         EasyMock.replay(mMockListener, mMockInfo, mMockDevice);
-        mFactory.run(mMockListener);
+        mFactory.run(mTestInfo, mMockListener);
         EasyMock.verify(mMockListener, mMockInfo, mMockDevice);
     }
 }

@@ -35,6 +35,10 @@ public abstract class BusinessLogicExecutor {
     protected static final String STRING_CLASS = "java.lang.String";
     protected static final String STRING_ARRAY_CLASS = "[Ljava.lang.String;";
 
+    /* List of substrings indicating a method arg should be redacted in the logs */
+    private static final String[] REDACTED_VALUES = new String[] {"permission"};
+    private static final String REDACTED_PLACEHOLDER = "[redacted]";
+
     /**
      * Execute a business logic condition.
      * @param method the name of the method to invoke. Must include fully qualified name of the
@@ -91,6 +95,23 @@ public abstract class BusinessLogicExecutor {
      * Format invokation information as "method(args[0], args[1], ...)".
      */
     protected abstract String formatExecutionString(String method, String... args);
+
+    /** Substitute sensitive information with REDACTED_PLACEHOLDER if necessary. */
+    protected static String[] formatArgs(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            args[i] = formatArg(args[i]);
+        }
+        return args;
+    }
+
+    private static String formatArg(String arg) {
+        for (String str : REDACTED_VALUES) {
+            if (arg.contains(str)) {
+                return REDACTED_PLACEHOLDER;
+            }
+        }
+        return arg;
+    }
 
     /**
      * Execute a business logic method.
