@@ -81,8 +81,12 @@ public class ConsoleReporter implements IShardableListener {
         mFailedTests = 0;
         mNotExecutedTests = 0;
         mTestFailed = false;
-        logMessage("%s %s with %d test%s", (isRepeatModule) ? "Continuing" : "Starting", id,
-                mTotalTestsInModule, (mTotalTestsInModule > 1) ? "s" : "");
+        logMessage(
+                "%s %s with %d test%s",
+                isRepeatModule ? "Continuing" : "Starting",
+                id,
+                mTotalTestsInModule,
+                (mTotalTestsInModule > 1) ? "s" : "");
     }
 
     /**
