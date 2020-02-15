@@ -79,8 +79,10 @@ public class SettingsPreparer extends PreconditionPreparer {
                     "\"expected-values\" must be set", device.getDeviceDescriptor());
         }
 
-        String shellCmdGet = (!mExpectedSettingValues.isEmpty()) ?
-                String.format("settings get %s %s", mSettingType, mSettingName) : "";
+        String shellCmdGet =
+                !mExpectedSettingValues.isEmpty()
+                        ? String.format("settings get %s %s", mSettingType, mSettingName)
+                        : "";
         String shellCmdPut = (mSetValue != null) ?
                 String.format("settings put %s %s %s", mSettingType, mSettingName, mSetValue) : "";
 

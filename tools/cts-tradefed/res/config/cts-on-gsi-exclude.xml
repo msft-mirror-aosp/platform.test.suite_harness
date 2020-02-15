@@ -234,6 +234,10 @@
     <!-- b/110405497: Flaky tests (waiver) -->
     <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.KeyAttestationTest#testDeviceIdAttestation" />
 
+    <!-- b/141113818: Allows unlock for CTS-on-GSI -->
+    <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.KeyAttestationTest#testEcAttestation_DeviceLocked" />
+    <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.KeyAttestationTest#testRsaAttestation_DeviceLocked" />
+
     <!-- b/110385515: Flaky due to a particular SIM card requirement (excluded) -->
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.ConnectivityManagerTest#testOpenConnection" />
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.wifi.rtt.cts.WifiRttTest#testRangingToTestAp" />
