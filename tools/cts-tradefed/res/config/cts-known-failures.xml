@@ -190,6 +190,7 @@
 
     <!-- b/148080781 -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testForegroundServiceState" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases[instant] android.cts.statsd.atom.UidAtomTests#testForegroundServiceState" />
 
     <!-- b/110354076 -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testCreateAndManageUser_DontSkipSetupWizard" />
