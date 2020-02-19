@@ -58,4 +58,7 @@
 
     <!-- App data isolation -->
     <option name="compatibility:include-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.AppDataIsolationTests"/>
+
+    <!-- Install attribution -->
+    <option name="compatibility:include-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.AppSecurityTests"/>
 </configuration>
