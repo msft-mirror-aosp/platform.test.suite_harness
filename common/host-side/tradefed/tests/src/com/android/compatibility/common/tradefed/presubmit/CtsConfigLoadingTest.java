@@ -181,10 +181,8 @@ public class CtsConfigLoadingTest {
         WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchDebugClassTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWhitelistTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWildcardTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsIdentityTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsLocationTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsLocation2TestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsMediaParserTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsMediaTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsMediaV2TestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsOpenGlPerfTestCases.config");
@@ -194,7 +192,6 @@ public class CtsConfigLoadingTest {
         WHITELIST_MODULE_PARAMETERS.add("CtsProviderUiTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsRsBlasTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsSkQPTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsWidgetTestCases29.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsWrapNoWrapTestCases.config");
         WHITELIST_MODULE_PARAMETERS.add("CtsWrapWrapDebugMallocDebugTestCases.config");
     }
