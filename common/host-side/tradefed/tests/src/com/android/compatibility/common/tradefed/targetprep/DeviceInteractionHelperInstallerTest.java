@@ -69,7 +69,10 @@ public class DeviceInteractionHelperInstallerTest {
     }
 
     private void expectHelperInstall(File file) throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.installPackage(EasyMock.eq(file), EasyMock.anyBoolean()))
+        EasyMock.expect(mMockDevice.isAppEnumerationSupported()).andReturn(true);
+        EasyMock.expect(
+                        mMockDevice.installPackage(
+                                EasyMock.eq(file), EasyMock.anyBoolean(), EasyMock.anyObject()))
                 .andReturn(null);
     }
 
@@ -373,7 +376,12 @@ public class DeviceInteractionHelperInstallerTest {
             File baseApk =
                     createFindableFile(testsDir, "com.android.cts.helpers.aosp.apk", testInfo);
 
-            EasyMock.expect(mMockDevice.installPackage(EasyMock.eq(baseApk), EasyMock.anyBoolean()))
+            EasyMock.expect(mMockDevice.isAppEnumerationSupported()).andReturn(true);
+            EasyMock.expect(
+                            mMockDevice.installPackage(
+                                    EasyMock.eq(baseApk),
+                                    EasyMock.anyBoolean(),
+                                    EasyMock.anyObject()))
                     .andReturn("Install failed");
             // Should throw TargetSetupError after failing to install and not do any further steps.
 
