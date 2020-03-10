@@ -32,7 +32,9 @@ import com.android.tradefed.util.AaptParser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -188,7 +190,11 @@ public class DeviceInteractionHelperInstaller extends BaseTargetPreparer {
         }
         CLog.logAndDisplay(
                 LogLevel.INFO, "Installing %s from %s", apkFile.getName(), apkFile.getPath());
-        String msg = device.installPackage(apkFile, true);
+        List<String> extraArgs = new ArrayList<String>();
+        if (device.isAppEnumerationSupported()) {
+            extraArgs.add("--force-queryable");
+        }
+        String msg = device.installPackage(apkFile, true, extraArgs.toArray(new String[] {}));
         if (msg != null) {
             throw new TargetSetupError(
                     String.format("Failed to install %s: %s", apkFile.getName(), msg),
