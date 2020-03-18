@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -367,15 +368,26 @@ public class ResultHandler {
      * @param referenceUrl A nullable string that can contain a URL to a related data
      * @param logUrl A nullable string that can contain a URL to related log files
      * @param commandLineArgs A string containing the arguments to the run command
+     * @param resultAttributes Extra key-value pairs to be added as attributes and corresponding
+     *     values into the result XML file
      * @return The result file created.
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public static File writeResults(String suiteName, String suiteVersion, String suitePlan,
-            String suiteBuild, IInvocationResult result, File resultDir,
-            long startTime, long endTime, String referenceUrl, String logUrl,
-            String commandLineArgs)
-                    throws IOException, XmlPullParserException {
+    public static File writeResults(
+            String suiteName,
+            String suiteVersion,
+            String suitePlan,
+            String suiteBuild,
+            IInvocationResult result,
+            File resultDir,
+            long startTime,
+            long endTime,
+            String referenceUrl,
+            String logUrl,
+            String commandLineArgs,
+            Map<String, String> resultAttributes)
+            throws IOException, XmlPullParserException {
         int passed = result.countResults(TestStatus.PASS);
         int failed = result.countResults(TestStatus.FAIL);
         File resultFile = new File(resultDir, TEST_RESULT_FILE_NAME);
@@ -398,6 +410,12 @@ public class ResultHandler {
         serializer.attribute(NS, SUITE_BUILD_ATTR, suiteBuild);
         serializer.attribute(NS, REPORT_VERSION_ATTR, RESULT_FILE_VERSION);
         serializer.attribute(NS, COMMAND_LINE_ARGS, nullToEmpty(commandLineArgs));
+
+        if (resultAttributes != null) {
+            for (Entry<String, String> entry : resultAttributes.entrySet()) {
+                serializer.attribute(NS, entry.getKey(), entry.getValue());
+            }
+        }
 
         if (referenceUrl != null) {
             serializer.attribute(NS, REFERENCE_URL_ATTR, referenceUrl);

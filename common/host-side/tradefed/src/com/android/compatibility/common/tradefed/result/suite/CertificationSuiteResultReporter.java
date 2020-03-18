@@ -53,6 +53,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -104,6 +105,13 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Option(name = INCLUDE_HTML_IN_ZIP,
             description = "Whether failure summary report is included in the zip fie.")
     private boolean mIncludeHtml = false;
+
+    @Option(
+            name = "result-attribute",
+            description =
+                    "Extra key-value pairs to be added as attributes and corresponding values "
+                            + "of the \"Result\" tag in the result XML.")
+    private Map<String, String> mResultAttributes = new HashMap<String, String>();
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -288,12 +296,14 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
     @Override
     public IFormatterGenerator createFormatter() {
-        return new CertificationResultXml(mBuildHelper.getSuiteName(),
+        return new CertificationResultXml(
+                mBuildHelper.getSuiteName(),
                 mBuildHelper.getSuiteVersion(),
                 mBuildHelper.getSuitePlan(),
                 mBuildHelper.getSuiteBuild(),
                 mReferenceUrl,
-                getLogUrl());
+                getLogUrl(),
+                mResultAttributes);
     }
 
     @Override
