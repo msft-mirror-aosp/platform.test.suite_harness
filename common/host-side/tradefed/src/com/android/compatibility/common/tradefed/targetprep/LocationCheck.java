@@ -15,10 +15,10 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
-import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -40,10 +40,10 @@ public class LocationCheck extends SettingsPreparer {
     }
 
     @Override
-    public void run(ITestDevice device, IBuildInfo buildInfo) throws TargetSetupError,
-            BuildError, DeviceNotAvailableException {
+    public void run(TestInformation testInfo)
+            throws TargetSetupError, BuildError, DeviceNotAvailableException {
 
-        if (!hasLocationFeature(device)) {
+        if (!hasLocationFeature(testInfo.getDevice())) {
             return; // skip this precondition if required location feature is not present
         }
 
@@ -54,6 +54,6 @@ public class LocationCheck extends SettingsPreparer {
         mFailureMessage =
                 "Location services must be enabled in order to "
                         + "successfully run the test suite";
-        super.run(device, buildInfo);
+        super.run(testInfo);
     }
 }

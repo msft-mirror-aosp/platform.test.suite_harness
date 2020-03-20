@@ -65,6 +65,7 @@ public class RetryFactoryTestTest {
     private ITestDevice mMockDevice;
     private IConfiguration mMockMainConfiguration;
     private IInvocationContext mMockContext;
+    private TestInformation mTestInfo;
 
     /**
      * A {@link CompatibilityTestSuite} that does not run anything.
@@ -108,6 +109,7 @@ public class RetryFactoryTestTest {
         mMockContext = new InvocationContext();
         mMockContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
         mMockContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockInfo);
+        mTestInfo = TestInformation.newBuilder().setInvocationContext(mMockContext).build();
 
         mSpyFilter = new RetryFilterHelper() {
             @Override
@@ -150,7 +152,7 @@ public class RetryFactoryTestTest {
         setter.setOptionValue("retry", "10599");
         setter.setOptionValue("test-arg", "abcd");
         EasyMock.replay(mMockListener);
-        mFactory.run(mMockListener);
+        mFactory.run(mTestInfo, mMockListener);
         EasyMock.verify(mMockListener);
     }
 
@@ -187,8 +189,6 @@ public class RetryFactoryTestTest {
         mFactory.setSystemStatusChecker(mCheckers);
         mFactory.setConfiguration(mMockMainConfiguration);
         mFactory.setInvocationContext(mMockContext);
-        TestInformation testInfo =
-                TestInformation.newBuilder().setInvocationContext(mMockContext).build();
 
         mMockListener.testModuleStarted(EasyMock.anyObject());
         mMockListener.testRunStarted(
@@ -198,7 +198,7 @@ public class RetryFactoryTestTest {
         mMockListener.testModuleEnded();
 
         EasyMock.replay(mMockListener, mMockInfo, mMockDevice);
-        mFactory.run(testInfo, mMockListener);
+        mFactory.run(mTestInfo, mMockListener);
         EasyMock.verify(mMockListener, mMockInfo, mMockDevice);
     }
 }

@@ -16,13 +16,13 @@
 <configuration description="Runs a subset of CTS tests using a general system image (GSI)">
     <option name="plan" value="cts-on-gsi" />
 
+    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.VtsDeviceInfoCollector" />
+
     <include name="cts" />
     <!-- CTS-on-GSI is not expected to run parameterized modules -->
     <option name="compatibility:enable-parameterized-modules" value="false" />
     <option name="compatibility:primary-abi-only" value="true" />
 
-    <include name="cts-on-gsi-base-filters" />
     <include name="cts-on-gsi-exclude" />
 
 </configuration>
-

@@ -21,7 +21,6 @@ import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.IConfiguration;
-import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
@@ -73,7 +72,7 @@ import javax.xml.transform.stream.StreamSource;
  */
 @OptionClass(alias = "result-reporter")
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
-        implements IConfigurationReceiver, ITestSummaryListener {
+        implements ITestSummaryListener {
 
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
@@ -122,8 +121,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     private Map<LogFile, InputStreamSource> mPreInvocationLogs = new HashMap<>();
     /** Invocation level Log saver to receive when files are logged */
     private ILogSaver mLogSaver;
-    /** Invocation level configuration */
-    private IConfiguration mConfiguration = null;
 
     private String mReferenceUrl;
 
@@ -245,20 +242,11 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         mLogSaver = saver;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setConfiguration(IConfiguration configuration) {
-        mConfiguration = configuration;
-    }
-
     /**
      * Create directory structure where results and logs will be written.
      */
     private void initializeResultDirectories() {
         CLog.d("Initializing result directory");
-        // TODO: Clean up start time handling to avoid relying on buildinfo
-        getPrimaryBuildInfo().addBuildAttribute(CompatibilityBuildHelper.START_TIME_MS,
-                Long.toString(getStartTime()));
         try {
             mResultDir = mBuildHelper.getResultDir();
             if (mResultDir != null) {
@@ -280,8 +268,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
         mUploader = new ResultUploader(mResultServer, mBuildHelper.getSuiteName());
         try {
-            mLogDir = new File(mBuildHelper.getLogsDir(),
-                    CompatibilityBuildHelper.getDirSuffix(getStartTime()));
+            mLogDir = mBuildHelper.getInvocationLogDir();
         } catch (FileNotFoundException e) {
             CLog.e(e);
         }
@@ -430,8 +417,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
      */
     private void copyDynamicConfigFiles() {
         File configDir = new File(mResultDir, "config");
-        if (!configDir.mkdir()) {
-            CLog.w("Failed to make dynamic config directory \"%s\" in the result",
+        if (!configDir.exists() && !configDir.mkdir()) {
+            CLog.w(
+                    "Failed to make dynamic config directory \"%s\" in the result.",
                     configDir.getAbsolutePath());
         }
 
@@ -445,6 +433,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 if (!uniqueModules.contains(moduleName)) {
                     // have not seen config for this module yet, copy into result
                     File destFile = new File(configDir, moduleName + ".dynamic");
+                    if (destFile.exists()) {
+                        continue;
+                    }
                     try {
                         FileUtil.copyFile(srcFile, destFile);
                         uniqueModules.add(moduleName); // Add to uniqueModules if copy succeeds
@@ -500,7 +491,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
             fis = new FileInputStream(resultFile);
             logFile = mLogSaver.saveLogData("log-result", LogDataType.XML, fis);
             CLog.d("Result XML URL: %s", logFile.getUrl());
-            logReportFiles(mConfiguration, resultFile, resultFile.getName(), LogDataType.XML);
+            logReportFiles(getConfiguration(), resultFile, resultFile.getName(), LogDataType.XML);
         } catch (IOException ioe) {
             CLog.e("error saving XML with log saver");
             CLog.e(ioe);
@@ -514,7 +505,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 CLog.d("Result zip URL: %s", logFile.getUrl());
-                logReportFiles(mConfiguration, zippedResults, "results", LogDataType.ZIP);
+                logReportFiles(getConfiguration(), zippedResults, "results", LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }

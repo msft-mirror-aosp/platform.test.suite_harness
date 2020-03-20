@@ -262,6 +262,16 @@ public class CompatibilityBuildHelper {
     }
 
     /**
+     * @return a {@link File} representing the log directory of the current invocation.
+     * @throws FileNotFoundException if the directory structure is not valid.
+     */
+    public File getInvocationLogDir() throws FileNotFoundException {
+        return new File(
+                getLogsDir(),
+                getDirSuffix(Long.parseLong(mBuildInfo.getBuildAttributes().get(START_TIME_MS))));
+    }
+
+    /**
      * @return a {@link File} representing the directory to store derivedplan files.
      * @throws FileNotFoundException if the directory structure is not valid.
      */
