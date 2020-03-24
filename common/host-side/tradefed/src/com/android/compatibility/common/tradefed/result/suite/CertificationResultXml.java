@@ -25,6 +25,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Utility class to save a Compatibility run as an XML.
@@ -46,27 +49,29 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     private String mSuiteBuild;
     private String mReferenceUrl;
     private String mLogUrl;
+    private Map<String, String> mResultAttributes = new HashMap<String, String>();
 
     /**
      * Empty version of the constructor when loading results.
      */
     public CertificationResultXml() {}
 
-    /**
-     * Create an XML report specialized for the Compatibility Test cases.
-     */
-    public CertificationResultXml(String suiteName,
+    /** Create an XML report specialized for the Compatibility Test cases. */
+    public CertificationResultXml(
+            String suiteName,
             String suiteVersion,
             String suitePlan,
             String suiteBuild,
             String referenceUrl,
-            String logUrl) {
+            String logUrl,
+            Map<String, String> resultAttributes) {
         mSuiteName = suiteName;
         mSuiteVersion = suiteVersion;
         mSuitePlan = suitePlan;
         mSuiteBuild = suiteBuild;
         mReferenceUrl = referenceUrl;
         mLogUrl = logUrl;
+        mResultAttributes = resultAttributes;
     }
 
     /**
@@ -87,6 +92,12 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
 
         if (mLogUrl != null) {
             serializer.attribute(NS, LOG_URL_ATTR, mLogUrl);
+        }
+
+        if (mResultAttributes != null) {
+            for (Entry<String, String> entry : mResultAttributes.entrySet()) {
+                serializer.attribute(NS, entry.getKey(), entry.getValue());
+            }
         }
     }
 
