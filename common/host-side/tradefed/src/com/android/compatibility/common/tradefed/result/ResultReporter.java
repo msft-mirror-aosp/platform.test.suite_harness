@@ -151,6 +151,13 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             description = "Whether failure summary report is included in the zip fie.")
     private boolean mIncludeHtml = false;
 
+    @Option(
+            name = "result-attribute",
+            description =
+                    "Extra key-value pairs to be added as attributes and corresponding"
+                            + "values of the \"Result\" tag in the result XML.")
+    private Map<String, String> mResultAttributes = new HashMap<String, String>();
+
     private CompatibilityBuildHelper mBuildHelper;
     private File mResultDir = null;
     private File mLogDir = null;
@@ -831,11 +838,19 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     protected File generateResultXmlFile()
             throws IOException, XmlPullParserException {
-        return ResultHandler.writeResults(mBuildHelper.getSuiteName(),
-                mBuildHelper.getSuiteVersion(), getSuitePlan(mBuildHelper),
-                mBuildHelper.getSuiteBuild(), mResult, mResultDir, mResult.getStartTime(),
-                mElapsedTime + mResult.getStartTime(), mReferenceUrl, getLogUrl(),
-                mBuildHelper.getCommandLineArgs());
+        return ResultHandler.writeResults(
+                mBuildHelper.getSuiteName(),
+                mBuildHelper.getSuiteVersion(),
+                getSuitePlan(mBuildHelper),
+                mBuildHelper.getSuiteBuild(),
+                mResult,
+                mResultDir,
+                mResult.getStartTime(),
+                mElapsedTime + mResult.getStartTime(),
+                mReferenceUrl,
+                getLogUrl(),
+                mBuildHelper.getCommandLineArgs(),
+                mResultAttributes);
     }
 
     /**

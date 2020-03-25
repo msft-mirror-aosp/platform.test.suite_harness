@@ -34,6 +34,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -239,6 +240,9 @@ public class ResultHandlerTest extends TestCase {
         ITestResult moduleBTest5 = moduleBCase.getOrCreateResult(METHOD_5);
         moduleBTest5.skipped();
 
+        Map<String, String> testAttributes = new HashMap<String, String>();
+        testAttributes.put("foo1", "bar1");
+        testAttributes.put("foo2", "bar2");
         // Serialize to file
         File res =
                 ResultHandler.writeResults(
@@ -252,8 +256,11 @@ public class ResultHandlerTest extends TestCase {
                         END_MS,
                         REFERENCE_URL,
                         LOG_URL,
-                        COMMAND_LINE_ARGS);
+                        COMMAND_LINE_ARGS,
+                        testAttributes);
         String content = FileUtil.readStringFromFile(res);
+        assertXmlContainsAttribute(content, "Result", "foo1", "bar1");
+        assertXmlContainsAttribute(content, "Result", "foo2", "bar2");
         assertXmlContainsAttribute(content, "Result/Build", "run_history", EXAMPLE_RUN_HISTORY);
         assertXmlContainsNode(content, "Result/RunHistory");
         assertXmlContainsAttribute(content, "Result/RunHistory/Run", "start", "10000000000000");
@@ -336,7 +343,8 @@ public class ResultHandlerTest extends TestCase {
                         END_MS,
                         REFERENCE_URL,
                         LOG_URL,
-                        COMMAND_LINE_ARGS);
+                        COMMAND_LINE_ARGS,
+                        null);
         String content = FileUtil.readStringFromFile(res);
         assertXmlContainsNode(content, "Result/Module/TestCase/Test/RunHistory");
         assertXmlContainsAttribute(
