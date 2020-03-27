@@ -99,7 +99,8 @@ public class CtsConfigLoadingTest {
                             "tv",
                             "uitoolkit",
                             "vr",
-                            "webview"));
+                            "webview",
+                            "wifi"));
     private static final Set<String> KNOWN_MISC_MODULES =
             new HashSet<>(
                     Arrays.asList(
