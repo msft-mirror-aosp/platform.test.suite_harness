@@ -18,6 +18,7 @@
     <include name="cts" />
 
     <option name="plan" value="cts-foldable" />
+    <option name="result-attribute" key="display_mode" value="1" />
 
     <!-- CTS tests to be included in this plan-->
 </configuration>
