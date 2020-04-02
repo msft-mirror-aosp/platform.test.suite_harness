@@ -26,7 +26,7 @@
     <option name="compatibility:include-filter" value="CtsSystemIntentTestCases"/>
 
     <!-- Toasts -->
-    <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.ToastTest"/>
+    <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.ToastWindowTest"/>
     <option name="compatibility:include-filter" value="CtsWidgetTestCases android.widget.cts.ToastTest"/>
     <option name="compatibility:include-filter" value="CtsWidgetTestCases29 android.widget.cts29.ToastTest"/>
     <option name="compatibility:include-filter" value="CtsToastTestCases android.widget.toast.cts.LegacyToastTest"/>
