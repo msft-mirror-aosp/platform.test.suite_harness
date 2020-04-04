@@ -61,4 +61,5 @@
 
     <!-- Install attribution -->
     <option name="compatibility:include-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.AppSecurityTests"/>
+    <option name="compatibility:include-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.InstallSourceInfoTest"/>
 </configuration>
