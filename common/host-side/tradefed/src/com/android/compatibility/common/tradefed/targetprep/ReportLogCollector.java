@@ -110,11 +110,10 @@ public class ReportLogCollector extends BaseTargetPreparer {
                 CLog.e("%s is not a directory", hostReportDir.getAbsolutePath());
                 return;
             }
-            String resultPath = resultDir.getAbsolutePath();
-            CollectorUtil.pullFromDevice(device, mSrcDir, resultPath);
+            device.pullDir(mSrcDir, resultDir);
             CollectorUtil.pullFromHost(hostReportDir, resultDir);
             CollectorUtil.reformatRepeatedStreams(resultDir);
-        } catch (IOException exception) {
+        } catch (DeviceNotAvailableException | IOException exception) {
             CLog.e(exception);
         }
     }
