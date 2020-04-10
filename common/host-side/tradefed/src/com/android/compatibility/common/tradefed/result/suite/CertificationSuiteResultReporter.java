@@ -254,9 +254,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
      */
     private void initializeResultDirectories() {
         CLog.d("Initializing result directory");
-        // TODO: Clean up start time handling to avoid relying on buildinfo
-        getPrimaryBuildInfo().addBuildAttribute(CompatibilityBuildHelper.START_TIME_MS,
-                Long.toString(getStartTime()));
         try {
             mResultDir = mBuildHelper.getResultDir();
             if (mResultDir != null) {
@@ -278,8 +275,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
 
         mUploader = new ResultUploader(mResultServer, mBuildHelper.getSuiteName());
         try {
-            mLogDir = new File(mBuildHelper.getLogsDir(),
-                    CompatibilityBuildHelper.getDirSuffix(getStartTime()));
+            mLogDir = mBuildHelper.getInvocationLogDir();
         } catch (FileNotFoundException e) {
             CLog.e(e);
         }
