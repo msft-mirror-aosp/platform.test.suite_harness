@@ -37,11 +37,7 @@ public class PropertyCheck extends PreconditionPreparer {
     )
     private String mPropertyName = null;
 
-    @Option(
-        name = "expected-value",
-        description = "The expected value of the property",
-        mandatory = true
-    )
+    @Option(name = "expected-value", description = "The expected value of the property")
     private String mExpectedPropertyValue = null;
 
     @Option(
@@ -50,9 +46,8 @@ public class PropertyCheck extends PreconditionPreparer {
     private boolean mPropertyValueIsSetOnly = false;
 
     @Option(
-        name = "throw-error",
-        description = "Whether to throw an error for an unexpected property value"
-    )
+            name = "throw-error",
+            description = "Whether to throw an error for an unexpected property value")
     private boolean mThrowError = false;
 
     @Override
