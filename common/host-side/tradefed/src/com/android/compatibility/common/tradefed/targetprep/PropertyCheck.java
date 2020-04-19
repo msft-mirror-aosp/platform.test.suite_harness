@@ -37,11 +37,7 @@ public class PropertyCheck extends PreconditionPreparer {
     )
     private String mPropertyName = null;
 
-    @Option(
-        name = "expected-value",
-        description = "The expected value of the property",
-        mandatory = true
-    )
+    @Option(name = "expected-value", description = "The expected value of the property")
     private String mExpectedPropertyValue = null;
 
     @Option(name = "is-set-only", description = "Whether this value must be set only (don't check"
