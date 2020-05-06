@@ -298,8 +298,10 @@ public class MediaPreparer extends BaseTargetPreparer {
             } catch (IOException e) {
                 FileUtil.recursiveDelete(mediaFolder);
                 throw new TargetSetupError(
-                        "Failed to download and open media files on host, the"
-                                + " device requires these media files for compatibility tests",
+                        String.format(
+                                "Failed to download and open media files on host machine at '%s'."
+                                        + " These media files are required for compatibility tests.",
+                                mediaFolderZip),
                         e,
                         device.getDeviceDescriptor());
             } finally {
