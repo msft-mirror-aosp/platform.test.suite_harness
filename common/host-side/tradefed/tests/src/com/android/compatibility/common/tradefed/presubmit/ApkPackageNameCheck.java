@@ -83,7 +83,7 @@ public class ApkPackageNameCheck {
             IConfiguration c = ConfigurationFactory.getInstance()
                     .createConfigurationFromArgs(new String[] {config.getAbsolutePath()});
             // For each config, we check all the apk it's going to install
-            List<String> apkNames = new ArrayList<>();
+            List<File> apkNames = new ArrayList<>();
             List<String> packageListNames = new ArrayList<>();
             for (ITargetPreparer prep : c.getTargetPreparers()) {
                 if (prep instanceof TestAppInstallSetup) {
@@ -91,7 +91,8 @@ public class ApkPackageNameCheck {
                 }
             }
 
-            for (String apkName : apkNames) {
+            for (File apk : apkNames) {
+                String apkName = apk.getName();
                 File apkFile = new File(testcases, apkName);
                 if (!apkFile.exists()) {
                     fail(String.format("Module %s is trying to install %s which does not "
