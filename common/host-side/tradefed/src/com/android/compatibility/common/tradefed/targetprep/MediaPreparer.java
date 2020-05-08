@@ -303,7 +303,8 @@ public class MediaPreparer extends BaseTargetPreparer {
                                         + " These media files are required for compatibility tests.",
                                 mediaFolderZip),
                         e,
-                        device.getDeviceDescriptor());
+                        device.getDeviceDescriptor(),
+                        /* device side */ false);
             } finally {
                 FileUtil.deleteFile(mediaFolderZip);
             }
