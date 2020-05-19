@@ -36,6 +36,7 @@ type TradefedBinaryProperties struct {
 	Short_name string
 	Full_name  string
 	Version    string
+	Prepend_platform_version_name bool
 }
 
 // tradefedBinaryFactory creates an empty module for the tradefed_binary module type,
@@ -55,6 +56,10 @@ const genSuffix = "-gen"
 func tradefedBinaryLoadHook(tfb *TradefedBinaryProperties) func(ctx android.LoadHookContext) {
 	return func(ctx android.LoadHookContext) {
 		genName := ctx.ModuleName() + genSuffix
+		version := tfb.Version
+		if (tfb.Prepend_platform_version_name) {
+			version = ctx.Config().PlatformVersionName() + tfb.Version
+		}
 
 		// Create a submodule that generates the test-suite-info.properties file
 		// and copies DynamicConfig.xml if it is present.
@@ -63,7 +68,7 @@ func tradefedBinaryLoadHook(tfb *TradefedBinaryProperties) func(ctx android.Load
 				Name:       &genName,
 				Short_name: tfb.Short_name,
 				Full_name:  tfb.Full_name,
-				Version:    tfb.Version,
+				Version:    version,
 			})
 
 		props := struct {
