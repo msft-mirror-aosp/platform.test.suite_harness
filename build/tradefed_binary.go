@@ -73,6 +73,7 @@ func tradefedBinaryLoadHook(tfb *TradefedBinaryProperties) func(ctx android.Load
 		// Add dependencies required by all tradefed_binary modules.
 		props.Libs = []string{
 			"tradefed",
+			"tradefed-test-framework",
 			"loganalysis",
 			"hosttestlib",
 			"compatibility-host-util",
