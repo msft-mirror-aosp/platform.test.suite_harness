@@ -86,7 +86,7 @@ fi;
 
 JAR_DIR=${CTS_ROOT}/android-cts/tools
 JARS="tradefed
-  tradefed-test-harness
+  tradefed-test-framework
   loganalysis
   hosttestlib
   compatibility-host-util
