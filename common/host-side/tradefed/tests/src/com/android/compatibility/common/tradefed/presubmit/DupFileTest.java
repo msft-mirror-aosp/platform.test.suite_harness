@@ -43,7 +43,7 @@ public class DupFileTest {
 
     // We ignore directories part of the common java and google packages.
     private static final String[] IGNORE_DIRS =
-            new String[] {"android/", "javax/annotation/", "com/google/protobuf/"};
+            new String[] {"android/", "javax/annotation/", "com/google/protobuf/", "kotlin/"};
 
     /** test if there are duplicate files in different jars. */
     @Test
