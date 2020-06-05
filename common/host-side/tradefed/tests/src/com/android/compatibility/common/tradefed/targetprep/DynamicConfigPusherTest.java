@@ -171,7 +171,8 @@ public class DynamicConfigPusherTest {
             fail("Should have thrown an exception.");
         } catch (TargetSetupError expected) {
             // expected
-            assertEquals("Cannot get local dynamic config file from test directory null",
+            assertEquals(
+                    "Cannot get local dynamic config file from test directory",
                     expected.getMessage());
         }
         EasyMock.verify(mMockDevice, mMockBuildInfo);
@@ -191,8 +192,9 @@ public class DynamicConfigPusherTest {
             fail("Should have thrown an exception.");
         } catch (TargetSetupError expected) {
             // expected
-            assertEquals("Fail to unpack 'not-an-existing-resource-name.dynamic' from resources "
-                    + "null", expected.getMessage());
+            assertEquals(
+                    "Fail to unpack 'not-an-existing-resource-name.dynamic' from resources",
+                    expected.getMessage());
         }
         EasyMock.verify(mMockDevice, mMockBuildInfo);
     }
