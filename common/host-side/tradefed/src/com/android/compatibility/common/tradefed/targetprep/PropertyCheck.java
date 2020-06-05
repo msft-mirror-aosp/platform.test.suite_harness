@@ -40,11 +40,13 @@ public class PropertyCheck extends PreconditionPreparer {
     @Option(name = "expected-value", description = "The expected value of the property")
     private String mExpectedPropertyValue = null;
 
-    @Option(name = "is-set-only", description = "Whether this value must be set only (don't check"
-        + "value)")
+    @Option(
+            name = "is-set-only",
+            description = "Whether this value must be set only (don't check value)")
     private boolean mPropertyValueIsSetOnly = false;
 
-    @Option(name = "throw-error",
+    @Option(
+            name = "throw-error",
             description = "Whether to throw an error for an unexpected property value")
     private boolean mThrowError = false;
 
@@ -54,22 +56,20 @@ public class PropertyCheck extends PreconditionPreparer {
         ITestDevice device = testInfo.getDevice();
         String propertyValue = device.getProperty(mPropertyName);
 
-
-        if (mPropertyValueIsSetOnly && mExpectedPropertyValue != null ) {
-            throw new IllegalArgumentException("is-set-only and "
-                + "expected-value cannot both be set.");
-        }
-        else if (!mPropertyValueIsSetOnly && mExpectedPropertyValue == null ) {
-            throw new IllegalArgumentException("is-set-only or "
-                + "expected-value must be set.");
+        if (mPropertyValueIsSetOnly && mExpectedPropertyValue != null) {
+            throw new IllegalArgumentException(
+                    "is-set-only and " + "expected-value cannot both be set.");
+        } else if (!mPropertyValueIsSetOnly && mExpectedPropertyValue == null) {
+            throw new IllegalArgumentException("is-set-only or expected-value must be set.");
         }
 
         if (mPropertyValueIsSetOnly) {
             if (propertyValue == null || propertyValue.equals("")) {
-                String msg = String.format("Property \"%s\" not found or not set on device",
-                    mPropertyName);
+                String msg =
+                        String.format(
+                                "Property \"%s\" not found or not set on device", mPropertyName);
                 // Handle missing property with either exception or warning
-                if(mThrowError) {
+                if (mThrowError) {
                     throw new TargetSetupError(msg, device.getDeviceDescriptor());
                 } else {
                     logWarning(msg);

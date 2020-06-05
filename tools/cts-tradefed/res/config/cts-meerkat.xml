@@ -22,8 +22,9 @@
     <!-- Disable instant tests -->
     <option name="compatibility:enable-parameterized-modules" value="false" />
 
-    <!-- Restrict SAW intent -->
+    <!-- System Alert Window (SAW) -->
     <option name="compatibility:include-filter" value="CtsSystemIntentTestCases"/>
+    <option name="compatibility:include-filter" value="CtsMediaTestCases android.media.cts.MediaProjectionTest"/>
 
     <!-- Toasts -->
     <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.ToastWindowTest"/>
