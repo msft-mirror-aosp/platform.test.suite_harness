@@ -35,10 +35,12 @@ public class BusinessLogicHostExecutor extends BusinessLogicExecutor {
     private IBuildInfo mBuild;
     private Object mTestObj;
 
-    public BusinessLogicHostExecutor(ITestDevice device, IBuildInfo build, Object testObj) {
+    public BusinessLogicHostExecutor(
+            ITestDevice device, IBuildInfo build, Object testObj, List<String> redactionRegexes) {
         mDevice = device;
         mBuild = build;
         mTestObj = testObj;
+        mRedactionRegexes = redactionRegexes;
     }
 
     /**
