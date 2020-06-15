@@ -295,4 +295,84 @@
 
     <!-- b/111167329: CtsCameraTestCases failure -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.SurfaceViewPreviewTest#testSurfaceSet"/>
+
+    <!-- b/135588722: CtsUsesLibraryHostTestCases (10_r1 waiver) -->
+    <option name="compatibility:exclude-filter" value="CtsUsesLibraryHostTestCases android.classloaders.cts.UsesLibraryHostTest#testMissingLibrary_full"/>
+    <option name="compatibility:exclude-filter" value="CtsUsesLibraryHostTestCases android.classloaders.cts.UsesLibraryHostTest#testUsesLibrary_full"/>
+    <option name="compatibility:exclude-filter" value="CtsCompilationTestCases android.compilation.cts.AdbRootDependentCompilationTest"/>
+
+    <!-- b/145371681: CtsContentSuggestionsTestCases and CtsAppPredictionServiceTestCases (10_r2 waiver) -->
+    <option name="compatibility:exclude-filter" value="CtsAppPredictionServiceTestCases" />
+    <option name="compatibility:exclude-filter" value="CtsContentSuggestionsTestCases" />
+
+    <!-- b/143513519: CtsCameraTestCases (10_r3 waiver) -->
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.camera.cts.HeifWriterTest#testHeif"/>
+
+    <!-- b/155107044: CtsNetTestCases -->
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testInterfaceCountersUdp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testInterfaceCountersUdp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptTcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptUdp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthUdp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptUdp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthUdp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptTcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha1Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptTcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthUdp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testIkeOverUdpEncapSocket"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testInterfaceCountersUdp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Tcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthTcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthTcp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Tcp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm128Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testCryptUdp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAuthTcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacMd5Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha256Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Udp4"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha384Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm64Udp6"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesGcm96Udp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Tcp4UdpEncap"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.TrafficStatsTest#testTrafficStatsForLocalhost"/>
+    <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.TrafficStatsTest#testValidTotalStats"/>
 </configuration>
