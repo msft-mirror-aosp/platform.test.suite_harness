@@ -15,6 +15,7 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.ResultHandler;
@@ -73,6 +74,28 @@ import javax.xml.transform.stream.StreamSource;
 @OptionClass(alias = "result-reporter")
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
         implements ITestSummaryListener {
+
+    // The known existing variant of suites.
+    // Adding a new variant requires approval from Android Partner team and Test Harness team.
+    private enum SuiteVariant {
+        CTS_ON_GSI("CTS_ON_GSI", "cts-on-gsi");
+
+        private final String mReportDisplayName;
+        private final String mConfigName;
+
+        private SuiteVariant(String reportName, String configName) {
+            mReportDisplayName = reportName;
+            mConfigName = configName;
+        }
+
+        public String getReportDisplayName() {
+            return mReportDisplayName;
+        }
+
+        public String getConfigName() {
+            return mConfigName;
+        }
+    }
 
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
@@ -152,11 +175,16 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         super.invocationStarted(context);
 
         if (mBuildHelper == null) {
-            mBuildHelper = new CompatibilityBuildHelper(getPrimaryBuildInfo());
+            mBuildHelper = createBuildHelper();
         }
         if (mResultDir == null) {
             initializeResultDirectories();
         }
+    }
+
+    @VisibleForTesting
+    CompatibilityBuildHelper createBuildHelper() {
+        return new CompatibilityBuildHelper(getPrimaryBuildInfo());
     }
 
     /**
@@ -305,6 +333,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         return new CertificationResultXml(
                 mBuildHelper.getSuiteName(),
                 mBuildHelper.getSuiteVersion(),
+                createSuiteVariant(),
                 mBuildHelper.getSuitePlan(),
                 mBuildHelper.getSuiteBuild(),
                 mReferenceUrl,
@@ -613,5 +642,17 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 listener.testLog(dataName, type, source);
             }
         }
+    }
+
+    private String createSuiteVariant() {
+        IConfiguration currentConfig = getConfiguration();
+        String commandLine = currentConfig.getCommandLine();
+        for (SuiteVariant var : SuiteVariant.values()) {
+            if (commandLine.startsWith(var.getConfigName() + " ")
+                    || commandLine.equals(var.getConfigName())) {
+                return var.getReportDisplayName();
+            }
+        }
+        return null;
     }
 }
