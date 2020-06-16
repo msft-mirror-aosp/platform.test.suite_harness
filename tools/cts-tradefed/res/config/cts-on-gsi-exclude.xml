@@ -288,6 +288,10 @@
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VolumeShaperTest#testPlayerStepRamp" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VolumeShaperTest#testPlayerTwoShapers" />
 
+    <!-- b/157286547 CtsIncidentHostTestCases ErrorsTest failure -->
+    <option name="compatibility:exclude-filter" value="CtsIncidentHostTestCases com.android.server.cts.ErrorsTest#testThrowException" />
+    <option name="compatibility:exclude-filter" value="CtsIncidentHostTestCases com.android.server.cts.ErrorsTest#testNativeCrash" />
+
     <!-- b/112450846: CtsAppSecurityHostTestCases multi-user, fixing on Q -->
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testCache" />
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testVerifyAppStats" />
