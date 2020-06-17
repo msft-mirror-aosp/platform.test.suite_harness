@@ -136,6 +136,14 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                             + "of the \"Result\" tag in the result XML.")
     private Map<String, String> mResultAttributes = new HashMap<String, String>();
 
+    // Should be removed for the S release.
+    @Option(
+            name = "cts-on-gsi-variant",
+            description =
+                    "Workaround for the R release to ensure the CTS-on-GSI report can be parsed "
+                            + "by the APFE.")
+    private boolean mCtsOnGsiVariant = false;
+
     private CompatibilityBuildHelper mBuildHelper;
 
     /** The directory containing the results */
@@ -331,7 +339,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Override
     public IFormatterGenerator createFormatter() {
         return new CertificationResultXml(
-                mBuildHelper.getSuiteName(),
+                createSuiteName(mBuildHelper.getSuiteName()),
                 mBuildHelper.getSuiteVersion(),
                 createSuiteVariant(),
                 mBuildHelper.getSuitePlan(),
@@ -642,6 +650,16 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 listener.testLog(dataName, type, source);
             }
         }
+    }
+
+    private String createSuiteName(String originalSuiteName) {
+        if (mCtsOnGsiVariant) {
+            String commandLine = getConfiguration().getCommandLine();
+            if (commandLine.startsWith("cts-on-gsi")) {
+                return "VTS";
+            }
+        }
+        return originalSuiteName;
     }
 
     private String createSuiteVariant() {
