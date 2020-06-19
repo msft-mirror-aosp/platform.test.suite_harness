@@ -15,6 +15,7 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.ResultHandler;
@@ -74,6 +75,28 @@ import javax.xml.transform.stream.StreamSource;
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
         implements ITestSummaryListener {
 
+    // The known existing variant of suites.
+    // Adding a new variant requires approval from Android Partner team and Test Harness team.
+    private enum SuiteVariant {
+        CTS_ON_GSI("CTS_ON_GSI", "cts-on-gsi");
+
+        private final String mReportDisplayName;
+        private final String mConfigName;
+
+        private SuiteVariant(String reportName, String configName) {
+            mReportDisplayName = reportName;
+            mConfigName = configName;
+        }
+
+        public String getReportDisplayName() {
+            return mReportDisplayName;
+        }
+
+        public String getConfigName() {
+            return mConfigName;
+        }
+    }
+
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
     public static final String HTLM_REPORT_NAME = "test_result.html";
@@ -112,6 +135,14 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                     "Extra key-value pairs to be added as attributes and corresponding values "
                             + "of the \"Result\" tag in the result XML.")
     private Map<String, String> mResultAttributes = new HashMap<String, String>();
+
+    // Should be removed for the S release.
+    @Option(
+            name = "cts-on-gsi-variant",
+            description =
+                    "Workaround for the R release to ensure the CTS-on-GSI report can be parsed "
+                            + "by the APFE.")
+    private boolean mCtsOnGsiVariant = false;
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -152,11 +183,16 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         super.invocationStarted(context);
 
         if (mBuildHelper == null) {
-            mBuildHelper = new CompatibilityBuildHelper(getPrimaryBuildInfo());
+            mBuildHelper = createBuildHelper();
         }
         if (mResultDir == null) {
             initializeResultDirectories();
         }
+    }
+
+    @VisibleForTesting
+    CompatibilityBuildHelper createBuildHelper() {
+        return new CompatibilityBuildHelper(getPrimaryBuildInfo());
     }
 
     /**
@@ -303,8 +339,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Override
     public IFormatterGenerator createFormatter() {
         return new CertificationResultXml(
-                mBuildHelper.getSuiteName(),
+                createSuiteName(mBuildHelper.getSuiteName()),
                 mBuildHelper.getSuiteVersion(),
+                createSuiteVariant(),
                 mBuildHelper.getSuitePlan(),
                 mBuildHelper.getSuiteBuild(),
                 mReferenceUrl,
@@ -613,5 +650,27 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 listener.testLog(dataName, type, source);
             }
         }
+    }
+
+    private String createSuiteName(String originalSuiteName) {
+        if (mCtsOnGsiVariant) {
+            String commandLine = getConfiguration().getCommandLine();
+            if (commandLine.startsWith("cts-on-gsi")) {
+                return "VTS";
+            }
+        }
+        return originalSuiteName;
+    }
+
+    private String createSuiteVariant() {
+        IConfiguration currentConfig = getConfiguration();
+        String commandLine = currentConfig.getCommandLine();
+        for (SuiteVariant var : SuiteVariant.values()) {
+            if (commandLine.startsWith(var.getConfigName() + " ")
+                    || commandLine.equals(var.getConfigName())) {
+                return var.getReportDisplayName();
+            }
+        }
+        return null;
     }
 }
