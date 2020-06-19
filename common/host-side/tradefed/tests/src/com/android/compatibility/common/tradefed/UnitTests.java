@@ -32,6 +32,7 @@ import com.android.compatibility.common.tradefed.result.ResultReporterBuildInfoT
 import com.android.compatibility.common.tradefed.result.ResultReporterTest;
 import com.android.compatibility.common.tradefed.result.SubPlanHelperTest;
 import com.android.compatibility.common.tradefed.result.suite.CertificationChecksumHelperTest;
+import com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporterTest;
 import com.android.compatibility.common.tradefed.result.suite.PreviousResultLoaderTest;
 import com.android.compatibility.common.tradefed.result.suite.PreviousSessionFileCopierTest;
 import com.android.compatibility.common.tradefed.targetprep.BusinessLogicPreparerTest;
@@ -93,6 +94,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
     // result.suite
     CertificationChecksumHelperTest.class,
+    CertificationSuiteResultReporterTest.class,
     PreviousResultLoaderTest.class,
     PreviousSessionFileCopierTest.class,
 
