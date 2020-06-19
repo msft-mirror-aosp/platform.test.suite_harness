@@ -28,6 +28,7 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.FileInputStreamSource;
 import com.android.tradefed.result.ILogSaver;
+import com.android.tradefed.result.ILogSaverListener;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.ITestSummaryListener;
 import com.android.tradefed.result.InputStreamSource;
@@ -640,14 +641,26 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         if (configuration == null) {
             return;
         }
+        ILogSaver saver = configuration.getLogSaver();
         List<ITestInvocationListener> listeners = configuration.getTestInvocationListeners();
         try (FileInputStreamSource source = new FileInputStreamSource(resultFile)) {
+            LogFile loggedFile = null;
+            try (InputStream stream = source.createInputStream()) {
+                loggedFile = saver.saveLogData(dataName, type, stream);
+            } catch (IOException e) {
+                CLog.e(e);
+            }
             for (ITestInvocationListener listener : listeners) {
                 if (listener.equals(this)) {
                     // Avoid logging agaisnt itself
                     continue;
                 }
                 listener.testLog(dataName, type, source);
+                if (loggedFile != null) {
+                    if (listener instanceof ILogSaverListener) {
+                        ((ILogSaverListener) listener).logAssociation(dataName, loggedFile);
+                    }
+                }
             }
         }
     }
