@@ -28,4 +28,6 @@
     <!-- Overwrite the "cts" plan configured in cts.xml -->
     <option name="plan" value="cts-on-gsi" />
 
+    <!-- For CTS-on-GSI, override the suite name to VTS for the R release only -->
+    <option name="cts-on-gsi-variant" value="true" />
 </configuration>
