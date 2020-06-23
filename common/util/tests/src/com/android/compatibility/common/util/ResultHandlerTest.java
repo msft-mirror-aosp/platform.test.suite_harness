@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -108,9 +107,10 @@ public class ResultHandlerTest extends TestCase {
     private static final String END_DISPLAY = "Fri Aug 20 15:13:04 PDT 2010";
     private static final long TEST_START_MS = 1000000000011L;
     private static final long TEST_END_MS = 1000000000012L;
+    private static final boolean TEST_IS_AUTOMATED = false;
 
-    private static final String REFERENCE_URL="http://android.com";
-    private static final String LOG_URL ="file:///path/to/logs";
+    private static final String REFERENCE_URL = "http://android.com";
+    private static final String LOG_URL = "file:///path/to/logs";
     private static final String COMMAND_LINE_ARGS = "cts -m CtsMyModuleTestCases";
     private static final String XML_BASE =
             "<?xml version='1.0' encoding='UTF-8' standalone='no' ?>" +
@@ -302,8 +302,12 @@ public class ResultHandlerTest extends TestCase {
         moduleB.setDone(true);
         moduleB.addRuntime(Integer.parseInt(RUNTIME_B));
         ICaseResult moduleBCase = moduleB.getOrCreateResult(CLASS_B);
-        Set<Map.Entry> durations = new HashSet<>();
-        durations.add(new AbstractMap.SimpleEntry<>(TEST_START_MS, TEST_END_MS));
+        Set<TestResultHistory.ExecutionRecord> executionRecords =
+                new HashSet<TestResultHistory.ExecutionRecord>();
+        executionRecords.add(
+                new TestResultHistory.ExecutionRecord(
+                        TEST_START_MS, TEST_END_MS, TEST_IS_AUTOMATED));
+
         ITestResult moduleBTest3 = moduleBCase.getOrCreateResult(METHOD_3);
         moduleBTest3.setResultStatus(TestStatus.FAIL);
         moduleBTest3.setMessage(MESSAGE);
@@ -312,7 +316,7 @@ public class ResultHandlerTest extends TestCase {
         moduleBTest3.setLog(LOGCAT);
         moduleBTest3.setScreenshot(SCREENSHOT);
         List<TestResultHistory> resultHistories = new ArrayList<TestResultHistory>();
-        TestResultHistory resultHistory = new TestResultHistory(METHOD_3, durations);
+        TestResultHistory resultHistory = new TestResultHistory(METHOD_3, executionRecords);
         resultHistories.add(resultHistory);
         moduleBTest3.setTestResultHistories(resultHistories);
         ITestResult moduleBTest4 = moduleBCase.getOrCreateResult(METHOD_4);
@@ -357,6 +361,11 @@ public class ResultHandlerTest extends TestCase {
                 "Result/Module/TestCase/Test/RunHistory/Run",
                 "end",
                 Long.toString(TEST_END_MS));
+        assertXmlContainsAttribute(
+                content,
+                "Result/Module/TestCase/Test/RunHistory/Run",
+                "isAutomated",
+                Boolean.toString(TEST_IS_AUTOMATED));
         checkResult(result, EXAMPLE_BUILD_FINGERPRINT, false, false);
     }
 
@@ -581,9 +590,15 @@ public class ResultHandlerTest extends TestCase {
             for (TestResultHistory resultHistory : resultHistories) {
                 assertNotNull("Expected test result history", resultHistory);
                 assertEquals("Incorrect test name", METHOD_3, resultHistory.getTestName());
-                for (Map.Entry duration : resultHistory.getDurations()) {
-                    assertEquals("Incorrect test start time", TEST_START_MS, duration.getKey());
-                    assertEquals("Incorrect test end time", TEST_END_MS, duration.getValue());
+                for (TestResultHistory.ExecutionRecord execRecord :
+                        resultHistory.getExecutionRecords()) {
+                    assertEquals(
+                            "Incorrect test start time", TEST_START_MS, execRecord.getStartTime());
+                    assertEquals("Incorrect test end time", TEST_END_MS, execRecord.getEndTime());
+                    assertEquals(
+                            "Incorrect test is automated",
+                            TEST_IS_AUTOMATED,
+                            execRecord.getIsAutomated());
                 }
             }
         }
