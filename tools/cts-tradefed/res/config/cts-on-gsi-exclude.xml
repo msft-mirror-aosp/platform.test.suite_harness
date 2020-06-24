@@ -52,9 +52,6 @@
     <option name="compatibility:exclude-filter" value="CtsSignatureTestCases" />
     <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.UsbDebuggingTest#testUsbDebugging" />
 
-    <!-- UI rendering is all AOSP code, doesn't need GSI coverage -->
-    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases" />
-
     <!--
         Exclude testcases failing on Pixel devices
         TODO(jaeshin@): b/68300743
