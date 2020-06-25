@@ -16,14 +16,10 @@
 
 package com.android.compatibility.common.util;
 
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -45,19 +41,20 @@ public class TestResultHistory implements Serializable {
     private static final String RUN_TAG = "Run";
     private static final String START_TIME_ATTR = "start";
     private static final String END_TIME_ATTR = "end";
+    private static final String IS_AUTOMATED_ATTR = "isAutomated";
 
     private final String mTestName;
-    private final Set<Map.Entry> mDurations;
+    private final Set<ExecutionRecord> mExecutionRecords;
 
     /**
      * Constructor of test result history.
      *
      * @param testName a string of test name.
-     * @param durations a set of execution time.
+     * @param executionRecords a Set of ExecutionRecords.
      */
-    public TestResultHistory(String testName, Set<Map.Entry> durations) {
+    public TestResultHistory(String testName, Set<ExecutionRecord> executionRecords) {
         this.mTestName = testName;
-        this.mDurations = durations;
+        this.mExecutionRecords = executionRecords;
     }
 
     /** Get test name */
@@ -65,9 +62,9 @@ public class TestResultHistory implements Serializable {
         return mTestName;
     }
 
-    /** Get a set of duration with key as start time and value as end time. */
-    public Set<Map.Entry> getDurations() {
-        return mDurations;
+    /** Get a set of ExecutionRecords. */
+    public Set<ExecutionRecord> getExecutionRecords() {
+        return mExecutionRecords;
     }
 
     /** {@inheritDoc} */
@@ -81,20 +78,20 @@ public class TestResultHistory implements Serializable {
         }
         TestResultHistory that = (TestResultHistory) o;
         return Objects.equals(mTestName, that.mTestName)
-                && Objects.equals(mDurations, that.mDurations);
+                && Objects.equals(mExecutionRecords, that.mExecutionRecords);
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(mTestName, mDurations);
+        return Objects.hash(mTestName, mExecutionRecords);
     }
 
     /**
      * Serializes a given {@link TestResultHistory} to XML.
      *
      * @param serializer given serializer.
-     * @param resultHistory test result history with test name and execution time.
+     * @param resultHistory test result history with test name and execution record.
      * @param testName top-level test name.
      * @throws IOException
      */
@@ -112,35 +109,63 @@ public class TestResultHistory implements Serializable {
             serializer.attribute(null, SUB_TEST_ATTR, name);
         }
 
-        for (Map.Entry<Long, Long> duration : resultHistory.getDurations()) {
+        for (ExecutionRecord execRecord : resultHistory.getExecutionRecords()) {
             serializer.startTag(null, RUN_TAG);
-            serializer.attribute(null, START_TIME_ATTR, String.valueOf(duration.getKey()));
-            serializer.attribute(null, END_TIME_ATTR, String.valueOf(duration.getValue()));
+            serializer.attribute(null, START_TIME_ATTR, String.valueOf(execRecord.getStartTime()));
+            serializer.attribute(null, END_TIME_ATTR, String.valueOf(execRecord.getEndTime()));
+            serializer.attribute(
+                    null, IS_AUTOMATED_ATTR, String.valueOf(execRecord.getIsAutomated()));
             serializer.endTag(null, RUN_TAG);
         }
         serializer.endTag(null, RUN_HISTORY_TAG);
     }
 
-    /**
-     * Serializes a given {@link TestResultHistory} to a String.
-     *
-     * @param resultHistory test result history with test name and execution time.
-     * @param testName top-level test name.
-     * @throws XmlPullParserException
-     * @throws IOException
-     * @throws IllegalStateException
-     * @throws IllegalArgumentException
-     */
-    public static String serialize(TestResultHistory resultHistory, String testName)
-            throws XmlPullParserException, IllegalArgumentException, IllegalStateException,
-                    IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        XmlSerializer serializer = XmlPullParserFactory.newInstance(TYPE, null).newSerializer();
-        serializer.setOutput(byteArrayOutputStream, ENCODING);
-        serializer.startDocument(ENCODING, true);
-        serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-        serialize(serializer, resultHistory, testName);
-        serializer.endDocument();
-        return byteArrayOutputStream.toString(ENCODING);
+    /** Execution Record about start time, end time and isAutomated */
+    public static class ExecutionRecord implements Serializable {
+
+        private static final long serialVersionUID = 0L;
+        // Start time of test case.
+        private final long startTime;
+        // End time of test case.
+        private final long endTime;
+        // Whether test case was executed through automation.
+        private final boolean isAutomated;
+
+        public ExecutionRecord(long startTime, long endTime, boolean isAutomated) {
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.isAutomated = isAutomated;
+        }
+
+        public long getStartTime() {
+            return startTime;
+        }
+
+        public long getEndTime() {
+            return endTime;
+        }
+
+        public boolean getIsAutomated() {
+            return isAutomated;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ExecutionRecord that = (ExecutionRecord) o;
+            return startTime == that.startTime
+                    && endTime == that.endTime
+                    && isAutomated == that.isAutomated;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(startTime, endTime, isAutomated);
+        }
     }
 }
