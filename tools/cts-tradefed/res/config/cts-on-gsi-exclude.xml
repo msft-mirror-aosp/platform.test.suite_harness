@@ -382,4 +382,8 @@
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.IpSecManagerTest#testAesCbcHmacSha512Tcp4UdpEncap"/>
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.TrafficStatsTest#testTrafficStatsForLocalhost"/>
     <option name="compatibility:exclude-filter" value="CtsNetTestCases android.net.cts.TrafficStatsTest#testValidTotalStats"/>
+
+    <!-- b/150807956: Temporarily disabled due to bad experiment channel -->
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithLayerAndComplexClip" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.PathClippingTests#testWebViewClipWithCircle" />
 </configuration>
