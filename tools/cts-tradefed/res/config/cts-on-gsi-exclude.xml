@@ -386,4 +386,9 @@
     <!-- b/150807956: Temporarily disabled due to bad experiment channel -->
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithLayerAndComplexClip" />
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.PathClippingTests#testWebViewClipWithCircle" />
+
+    <!-- b/159295445, b/159294948: CtsDevicePolicyManagerTestCases -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDeviceIdAttestationForProfileOwner" />
 </configuration>
