@@ -15,6 +15,7 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
+import com.android.tradefed.config.Option;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
@@ -31,8 +32,17 @@ import com.android.tradefed.targetprep.TargetSetupError;
  */
 public final class BuildFingerPrintPreparer extends BaseTargetPreparer {
 
+    /**
+     * These 3 options cannot really be injected directly, but are needed to be copied during retry
+     * and sharding.
+     */
+    @Option(name = "expected-fingerprint")
     private String mExpectedFingerprint = null;
+
+    @Option(name = "expected-vendor-fingerprint")
     private String mExpectedVendorFingerprint = null;
+
+    @Option(name = "unaltered-fingerprint")
     private String mUnalteredFingerprint = null;
 
     private String mFingerprintProperty = "ro.build.fingerprint";

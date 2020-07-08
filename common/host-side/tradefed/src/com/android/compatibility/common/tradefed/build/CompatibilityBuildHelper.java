@@ -22,7 +22,6 @@ import com.android.tradefed.build.VersionedFile;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.util.FileUtil;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
