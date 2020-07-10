@@ -45,6 +45,9 @@
     <option name="compatibility:include-filter" value="CtsAppOpsTestCases android.app.appops.cts.AppOpsTest"/>
     <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AlertWindowsTests"/>
     <option name="compatibility:include-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilityLoggingTest"/>
+    <option name="compatibility:include-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.SessionTest"/>
+    <option name="compatibility:include-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.ExternalSourcesTestAppOpAllowed"/>
+    <option name="compatibility:include-filter" value="CtsPackageUninstallTestCases"/>
 
     <!-- Tests that we've added for b/72485440 and in ag/3789406 -->
     <option name="compatibility:include-filter" value="CtsContentTestCases android.content.cts.ContextTest"/>
