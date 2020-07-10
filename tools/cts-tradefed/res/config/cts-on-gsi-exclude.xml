@@ -391,4 +391,7 @@
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDeviceIdAttestationForProfileOwner" />
+
+    <!-- b/153032202: CtsSystemUiTestCases (10_r3 waiver) -->
+    <option name="compatibility:exclude-filter" value="CtsSystemUiTestCases android.systemui.cts.WindowInsetsBehaviorTests#swipeOutsideLimit_systemUiVisible_allEventsCanceled"/>
 </configuration>
