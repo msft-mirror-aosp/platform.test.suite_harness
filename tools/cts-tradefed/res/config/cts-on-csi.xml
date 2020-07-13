@@ -16,7 +16,8 @@
 <configuration description="Runs a subset of CTS-on-GSI tests using a core system image (CSI)">
 
     <include name="cts-on-gsi" />
-    <include name="cts-on-csi-exclude" />
+    <include name="cts-on-csi-no-apks" />
+    <include name="csi-known-failures" />
 
     <option name="plan" value="cts-on-csi" />
 
