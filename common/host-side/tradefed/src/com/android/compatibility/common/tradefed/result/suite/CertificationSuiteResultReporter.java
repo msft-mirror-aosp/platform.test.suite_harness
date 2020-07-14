@@ -21,6 +21,7 @@ import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.cluster.SubprocessConfigBuilder;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
@@ -668,7 +669,11 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     private String createSuiteName(String originalSuiteName) {
         if (mCtsOnGsiVariant) {
             String commandLine = getConfiguration().getCommandLine();
-            if (commandLine.startsWith("cts-on-gsi")) {
+            // SubprocessConfigBuilder is added to support ATS current way of running things.
+            // It won't be needed after the R release.
+            if (commandLine.startsWith("cts-on-gsi")
+                    || commandLine.startsWith(
+                            SubprocessConfigBuilder.createConfigName("cts-on-gsi"))) {
                 return "VTS";
             }
         }
