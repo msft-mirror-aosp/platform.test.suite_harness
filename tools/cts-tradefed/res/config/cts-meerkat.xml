@@ -22,6 +22,10 @@
     <!-- Disable instant tests -->
     <option name="compatibility:enable-parameterized-modules" value="false" />
 
+    <!-- Overlays & touches -->
+    <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.WindowInputTests"/>
+    <option name="compatibility:include-filter" value="CtsSecurityTestCases android.security.cts.MotionEventTest"/>
+
     <!-- System Alert Window (SAW) -->
     <option name="compatibility:include-filter" value="CtsSystemIntentTestCases"/>
     <option name="compatibility:include-filter" value="CtsMediaTestCases android.media.cts.MediaProjectionTest"/>
