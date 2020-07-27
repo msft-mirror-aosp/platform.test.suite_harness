@@ -34,17 +34,13 @@ public class ConfigurationFactoryTest extends TestCase {
         mConfigFactory = (ConfigurationFactory) ConfigurationFactory.getInstance();
     }
 
-    /**
-     * Sanity test to ensure all config names on classpath are loadable.
-     */
+    /** Initial test to ensure all config names on classpath are loadable. */
     public void testLoadAllConfigs() throws ConfigurationException {
         // we dry-run the templates otherwise it will always fail.
         mConfigFactory.loadAllConfigs(false);
     }
 
-    /**
-     * Sanity test to ensure all configs on classpath can be fully loaded and parsed.
-     */
+    /** Initial test to ensure all configs on classpath can be fully loaded and parsed. */
     public void testLoadAndPrintAllConfigs() throws ConfigurationException {
         // Printing the help involves more checks since it tries to resolve the config objects.
         mConfigFactory.loadAndPrintAllConfigs();
