@@ -167,34 +167,34 @@ public class CtsConfigLoadingTest {
     }
 
     /**
-     * Whitelist to start enforcing metadata on modules. No additional entry will be allowed! This
+     * AllowList to start enforcing metadata on modules. No additional entry will be allowed! This
      * is meant to burn down the remaining modules definition.
      */
-    private static final Set<String> WHITELIST_MODULE_PARAMETERS = new HashSet<>();
+    private static final Set<String> ALLOWLIST_MODULE_PARAMETERS = new HashSet<>();
 
     static {
-        WHITELIST_MODULE_PARAMETERS.add("CtsAccessibilityServiceTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsActivityManagerBackgroundActivityTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsAppOpsTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsCarrierApiTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsContentCaptureServiceTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsDeqpTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchDebugClassTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWhitelistTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWildcardTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsLocationTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsLocation2TestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsMediaTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsMediaV2TestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsOpenGlPerfTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsOsTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsPermission2TestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsPermissionTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsProviderUiTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsRsBlasTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsSkQPTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsWrapNoWrapTestCases.config");
-        WHITELIST_MODULE_PARAMETERS.add("CtsWrapWrapDebugMallocDebugTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsAccessibilityServiceTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsActivityManagerBackgroundActivityTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsAppOpsTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsCarrierApiTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsContentCaptureServiceTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsDeqpTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchDebugClassTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWhitelistTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWildcardTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsLocationTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsLocation2TestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsMediaTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsMediaV2TestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsOpenGlPerfTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsOsTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsPermission2TestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsPermissionTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsProviderUiTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsRsBlasTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsSkQPTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsWrapNoWrapTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsWrapWrapDebugMallocDebugTestCases.config");
     }
 
     /**
@@ -351,8 +351,8 @@ public class CtsConfigLoadingTest {
             c.validateOptions();
         }
 
-        // Exempt the whitelist
-        missingMandatoryParameters.removeAll(WHITELIST_MODULE_PARAMETERS);
+        // Exempt the allow list
+        missingMandatoryParameters.removeAll(ALLOWLIST_MODULE_PARAMETERS);
         // Ensure the mandatory fields are filled
         if (!missingMandatoryParameters.isEmpty()) {
             String msg =
