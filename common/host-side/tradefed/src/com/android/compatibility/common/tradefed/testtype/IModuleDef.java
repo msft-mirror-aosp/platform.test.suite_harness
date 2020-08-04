@@ -78,12 +78,12 @@ public interface IModuleDef
     IRemoteTest getTest();
 
     /**
-     * Set a list of preparers to allow to run before or after a test.
-     * If this list is empty, then all configured preparers will run.
+     * Set a list of preparers to allow to run before or after a test. If this list is empty, then
+     * all configured preparers will run.
      *
-     * @param preparerWhitelist list containing the simple name of the preparer to run.
+     * @param preparerAllowlist list containing the simple name of the preparer to run.
      */
-    void setPreparerWhitelist(Set<String> preparerWhitelist);
+    void setPreparerAllowlist(Set<String> preparerAllowlist);
 
     /**
      * Pushes dynamic configuration, then runs the module's precondition checks and setup tasks.

@@ -73,7 +73,7 @@ public class ModuleDef implements IModuleDef {
     private List<ITargetCleaner> mCleaners = new ArrayList<>();
     private IBuildInfo mBuild;
     private ITestDevice mDevice;
-    private Set<String> mPreparerWhitelist = new HashSet<>();
+    private Set<String> mPreparerAllowlist = new HashSet<>();
     private ConfigurationDescriptor mConfigurationDescriptor;
     private IInvocationContext mContext;
 
@@ -167,11 +167,9 @@ public class ModuleDef implements IModuleDef {
         return mName;
     }
 
-    /**
-     * @return the mPreparerWhitelist
-     */
-    protected Set<String> getPreparerWhitelist() {
-        return mPreparerWhitelist;
+    /** @return the getPreparerAllowlist */
+    protected Set<String> getPreparerAllowlist() {
+        return mPreparerAllowlist;
     }
 
     /**
@@ -209,12 +207,10 @@ public class ModuleDef implements IModuleDef {
         return mTest;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void setPreparerWhitelist(Set<String> preparerWhitelist) {
-        mPreparerWhitelist.addAll(preparerWhitelist);
+    public void setPreparerAllowlist(Set<String> preparerAlowlist) {
+        mPreparerAllowlist.addAll(preparerAlowlist);
     }
 
     /**
@@ -342,9 +338,10 @@ public class ModuleDef implements IModuleDef {
 
     private void runPreparerSetup(ITargetPreparer preparer) throws DeviceNotAvailableException {
         String preparerName = preparer.getClass().getCanonicalName();
-        if (!mPreparerWhitelist.isEmpty() && !mPreparerWhitelist.contains(preparerName)) {
-            CLog.d("Skipping Preparer: %s since it is not in the whitelist %s",
-                    preparerName, mPreparerWhitelist);
+        if (!mPreparerAllowlist.isEmpty() && !mPreparerAllowlist.contains(preparerName)) {
+            CLog.d(
+                    "Skipping Preparer: %s since it is not in the allowList %s",
+                    preparerName, mPreparerAllowlist);
             return;
         }
         CLog.d("Preparer: %s", preparer.getClass().getSimpleName());
