@@ -242,12 +242,14 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
             description = "Don't verify device connectivity between module execution.")
     private boolean mSkipConnectivityCheck = false;
 
-    @Option(name = "preparer-whitelist",
-            description = "Only run specific preparers."
-            + "Specify zero or more ITargetPreparers as canonical class names. "
-            + "e.g. \"com.android.compatibility.common.tradefed.targetprep.ApkInstaller\" "
-            + "If not specified, all configured preparers are run.")
-    private Set<String> mPreparerWhitelist = new HashSet<>();
+    @Option(
+            name = "preparer-whitelist",
+            description =
+                    "Only run specific preparers."
+                            + "Specify zero or more ITargetPreparers as canonical class names. "
+                            + "e.g. \"com.android.compatibility.common.tradefed.targetprep.ApkInstaller\" "
+                            + "If not specified, all configured preparers are run.")
+    private Set<String> mPreparerAllowlist = new HashSet<>();
 
     @Option(name = "skip-all-system-status-check",
             description = "Whether all system status check between modules should be skipped")
@@ -416,7 +418,7 @@ public class CompatibilityTest implements IDeviceTest, IShardableTest, IBuildRec
                 IModuleDef module = modules.get(i);
                 module.setBuild(mBuildHelper.getBuildInfo());
                 module.setDevice(mDevice);
-                module.setPreparerWhitelist(mPreparerWhitelist);
+                module.setPreparerAllowlist(mPreparerAllowlist);
                 // don't set a value if unspecified
                 if (mCollectTestsOnly != null) {
                     module.setCollectTestsOnly(mCollectTestsOnly);
