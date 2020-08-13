@@ -68,28 +68,6 @@
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.MediaPlayerTest#testDeselectTrackForSubtitleTracks" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.MediaPlayerTest#testGetTrackInfoForVideoWithSubtitleTracks" />
 
-    <!-- b/74375238: CtsAppSecurityHostTestCases imcomplete test failure -->
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testCreateDocumentAtInitialLocation" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testCreateExisting" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.android.appsecurity.cts.DocumentsTest#testCreateNew" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testCreateWebLink" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testEject" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testFindDocumentPathInScopedAccess" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testGetContent" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testOpenDocumentAtInitialLocation" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testOpenDocumentTreeAtInitialLocation" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testOpenSimple" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testOpenVirtual" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testTransferDocument" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testTree" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ScopedDirectoryAccessTest#testDeniesOnceButAllowsAskingAgain" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ScopedDirectoryAccessTest#testDeniesOnceForAll" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.android.appsecurity.cts.ScopedDirectoryAccessTest#testDeniesOnceForAllClearedWhenPackageRemoved" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.android.appsecurity.cts.ScopedDirectoryAccessTest#testNotAskedAgain" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ScopedDirectoryAccessTest#testUserAccepts" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ScopedDirectoryAccessTest#testUserAcceptsNewDirectory" />
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.android.appsecurity.cts.ScopedDirectoryAccessTest#testUserRejects" />
-
     <!-- b/74583365: CtsAppSecurityHostTestCases flaky -->
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.AdoptableHostTest#testApps " />
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.AdoptableHostTest#testEjected" />
