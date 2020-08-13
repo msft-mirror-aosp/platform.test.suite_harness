@@ -68,9 +68,6 @@
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.MediaPlayerTest#testDeselectTrackForSubtitleTracks" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.MediaPlayerTest#testGetTrackInfoForVideoWithSubtitleTracks" />
 
-    <!-- b/69329663: DirectBootHostTest#testDirectBootNative flaky -->
-    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DirectBootHostTest#testDirectBootNative" />
-
     <!-- b/74375238: CtsAppSecurityHostTestCases imcomplete test failure -->
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testCreateDocumentAtInitialLocation" />
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.DocumentsTest#testCreateExisting" />
