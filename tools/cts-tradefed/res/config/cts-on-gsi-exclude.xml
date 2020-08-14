@@ -43,7 +43,6 @@
 
     <!-- Exclude not applicable testcases-->
     <option name="compatibility:exclude-filter" value="CtsSignatureTestCases" />
-    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.UsbDebuggingTest#testUsbDebugging" />
 
     <!--
         Exclude testcases failing on Pixel devices
