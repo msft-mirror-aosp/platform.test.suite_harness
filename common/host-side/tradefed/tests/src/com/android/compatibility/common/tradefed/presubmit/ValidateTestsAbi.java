@@ -58,14 +58,27 @@ public class ValidateTestsAbi {
         MODULE_EXCEPTIONS.add("CtsCorruptApkTests");
 
         /**
-         * This module tests for installations of packages that have only 32-bit native libraries.
+         * This module tests for installations of packages that have only 32-bit native libraries
+         * and extract native libraries.
          */
         MODULE_EXCEPTIONS.add("CtsExtractNativeLibsAppTrue32");
 
         /**
-         * This module tests for installations of packages that have only 64-bit native libraries.
+         * This module tests for installations of packages that have only 64-bit native libraries
+         * and extract native libraries.
          */
         MODULE_EXCEPTIONS.add("CtsExtractNativeLibsAppTrue64");
+        /**
+         * This module tests for installations of packages that have only 32-bit native libraries
+         * and embed native libraries.
+         */
+        MODULE_EXCEPTIONS.add("CtsExtractNativeLibsAppFalse32");
+
+        /**
+         * This module tests for installations of packages that have only 64-bit native libraries
+         * and embed native libraries.
+         */
+        MODULE_EXCEPTIONS.add("CtsExtractNativeLibsAppFalse64");
     }
 
     private static final Set<String> BINARY_EXCEPTIONS = new HashSet<>();
