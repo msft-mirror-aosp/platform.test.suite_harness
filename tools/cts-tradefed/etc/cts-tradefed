@@ -55,12 +55,20 @@ if [ -n "${TF_DEBUG}" ]; then
   RDBG_FLAG=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=${TF_DEBUG_PORT}
 fi
 
+JAVA_BINARY=${CTS_ROOT}/android-cts/jdk/bin/java
+
+if [ ! -f "${JAVA_BINARY}" ]; then
+    JAVA_BINARY=java
+fi
+
 # get OS
 HOST=`uname`
 if [ "$HOST" == "Linux" ]; then
     OS="linux-x86"
 elif [ "$HOST" == "Darwin" ]; then
     OS="darwin-x86"
+    # Bundled java is for linux so use host JDK on Darwin
+    JAVA_BINARY=java
 else
     echo "Unrecognized OS"
     exit
@@ -130,5 +138,5 @@ for j in ${CTS_ROOT}/android-cts/testcases/*.jar; do
     JAR_PATH=${JAR_PATH}:$j
 done
 
-java $RDBG_FLAG -Xmx6g -XX:+HeapDumpOnOutOfMemoryError -cp ${JAR_PATH} -DCTS_ROOT=${CTS_ROOT} com.android.compatibility.common.tradefed.command.CompatibilityConsole "$@"
+${JAVA_BINARY} $RDBG_FLAG -Xmx6g -XX:+HeapDumpOnOutOfMemoryError -cp ${JAR_PATH} -DCTS_ROOT=${CTS_ROOT} com.android.compatibility.common.tradefed.command.CompatibilityConsole "$@"
 
