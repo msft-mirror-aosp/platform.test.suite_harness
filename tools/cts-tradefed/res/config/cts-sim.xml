@@ -17,8 +17,31 @@
 
     <include name="cts" />
 
-    <include name="cts-sim-include" />
-
     <option name="plan" value="cts-sim" />
+
+    <!-- CTS tests that need SIM card-->
+    <option name="compatibility:include-filter" value="CtsCarrierApiTestCases" />
+    <option name="compatibility:include-filter" value="CtsJobSchedulerTestCases" />
+    <option name="compatibility:include-filter" value="CtsNetTestCases" />
+    <option name="compatibility:include-filter" value="CtsNetTestCasesLegacyApi22" />
+    <option name="compatibility:include-filter" value="CtsOmapiTestCases" />
+    <option name="compatibility:include-filter" value="CtsPermissionTestCases" />
+    <option name="compatibility:include-filter" value="CtsPermission2TestCases" />
+    <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases1" />
+    <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases2" />
+    <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases3" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases1" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases2" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases3" />
+    <option name="compatibility:include-filter" value="CtsSimRestrictedApisTestCases" />
+    <option name="compatibility:include-filter" value="CtsStatsdHostTestCases" />
+    <option name="compatibility:include-filter" value="CtsTelecomTestCases" />
+    <option name="compatibility:include-filter" value="CtsTelecomTestCases2" />
+    <option name="compatibility:include-filter" value="CtsTelecomTestCases3" />
+    <option name="compatibility:include-filter" value="CtsTelephonyTestCases" />
+    <option name="compatibility:include-filter" value="CtsTelephony2TestCases" />
+    <option name="compatibility:include-filter" value="CtsTelephony3TestCases" />
+    <option name="compatibility:include-filter" value="CtsTelephonySdk28TestCases" />
+    <option name="compatibility:include-filter" value="CtsUsageStatsTestCases" />
 
 </configuration>
