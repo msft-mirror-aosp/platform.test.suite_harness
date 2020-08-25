@@ -14,26 +14,45 @@
      limitations under the License.
 -->
 <configuration description="Known fialures on CSI">
-    <!-- Exclude the known failure of CtsAppCases affect other tests in NotificationManagerTest -->
+    <!-- Troublesome tests that often crash the system -->
+    <option name="compatibility:exclude-filter" value="CtsAppExitTestCases android.app.cts.ActivityManagerAppExitInfoTest#testCrash" />
+    <option name="compatibility:exclude-filter" value="CtsAppExitTestCases android.app.cts.ActivityManagerAppExitInfoTest#testNativeCrash" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ExternalStorageHostTest#testMediaEscalation28" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ExternalStorageHostTest#testMediaEscalation29" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ExternalStorageHostTest#testMediaEscalation" />
+    <option name="compatibility:exclude-filter" value="CtsAppTestCases android.app.cts.ActivityManagerFgsBgStartTest#testFgsLocationPendingIntent" />
     <option name="compatibility:exclude-filter" value="CtsAppTestCases android.app.cts.NotificationManagerTest#testNotificationManagerBubble_checkActivityFlagsDocumentLaunchMode" />
+    <option name="compatibility:exclude-filter" value="CtsDeviceIdleHostTestCases com.android.cts.deviceidle.DeviceIdleWhitelistTest#testRemovesPersistedAcrossReboots" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testProxyPacProxyTest" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testPackageInstallUserRestrictions" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestEmptyRoleThenDeniedAutomatically" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.metric.MetricActivationTests#testRestart" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.metric.MetricActivationTests#testMultipleActivations" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testANROccurred" />
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.UidAtomTests#testAppCrashOccurred" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.SurfaceViewTests#testMovingWhiteSurfaceView" />
 
-    <!-- Exclude known failure of CtsMediaTestCases -->
+    <!-- Exclude known failure of CtsMediaTestCases (mostly on some Pixel phones) -->
     <!-- CSI doesn't seem to include ringtones. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.RingtoneManagerTest" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.RingtoneTest" />
 
     <!-- Following failures take about 10 min each, so exclude them to reduce test time. -->
+    <!-- CSI on Goldfish can pass the following tests in StreamingMediaPlayerTest. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.StreamingMediaPlayerTest#testHTTP_H263_AMR_Video2" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.StreamingMediaPlayerTest#testHTTP_H264Base_AAC_Video2" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.StreamingMediaPlayerTest#testHTTP_MPEG4SP_AAC_Video2" />
 
+    <!-- CSI on Cuttlefish and Goldfish can pass the following tests in VideoCodecTest. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoCodecTest#testParallelEncodingAndDecodingAVC" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoCodecTest#testParallelEncodingAndDecodingHEVC" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoCodecTest#testParallelEncodingAndDecodingVP8" />
 
     <!-- Failures will crash the test harness, so exclude it here (even though only failed with VP9 decoder). -->
+    <!-- CSI on Cuttlefish and Goldfish can pass the following tests in VideoDecoderRotationTest. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderRotationTest" />
 
+    <!-- CSI on Cuttlefish and Goldfish can pass the following tests in VideoDecoderPerfTest. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderPerfTest#testAvcOther0Perf0320x0240" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderPerfTest#testAvcOther0Perf0720x0480" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderPerfTest#testAvcOther0Perf1280x0720" />
@@ -53,6 +72,7 @@
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderPerfTest#testHevcOther1Perf1920x1080" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoDecoderPerfTest#testHevcOther1Perf3840x2160" />
 
+    <!-- CSI on Cuttlefish and Goldfish can pass the following tests in VideoEncoderTest. -->
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoEncoderTest#testGoogH263SurfMinMin" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoEncoderTest#testGoogH265SurfArbitraryH" />
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VideoEncoderTest#testGoogH265SurfArbitraryW" />
