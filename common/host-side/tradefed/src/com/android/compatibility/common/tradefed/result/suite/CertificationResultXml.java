@@ -42,9 +42,11 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     private static final String SUITE_NAME_ATTR = "suite_name";
     private static final String SUITE_VERSION_ATTR = "suite_version";
     private static final String SUITE_BUILD_ATTR = "suite_build_number";
+    private static final String SUITE_VARIANT_ATTR = "suite_variant";
 
     private String mSuiteName;
     private String mSuiteVersion;
+    private String mSuiteVariant;
     private String mSuitePlan;
     private String mSuiteBuild;
     private String mReferenceUrl;
@@ -60,6 +62,7 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     public CertificationResultXml(
             String suiteName,
             String suiteVersion,
+            String suiteVariant,
             String suitePlan,
             String suiteBuild,
             String referenceUrl,
@@ -67,6 +70,7 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
             Map<String, String> resultAttributes) {
         mSuiteName = suiteName;
         mSuiteVersion = suiteVersion;
+        mSuiteVariant = suiteVariant;
         mSuitePlan = suitePlan;
         mSuiteBuild = suiteBuild;
         mReferenceUrl = referenceUrl;
@@ -81,6 +85,12 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     public void addSuiteAttributes(XmlSerializer serializer)
             throws IllegalArgumentException, IllegalStateException, IOException {
         serializer.attribute(NS, SUITE_NAME_ATTR, mSuiteName);
+        if (mSuiteVariant != null) {
+            serializer.attribute(NS, SUITE_VARIANT_ATTR, mSuiteVariant);
+        } else {
+            // Default suite_variant to the suite name itself if it's not a special variant.
+            serializer.attribute(NS, SUITE_VARIANT_ATTR, mSuiteName);
+        }
         serializer.attribute(NS, SUITE_VERSION_ATTR, mSuiteVersion);
         serializer.attribute(NS, SUITE_PLAN_ATTR, mSuitePlan);
         serializer.attribute(NS, SUITE_BUILD_ATTR, mSuiteBuild);

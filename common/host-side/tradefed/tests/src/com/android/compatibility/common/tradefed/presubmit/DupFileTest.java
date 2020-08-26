@@ -46,10 +46,16 @@ public class DupFileTest {
 
     // We ignore directories part of the common java and google packages.
     private static final String[] IGNORE_DIRS =
-            new String[] {"android/", "javax/annotation/", "com/google/protobuf/", "kotlin/"};
-
+            new String[] {
+                "android/",
+                "javax/annotation/",
+                "com/google/protobuf/",
+                "kotlin/",
+                "perfetto/protos/"
+            };
     // Temporarily exclude some Tradefed jar while we work on unbundling them.
-    private static final Set<String> IGNORE_JARS = ImmutableSet.of("tradefed-test-framework.jar");
+    private static final Set<String> IGNORE_JARS =
+            ImmutableSet.of("tradefed-no-fwk.jar", "tradefed-test-framework.jar");
 
     /** test if there are duplicate files in different jars. */
     @Test

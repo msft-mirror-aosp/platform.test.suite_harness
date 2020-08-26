@@ -15,11 +15,13 @@
  */
 package com.android.compatibility.common.tradefed.result.suite;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.cluster.SubprocessConfigBuilder;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
@@ -27,6 +29,7 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.FileInputStreamSource;
 import com.android.tradefed.result.ILogSaver;
+import com.android.tradefed.result.ILogSaverListener;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.ITestSummaryListener;
 import com.android.tradefed.result.InputStreamSource;
@@ -74,6 +77,28 @@ import javax.xml.transform.stream.StreamSource;
 public class CertificationSuiteResultReporter extends XmlFormattedGeneratorReporter
         implements ITestSummaryListener {
 
+    // The known existing variant of suites.
+    // Adding a new variant requires approval from Android Partner team and Test Harness team.
+    private enum SuiteVariant {
+        CTS_ON_GSI("CTS_ON_GSI", "cts-on-gsi");
+
+        private final String mReportDisplayName;
+        private final String mConfigName;
+
+        private SuiteVariant(String reportName, String configName) {
+            mReportDisplayName = reportName;
+            mConfigName = configName;
+        }
+
+        public String getReportDisplayName() {
+            return mReportDisplayName;
+        }
+
+        public String getConfigName() {
+            return mConfigName;
+        }
+    }
+
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
     public static final String HTLM_REPORT_NAME = "test_result.html";
@@ -112,6 +137,14 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                     "Extra key-value pairs to be added as attributes and corresponding values "
                             + "of the \"Result\" tag in the result XML.")
     private Map<String, String> mResultAttributes = new HashMap<String, String>();
+
+    // Should be removed for the S release.
+    @Option(
+            name = "cts-on-gsi-variant",
+            description =
+                    "Workaround for the R release to ensure the CTS-on-GSI report can be parsed "
+                            + "by the APFE.")
+    private boolean mCtsOnGsiVariant = false;
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -152,11 +185,16 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         super.invocationStarted(context);
 
         if (mBuildHelper == null) {
-            mBuildHelper = new CompatibilityBuildHelper(getPrimaryBuildInfo());
+            mBuildHelper = createBuildHelper();
         }
         if (mResultDir == null) {
             initializeResultDirectories();
         }
+    }
+
+    @VisibleForTesting
+    CompatibilityBuildHelper createBuildHelper() {
+        return new CompatibilityBuildHelper(getPrimaryBuildInfo());
     }
 
     /**
@@ -193,7 +231,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         }
     }
 
-    /** Write device-info files to the result, invoked only by the master result reporter */
+    /** Write device-info files to the result */
     private void testLogDeviceInfo(String name, InputStreamSource stream) {
         try {
             File ediDir = new File(mResultDir, DeviceInfo.RESULT_DIR_NAME);
@@ -303,8 +341,9 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Override
     public IFormatterGenerator createFormatter() {
         return new CertificationResultXml(
-                mBuildHelper.getSuiteName(),
+                createSuiteName(mBuildHelper.getSuiteName()),
                 mBuildHelper.getSuiteVersion(),
+                createSuiteVariant(),
                 mBuildHelper.getSuitePlan(),
                 mBuildHelper.getSuiteBuild(),
                 mReferenceUrl,
@@ -343,19 +382,21 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 getMergedTestRunResults(),
                 getPrimaryBuildInfo().getBuildAttributes().get(BUILD_FINGERPRINT));
 
-        File report = createReport(reportFile);
-        if (report != null) {
-            CLog.i("Viewable report: %s", report.getAbsolutePath());
-        }
+        File report = null;
         File failureReport = null;
         if (mIncludeHtml) {
-            // Create the html report before the zip file.
+            // Create the html reports before the zip file.
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
         }
         File zippedResults = zipResults(mResultDir);
         if (!mIncludeHtml) {
-            // Create failure report after zip file so extra data is not uploaded
+            // Create html reports after zip file so extra data is not uploaded
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
+        }
+        if (report != null) {
+            CLog.i("Viewable report: %s", report.getAbsolutePath());
         }
         try {
             if (failureReport.exists()) {
@@ -603,15 +644,53 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         if (configuration == null) {
             return;
         }
+        ILogSaver saver = configuration.getLogSaver();
         List<ITestInvocationListener> listeners = configuration.getTestInvocationListeners();
         try (FileInputStreamSource source = new FileInputStreamSource(resultFile)) {
+            LogFile loggedFile = null;
+            try (InputStream stream = source.createInputStream()) {
+                loggedFile = saver.saveLogData(dataName, type, stream);
+            } catch (IOException e) {
+                CLog.e(e);
+            }
             for (ITestInvocationListener listener : listeners) {
                 if (listener.equals(this)) {
                     // Avoid logging agaisnt itself
                     continue;
                 }
                 listener.testLog(dataName, type, source);
+                if (loggedFile != null) {
+                    if (listener instanceof ILogSaverListener) {
+                        ((ILogSaverListener) listener).logAssociation(dataName, loggedFile);
+                    }
+                }
             }
         }
+    }
+
+    private String createSuiteName(String originalSuiteName) {
+        if (mCtsOnGsiVariant) {
+            String commandLine = getConfiguration().getCommandLine();
+            // SubprocessConfigBuilder is added to support ATS current way of running things.
+            // It won't be needed after the R release.
+            if (commandLine.startsWith("cts-on-gsi")
+                    || commandLine.startsWith(
+                            SubprocessConfigBuilder.createConfigName("cts-on-gsi"))) {
+                return "VTS";
+            }
+        }
+        return originalSuiteName;
+    }
+
+    private String createSuiteVariant() {
+        IConfiguration currentConfig = getConfiguration();
+        String commandLine = currentConfig.getCommandLine();
+        for (SuiteVariant var : SuiteVariant.values()) {
+            if (commandLine.startsWith(var.getConfigName() + " ")
+                    || commandLine.equals(var.getConfigName())) {
+                return var.getReportDisplayName();
+            }
+        }
+        return null;
     }
 }
