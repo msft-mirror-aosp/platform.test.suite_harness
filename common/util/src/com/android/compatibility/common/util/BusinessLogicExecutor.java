@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.AssumptionViolatedException;
 
@@ -35,9 +37,9 @@ public abstract class BusinessLogicExecutor {
     protected static final String STRING_CLASS = "java.lang.String";
     protected static final String STRING_ARRAY_CLASS = "[Ljava.lang.String;";
 
-    /* List of substrings indicating a method arg should be redacted in the logs */
-    private static final String[] REDACTED_VALUES = new String[] {"permission"};
     private static final String REDACTED_PLACEHOLDER = "[redacted]";
+    /* List of regexes indicating a method arg should be redacted in the logs */
+    protected List<String> mRedactionRegexes = new ArrayList<>();
 
     /**
      * Execute a business logic condition.
@@ -97,7 +99,7 @@ public abstract class BusinessLogicExecutor {
     protected abstract String formatExecutionString(String method, String... args);
 
     /** Substitute sensitive information with REDACTED_PLACEHOLDER if necessary. */
-    protected static String[] formatArgs(String[] args) {
+    protected String[] formatArgs(String[] args) {
         List<String> formattedArgs = new ArrayList<>();
         for (String arg : args) {
             formattedArgs.add(formatArg(arg));
@@ -105,9 +107,11 @@ public abstract class BusinessLogicExecutor {
         return formattedArgs.toArray(new String[0]);
     }
 
-    private static String formatArg(String arg) {
-        for (String str : REDACTED_VALUES) {
-            if (arg.contains(str)) {
+    private String formatArg(String arg) {
+        for (String regex : mRedactionRegexes) {
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(arg);
+            if (matcher.find()) {
                 return REDACTED_PLACEHOLDER;
             }
         }
