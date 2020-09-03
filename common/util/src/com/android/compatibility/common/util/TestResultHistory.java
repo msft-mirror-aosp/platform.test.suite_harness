@@ -104,7 +104,7 @@ public class TestResultHistory implements Serializable {
 
         serializer.startTag(null, RUN_HISTORY_TAG);
         // Only show sub-test names in test attribute in run history node.
-        String name = resultHistory.getTestName().replaceFirst(testName + ":", "");
+        String name = getSubTestName(testName, resultHistory.getTestName());
         if (!name.isEmpty() && !name.equalsIgnoreCase(testName)) {
             serializer.attribute(null, SUB_TEST_ATTR, name);
         }
@@ -118,6 +118,20 @@ public class TestResultHistory implements Serializable {
             serializer.endTag(null, RUN_TAG);
         }
         serializer.endTag(null, RUN_HISTORY_TAG);
+    }
+
+    /**
+     * Get subtest name by replacing top-level test name.
+     *
+     * @param testName top-level test name.
+     * @param fullTestName test name with the combination of top-level and subtest name.
+     * @return subtest name without top-level test name
+     */
+    protected static String getSubTestName(String testName, String fullTestName) {
+        // Handle test name with brackets, like [folded] as the suffix for foldable test plan.
+        testName = testName.replace("[", "\\[").replace("]", "\\]");
+        String subTestName = fullTestName.replaceFirst(testName + ":", "");
+        return subTestName;
     }
 
     /** Execution Record about start time, end time and isAutomated */
