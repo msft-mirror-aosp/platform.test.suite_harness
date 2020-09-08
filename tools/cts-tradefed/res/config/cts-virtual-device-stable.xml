@@ -53,12 +53,12 @@
     <option name="compatibility:include-filter" value="CtsFragmentTestCases" />
     <option name="compatibility:include-filter" value="CtsFragmentTestCasesSdk26" />
     <option name="compatibility:include-filter" value="CtsGestureTestCases" />
-    <option name="compatibility:include-filter" value="CtsHiddenApiBlacklistApi27TestCases" />
-    <option name="compatibility:include-filter" value="CtsHiddenApiBlacklistApi28TestCases" />
-    <option name="compatibility:include-filter" value="CtsHiddenApiBlacklistCurrentApiTestCases" />
-    <option name="compatibility:include-filter" value="CtsHiddenApiBlacklistDebugClassTestCases" />
+    <option name="compatibility:include-filter" value="CtsHiddenApiBlocklistApi27TestCases" />
+    <option name="compatibility:include-filter" value="CtsHiddenApiBlocklistApi28TestCases" />
+    <option name="compatibility:include-filter" value="CtsHiddenApiBlocklistCurrentApiTestCases" />
+    <option name="compatibility:include-filter" value="CtsHiddenApiBlocklistDebugClassTestCases" />
     <option name="compatibility:include-filter" value="CtsHiddenApiKillswitchDebugClassTestCases" />
-    <option name="compatibility:include-filter" value="CtsHiddenApiKillswitchWhitelistTestCases" />
+    <option name="compatibility:include-filter" value="CtsHiddenApiKillswitchSdkListTestCases" />
     <option name="compatibility:include-filter" value="CtsHiddenApiKillswitchWildcardTestCases" />
     <option name="compatibility:include-filter" value="CtsHostsideNumberBlockingTestCases" />
     <option name="compatibility:include-filter" value="CtsHostsideTvTests" />
