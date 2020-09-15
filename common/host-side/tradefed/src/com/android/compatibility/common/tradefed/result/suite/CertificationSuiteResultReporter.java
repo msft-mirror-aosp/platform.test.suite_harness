@@ -231,7 +231,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         }
     }
 
-    /** Write device-info files to the result, invoked only by the master result reporter */
+    /** Write device-info files to the result */
     private void testLogDeviceInfo(String name, InputStreamSource stream) {
         try {
             File ediDir = new File(mResultDir, DeviceInfo.RESULT_DIR_NAME);
