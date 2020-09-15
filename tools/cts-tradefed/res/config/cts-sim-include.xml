@@ -16,6 +16,10 @@
 <configuration description="Include CTS test that require SIM card">
 
     <!-- CTS tests that need SIM card-->
+    <option name="compatibility:include-filter" value="signed-CtsOmapiTestCases" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases1" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases2" />
+    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases3" />
     <option name="compatibility:include-filter" value="CtsCarrierApiTestCases" />
     <option name="compatibility:include-filter" value="CtsJobSchedulerTestCases" />
     <option name="compatibility:include-filter" value="CtsNetTestCases" />
@@ -26,9 +30,6 @@
     <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases1" />
     <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases2" />
     <option name="compatibility:include-filter" value="CtsSecureElementAccessControlTestCases3" />
-    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases1" />
-    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases2" />
-    <option name="compatibility:include-filter" value="signed-CtsSecureElementAccessControlTestCases3" />
     <option name="compatibility:include-filter" value="CtsSimRestrictedApisTestCases" />
     <option name="compatibility:include-filter" value="CtsStatsdHostTestCases" />
     <option name="compatibility:include-filter" value="CtsTelecomTestCases" />
@@ -38,6 +39,7 @@
     <option name="compatibility:include-filter" value="CtsTelephony2TestCases" />
     <option name="compatibility:include-filter" value="CtsTelephony3TestCases" />
     <option name="compatibility:include-filter" value="CtsTelephonySdk28TestCases" />
+    <option name="compatibility:include-filter" value="CtsTetheringTest" />
     <option name="compatibility:include-filter" value="CtsUsageStatsTestCases" />
 
 </configuration>
