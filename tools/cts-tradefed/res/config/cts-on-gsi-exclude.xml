@@ -84,10 +84,6 @@
     <option name="compatibility:exclude-filter" value="CtsSystemUiTestCases android.systemui.cts.LightBarTests#testLightNavigationBar" />
     <option name="compatibility:exclude-filter" value="CtsSystemUiTestCases android.systemui.cts.LightBarThemeTest#testNavigationBarDivider" />
 
-    <!-- b/80390042: CtsContentTestCases failure flaky -->
-    <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.ContentProviderCursorWindowTest#testQuery" />
-    <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.res.cts.PrivateAttributeTest#testNoAttributesAfterLastPublicAttribute" />
-
     <!-- b/80388296: CtsDevicePolicyManagerTestCases failure flaky -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testDisallowAutofill_allowed" />
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPackageInstallUserRestrictions" />
