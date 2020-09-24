@@ -214,6 +214,9 @@
     <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testAppOrientationRequestConfigClears" />
     <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.AppConfigurationTests#testTaskCloseRestoreFreeOrientation" />
 
+    <!-- b/167931576 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.ActivityVisibilityTests#testTurnScreenOnAttrNoLockScreen" />
+
     <!-- b/135533962 -->
     <option name="compatibility:exclude-filter" value="arm64-v8a CtsWrapWrapDebugMallocDebugTestCases" />
 </configuration>
