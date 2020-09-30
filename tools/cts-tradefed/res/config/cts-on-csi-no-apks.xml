@@ -130,6 +130,7 @@
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testFullDisk" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.SettingsIntentTest" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testAddNetworksIntent" />
+    <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testEasyConnectIntent" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testInteractAcrossProfilesSettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testLocationScanningSettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testNotificationPolicyDetailIntent" />
@@ -143,6 +144,7 @@
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testSettingsIntents" />
     <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.AutoRevokeTest#testAutoRevoke_userWhitelisting" />
     <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.AutoRevokeTest#testInstallGrants_notRevokedImmediately" />
+    <option name="compatibility:exclude-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.ExternalSourcesTestAppOpAllowed#testManageUnknownSourcesExists" />
     <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.SettingsPanelTest" />
     <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.settings.SettingsTest#testUserDictionarySettingsExists" />
     <option name="compatibility:exclude-filter" value="CtsSettingsHostTestCases" />
