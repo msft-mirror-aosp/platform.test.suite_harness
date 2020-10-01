@@ -19,6 +19,12 @@
     <include name="cts-on-csi-no-apks" />
     <include name="csi-known-failures" />
 
+    <!--
+    CtsWindowManagerDeviceTestCases has about two hundred failed tests on CSI,
+    so it has its own exclude list.
+    -->
+    <include name="cts-on-csi-wmd" />
+
     <option name="plan" value="cts-on-csi" />
 
 </configuration>

@@ -231,7 +231,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
         }
     }
 
-    /** Write device-info files to the result, invoked only by the master result reporter */
+    /** Write device-info files to the result */
     private void testLogDeviceInfo(String name, InputStreamSource stream) {
         try {
             File ediDir = new File(mResultDir, DeviceInfo.RESULT_DIR_NAME);
@@ -382,19 +382,21 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 getMergedTestRunResults(),
                 getPrimaryBuildInfo().getBuildAttributes().get(BUILD_FINGERPRINT));
 
-        File report = createReport(reportFile);
-        if (report != null) {
-            CLog.i("Viewable report: %s", report.getAbsolutePath());
-        }
+        File report = null;
         File failureReport = null;
         if (mIncludeHtml) {
-            // Create the html report before the zip file.
+            // Create the html reports before the zip file.
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
         }
         File zippedResults = zipResults(mResultDir);
         if (!mIncludeHtml) {
-            // Create failure report after zip file so extra data is not uploaded
+            // Create html reports after zip file so extra data is not uploaded
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
+        }
+        if (report != null) {
+            CLog.i("Viewable report: %s", report.getAbsolutePath());
         }
         try {
             if (failureReport.exists()) {

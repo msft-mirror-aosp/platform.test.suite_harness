@@ -172,8 +172,8 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     private ICaseResult mCurrentCaseResult;
     private ITestResult mCurrentResult;
     private String mDeviceSerial = UNKNOWN_DEVICE;
-    private Set<String> mMasterDeviceSerials = new HashSet<>();
-    private Set<IBuildInfo> mMasterBuildInfos = new HashSet<>();
+    private Set<String> mMainDeviceSerials = new HashSet<>();
+    private Set<IBuildInfo> mMainBuildInfos = new HashSet<>();
     // Whether or not we failed the fingerprint check
     private boolean mFingerprintFailure = false;
 
@@ -191,10 +191,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     // Whether the current module has previously been marked done
     private boolean mModuleWasDone;
 
-    // Nullable. If null, "this" is considered the master and must handle
-    // result aggregation and reporting. When not null, it should forward events
-    // to the master.
-    private final ResultReporter mMasterResultReporter;
+    // Nullable. If null, "this" is considered the primary and must handle
+    // result aggregation and reporting. When not null, it should forward events to the primary
+    private final ResultReporter mPrimaryResultReporter;
 
     private LogFileSaver mTestLogSaver;
 
@@ -213,11 +212,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     }
 
     /**
-     * Construct a shard ResultReporter that forwards module results to the
-     * masterResultReporter.
+     * Construct a shard ResultReporter that forwards module results to the mPrimaryResultReporter.
      */
-    public ResultReporter(ResultReporter masterResultReporter) {
-        mMasterResultReporter = masterResultReporter;
+    public ResultReporter(ResultReporter primaryResultReporter) {
+        mPrimaryResultReporter = primaryResultReporter;
     }
 
     /** {@inheritDoc} */
@@ -243,22 +241,22 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         }
 
         if (isShardResultReporter()) {
-            // Shard ResultReporters forward invocationStarted to the mMasterResultReporter
-            mMasterResultReporter.invocationStarted(context);
+            // Shard ResultReporters forward invocationStarted to the mPrimaryResultReporter
+            mPrimaryResultReporter.invocationStarted(context);
             return;
         }
 
-        // NOTE: Everything after this line only applies to the master ResultReporter.
+        // NOTE: Everything after this line only applies to the primary ResultReporter.
 
-        synchronized(this) {
+        synchronized (this) {
             if (primaryBuild.getDeviceSerial() != null) {
-                // The master ResultReporter collects all device serials being used
+                // The primary ResultReporter collects all device serials being used
                 // for the current implementation.
-                mMasterDeviceSerials.add(primaryBuild.getDeviceSerial());
+                mMainDeviceSerials.add(primaryBuild.getDeviceSerial());
             }
 
-            // The master ResultReporter collects all buildInfos.
-            mMasterBuildInfos.add(primaryBuild);
+            // The primary ResultReporter collects all buildInfos.
+            mMainBuildInfos.add(primaryBuild);
 
             if (mResultDir == null) {
                 // For the non-sharding case, invocationStarted is only called once,
@@ -456,8 +454,8 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             }
         }
         if (isShardResultReporter()) {
-            // Forward module results to the master.
-            mMasterResultReporter.mergeModuleResult(mCurrentModuleResult);
+            // Forward module results to the primary.
+            mPrimaryResultReporter.mergeModuleResult(mCurrentModuleResult);
             mCurrentModuleResult.resetTestRuns();
             mCurrentModuleResult.resetRuntime();
         }
@@ -527,17 +525,17 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     public void invocationEnded(long elapsedTime) {
         if (isShardResultReporter()) {
             // Shard ResultReporters report
-            mMasterResultReporter.invocationEnded(elapsedTime);
+            mPrimaryResultReporter.invocationEnded(elapsedTime);
             return;
         }
 
-        // NOTE: Everything after this line only applies to the master ResultReporter.
+        // NOTE: Everything after this line only applies to the primary ResultReporter.
 
-        synchronized(this) {
-            // The master ResultReporter tracks the progress of all invocations across
+        synchronized (this) {
+            // The mPrimaryResultReporter tracks the progress of all invocations across
             // shard ResultReporters. Writing results should not proceed until all
             // ResultReporters have completed.
-            if (++invocationEndedCount < mMasterBuildInfos.size()) {
+            if (++invocationEndedCount < mMainBuildInfos.size()) {
                 return;
             }
             mElapsedTime = elapsedTime;
@@ -561,14 +559,14 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
             return;
         }
         // Add all device serials into the result to be serialized
-        for (String deviceSerial : mMasterDeviceSerials) {
+        for (String deviceSerial : mMainDeviceSerials) {
             mResult.addDeviceSerial(deviceSerial);
         }
 
         addDeviceBuildInfoToResult();
 
         Set<String> allExpectedModules = new HashSet<>();
-        for (IBuildInfo buildInfo : mMasterBuildInfos) {
+        for (IBuildInfo buildInfo : mMainBuildInfos) {
             for (Map.Entry<String, String> entry : buildInfo.getBuildAttributes().entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
@@ -703,10 +701,10 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     @Override
     public void testLog(String name, LogDataType type, InputStreamSource stream) {
-        // This is safe to be invoked on either the master or a shard ResultReporter
+        // This is safe to be invoked on either the primary or a shard ResultReporter
         if (isShardResultReporter()) {
-            // Shard ResultReporters forward testLog to the mMasterResultReporter
-            mMasterResultReporter.testLog(name, type, stream);
+            // Shard ResultReporters forward testLog to the mPrimaryResultReporter
+            mPrimaryResultReporter.testLog(name, type, stream);
             return;
         }
         if (name.endsWith(DeviceInfo.FILE_SUFFIX)) {
@@ -733,7 +731,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         }
     }
 
-    /* Write device-info files to the result, invoked only by the master result reporter */
+    /* Write device-info files to the result, invoked only by the primary result reporter */
     private void testLogDeviceInfo(String name, InputStreamSource stream) {
         try {
             File ediDir = new File(mResultDir, DeviceInfo.RESULT_DIR_NAME);
@@ -755,8 +753,9 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     @Override
     public void testLogSaved(String dataName, LogDataType dataType, InputStreamSource dataStream,
             LogFile logFile) {
-        // This is safe to be invoked on either the master or a shard ResultReporter
-        if (mIncludeTestLogTags && mCurrentResult != null
+        // This is safe to be invoked on either the primary or a shard ResultReporter
+        if (mIncludeTestLogTags
+                && mCurrentResult != null
                 && dataName.startsWith(mCurrentResult.getFullName())) {
 
             if (dataType == LogDataType.BUGREPORT) {
@@ -774,7 +773,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
      */
     @Override
     public void setLogSaver(ILogSaver saver) {
-        // This is safe to be invoked on either the master or a shard ResultReporter
+        // This is safe to be invoked on either the primary or a shard ResultReporter
         mLogSaver = saver;
     }
 
@@ -896,7 +895,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     /** Aggregate build info from member device info. */
     protected Map<String, String> mapBuildInfo() {
         Map<String, String> buildProperties = new HashMap<>();
-        for (IBuildInfo buildInfo : mMasterBuildInfos) {
+        for (IBuildInfo buildInfo : mMainBuildInfos) {
             for (Map.Entry<String, String> entry : buildInfo.getBuildAttributes().entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
@@ -930,11 +929,11 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
     }
 
     /**
-     * Return true if this instance is a shard ResultReporter and should propagate
-     * certain events to the master.
+     * Return true if this instance is a shard ResultReporter and should propagate certain events to
+     * the primary.
      */
     private boolean isShardResultReporter() {
-        return mMasterResultReporter != null;
+        return mPrimaryResultReporter != null;
     }
 
     /**
@@ -1012,7 +1011,7 @@ public class ResultReporter implements ILogSaverListener, ITestInvocationListene
         }
 
         Set<String> uniqueModules = new HashSet<>();
-        for (IBuildInfo buildInfo : mMasterBuildInfos) {
+        for (IBuildInfo buildInfo : mMainBuildInfos) {
             CompatibilityBuildHelper helper = new CompatibilityBuildHelper(buildInfo);
             Map<String, File> dcFiles = helper.getDynamicConfigFiles();
             for (String moduleName : dcFiles.keySet()) {

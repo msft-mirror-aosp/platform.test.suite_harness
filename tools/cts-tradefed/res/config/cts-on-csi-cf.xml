@@ -13,12 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Runs CTS-sim on device with SIM card">
+<configuration description="Excluded tests for Cuttlefish">
 
-    <include name="cts" />
+    <!-- Inherit from cts-on-csi for exclude list common for all CSI devices -->
+    <include name="cts-on-csi" />
 
-    <include name="cts-sim-include" />
-
-    <option name="plan" value="cts-sim" />
+    <!-- Troublesome tests that often crash the system -->
+    <option name="compatibility:exclude-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.IntentTest#packageNotInstalledSecureFrp" />
+    <option name="compatibility:exclude-filter" value="CtsPermission3TestCases android.permission3.cts.PermissionReviewTest#testReviewPermissionWhenServiceIsBound" />
 
 </configuration>
