@@ -27,9 +27,10 @@ public class ManifestGenerator {
 
     private static final String DEFAULT_MIN_SDK = "8";
 
-    private static final String USAGE = "Usage: "
-        + "manifest-generator -n NAME -p PACKAGE_NAME -o OUTPUT_FILE -i INSTRUMENT_NAME "
-        + "[-s MIN_SDK_VERSION] [-t TARGET_SDK_VERSION] [-r PERMISSION]+ [-a ACTIVITY]+";
+    private static final String USAGE =
+            "Usage: manifest-generator -n NAME -p PACKAGE_NAME -o OUTPUT_FILE -i INSTRUMENT_NAME "
+                    + "[-s MIN_SDK_VERSION] [-t TARGET_SDK_VERSION] [-r PERMISSION]+ "
+                    + "[-a ACTIVITY]+ [-l REQUIRED_LIBRARY]+ [-lo OPTIONAL_LIBRARY]+";
     private static final String MANIFEST = "manifest";
     private static final String USES_SDK = "uses-sdk";
     private static final String USES_PERMISSION = "uses-permission";
@@ -46,6 +47,7 @@ public class ManifestGenerator {
         List<String> permissions = new ArrayList<>();
         List<String> activities = new ArrayList<>();
         List<String> libraries = new ArrayList<>();
+        List<String> optionalLibs = new ArrayList<>();
         String output = null;
 
         for (int i = 0; i < args.length - 1; i++) {
@@ -55,6 +57,8 @@ public class ManifestGenerator {
                 activities.add(args[++i]);
             } else if (args[i].equals("-l")) {
                 libraries.add(args[++i]);
+            } else if (args[i].equals("-lo")) {
+                optionalLibs.add(args[++i]);
             } else if (args[i].equals("-o")) {
                 output = args[++i];
             } else if (args[i].equals("-i")) {
@@ -80,25 +84,40 @@ public class ManifestGenerator {
 
         FileOutputStream out = null;
         try {
-          out = new FileOutputStream(output);
-          generate(out, pkgName, instrumentName, minSdk, targetSdk, permissions, activities,
-                libraries);
+            out = new FileOutputStream(output);
+            generate(
+                    out,
+                    pkgName,
+                    instrumentName,
+                    minSdk,
+                    targetSdk,
+                    permissions,
+                    activities,
+                    libraries,
+                    optionalLibs);
         } catch (Exception e) {
-          System.err.println("Couldn't create manifest file");
+            System.err.println("Couldn't create manifest file");
         } finally {
-          if (out != null) {
-              try {
-                  out.close();
-              } catch (Exception e) {
-                  // Ignore
-              }
-          }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
         }
     }
 
-    /*package*/ static void generate(OutputStream out, String pkgName, String instrumentName,
-            String minSdk, String targetSdk, List<String> permissions, List<String> activities,
-            List<String> libraries)
+    /*package*/ static void generate(
+            OutputStream out,
+            String pkgName,
+            String instrumentName,
+            String minSdk,
+            String targetSdk,
+            List<String> permissions,
+            List<String> activities,
+            List<String> libraries,
+            List<String> optionalLibs)
             throws Exception {
         final String ns = null;
         KXmlSerializer serializer = new KXmlSerializer();
@@ -123,6 +142,12 @@ public class ManifestGenerator {
         for (String library : libraries) {
             serializer.startTag(ns, USES_LIBRARY);
             serializer.attribute(ns, "android:name", library);
+            serializer.endTag(ns, USES_LIBRARY);
+        }
+        for (String optionalLib : optionalLibs) {
+            serializer.startTag(ns, USES_LIBRARY);
+            serializer.attribute(ns, "android:name", optionalLib);
+            serializer.attribute(ns, "android:required", "false");
             serializer.endTag(ns, USES_LIBRARY);
         }
         for (String activity : activities) {
