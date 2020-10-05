@@ -97,9 +97,6 @@
     <option name="compatibility:exclude-filter" value="CtsServicesHostTestCases android.server.cts.KeyguardTests#testDialogShowWhenLockedActivity" />
     <option name="compatibility:exclude-filter" value="CtsServicesHostTestCases android.server.cts.KeyguardTests#testTranslucentShowWhenLockedActivity" />
 
-    <!-- b/80388295: CtsAccessibilityServiceTestCases failure flaky -->
-    <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilityGestureDispatchTest#testClickWhenMagnified_matchesActualTouch" />
-
     <!-- b/80284482: Flaky tests -->
     <option name="compatibility:exclude-filter" value="CtsAlarmManagerTestCases android.alarmmanager.cts.AppStandbyTests#testAllowWhileIdleAlarms" />
     <option name="compatibility:exclude-filter" value="CtsAlarmManagerTestCases android.alarmmanager.cts.AppStandbyTests#testBucketUpgradeToNoDelay" />
