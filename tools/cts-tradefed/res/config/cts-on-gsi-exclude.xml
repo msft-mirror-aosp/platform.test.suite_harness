@@ -133,9 +133,6 @@
     <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.BuildTest#testIsSecureUserBuild" />
     <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.BuildVersionTest#testBuildFingerprint" />
 
-    <!-- b/111147583: CtsSecurityTestCases irrelevant test cases -->
-    <option name="compatibility:exclude-filter" value="CtsSecurityTestCases android.security.cts.VerifiedBootTest#testVerifiedBootSupport" />
-
     <!-- b/110405126: CtsPermissionTestCases flaky (due to SIM card setting) -->
     <option name="compatibility:exclude-filter" value="CtsPermissionTestCases android.permission.cts.TelephonyManagerPermissionTest#testGetDeviceId" />
     <option name="compatibility:exclude-filter" value="CtsPermissionTestCases android.permission.cts.TelephonyManagerPermissionTest#testGetImei" />
