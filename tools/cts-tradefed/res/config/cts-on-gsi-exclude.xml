@@ -159,7 +159,6 @@
     <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.VolumeShaperTest#testPlayerTwoShapers" />
 
     <!-- b/157286547 CtsIncidentHostTestCases ErrorsTest failure -->
-    <option name="compatibility:exclude-filter" value="CtsIncidentHostTestCases com.android.server.cts.ErrorsTest#testThrowException" />
     <option name="compatibility:exclude-filter" value="CtsIncidentHostTestCases com.android.server.cts.ErrorsTest#testNativeCrash" />
 
     <!-- b/111167329: CtsCameraTestCases failure -->
