@@ -13,18 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Runs a subset of CTS-on-GSI tests using a core system image (CSI)">
+<configuration description="Excluded tests for Cuttlefish">
 
-    <include name="cts-on-gsi" />
-    <include name="cts-on-csi-no-apks" />
-    <include name="csi-known-failures" />
+    <!-- Inherit from cts-on-csi for exclude list common for all CSI devices -->
+    <include name="cts-on-csi" />
 
-    <!--
-    CtsWindowManagerDeviceTestCases has about two hundred failed tests on CSI,
-    so it has its own exclude list.
-    -->
-    <include name="cts-on-csi-wmd" />
-
-    <option name="plan" value="cts-on-csi" />
+    <!-- Troublesome tests that often crash the system -->
+    <option name="compatibility:exclude-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.IntentTest#packageNotInstalledSecureFrp" />
+    <option name="compatibility:exclude-filter" value="CtsPermission3TestCases android.permission3.cts.PermissionReviewTest#testReviewPermissionWhenServiceIsBound" />
 
 </configuration>
