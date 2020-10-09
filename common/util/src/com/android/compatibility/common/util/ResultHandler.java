@@ -96,6 +96,7 @@ public class ResultHandler {
     private static final String MODULE_TAG = "Module";
     private static final String MODULES_DONE_ATTR = "modules_done";
     private static final String MODULES_TOTAL_ATTR = "modules_total";
+    private static final String MODULES_NOT_DONE_REASON = "Reason";
     private static final String NAME_ATTR = "name";
     private static final String OS_ARCH_ATTR = "os_arch";
     private static final String OS_NAME_ATTR = "os_name";
@@ -226,7 +227,7 @@ public class ResultHandler {
             parser.nextTag();
             boolean hasRunHistoryTag = true;
             try {
-                parser.require(parser.START_TAG, NS, RUN_HISTORY_TAG);
+                parser.require(XmlPullParser.START_TAG, NS, RUN_HISTORY_TAG);
             } catch (XmlPullParserException e) {
                 hasRunHistoryTag = false;
             }
@@ -248,6 +249,13 @@ public class ResultHandler {
                 long runtime = Long.parseLong(parser.getAttributeValue(NS, RUNTIME_ATTR));
                 module.addRuntime(runtime);
                 while (parser.nextTag() == XmlPullParser.START_TAG) {
+                    // If a reason for not done exists, handle it.
+                    if (parser.getName().equals(MODULES_NOT_DONE_REASON)) {
+                        parser.require(XmlPullParser.START_TAG, NS, MODULES_NOT_DONE_REASON);
+                        parser.nextTag();
+                        parser.require(XmlPullParser.END_TAG, NS, MODULES_NOT_DONE_REASON);
+                        continue;
+                    }
                     parser.require(XmlPullParser.START_TAG, NS, CASE_TAG);
                     String caseName = parser.getAttributeValue(NS, NAME_ATTR);
                     ICaseResult testCase = module.getOrCreateResult(caseName);
