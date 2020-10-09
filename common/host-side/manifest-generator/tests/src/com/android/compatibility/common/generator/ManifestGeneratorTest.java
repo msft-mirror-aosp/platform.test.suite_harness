@@ -18,7 +18,6 @@ package com.android.compatibility.common.generator;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,18 +30,21 @@ public class ManifestGeneratorTest extends TestCase {
     private static final String INSTRUMENT = "test.package.TestInstrument";
     private static final String MIN_SDK = "8";
     private static final String TARGET_SDK = "17";
-    private static final String MANIFEST = "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\r\n"
-        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" "
-        + "package=\"test.package\">\r\n"
-        + "  <uses-sdk android:minSdkVersion=\"8\" android:targetSdkVersion=\"17\" />\r\n"
-        + "%s"
-        + "  <application>\r\n"
-        + "%s"
-        + "%s"
-        + "  </application>\r\n"
-        + "  <instrumentation android:name=\"test.package.TestInstrument\" "
-        + "android:targetPackage=\"test.package\" />\r\n"
-        + "</manifest>";
+    private static final String MANIFEST =
+            "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\r\n"
+                    + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" "
+                    + "package=\"test.package\">\r\n"
+                    + "  <uses-sdk android:minSdkVersion=\"8\" android:targetSdkVersion=\"17\" "
+                    + "/>\r\n"
+                    + "%s"
+                    + "  <application>\r\n"
+                    + "%s"
+                    + "%s"
+                    + "%s"
+                    + "  </application>\r\n"
+                    + "  <instrumentation android:name=\"test.package.TestInstrument\" "
+                    + "android:targetPackage=\"test.package\" />\r\n"
+                    + "</manifest>";
     private static final String PERMISSION = "  <uses-permission android:name=\"%s\" />\r\n";
     private static final String PERMISSION_A = "android.permission.PermissionA";
     private static final String PERMISSION_B = "android.permission.PermissionB";
@@ -50,7 +52,10 @@ public class ManifestGeneratorTest extends TestCase {
     private static final String ACTIVITY_A = "test.package.ActivityA";
     private static final String ACTIVITY_B = "test.package.ActivityB";
     private static final String USES_LIBRARY = "    <uses-library android:name=\"%s\" />\r\n";
+    private static final String USES_OPTIONAL_LIBRARY =
+            "    <uses-library android:name=\"%s\" android:required=\"false\" />\r\n";
     private static final String LIBRARY = "test.runner.library";
+    private static final String OPTIONAL_LIBRARY = "android.test.base";
 
     public void testManifest() throws Exception {
         List<String> permissions = new ArrayList<>();
@@ -61,6 +66,8 @@ public class ManifestGeneratorTest extends TestCase {
         activities.add(ACTIVITY_B);
         List<String> libraries = new ArrayList<>();
         libraries.add(LIBRARY);
+        List<String> optionalLibs = new ArrayList<>();
+        optionalLibs.add(OPTIONAL_LIBRARY);
         OutputStream output = new OutputStream() {
             private StringBuilder string = new StringBuilder();
             @Override
@@ -73,14 +80,24 @@ public class ManifestGeneratorTest extends TestCase {
                 return this.string.toString();
             }
         };
-        ManifestGenerator.generate(output, PACKAGE, INSTRUMENT, MIN_SDK, TARGET_SDK,
-            permissions, activities, libraries);
+        ManifestGenerator.generate(
+                output,
+                PACKAGE,
+                INSTRUMENT,
+                MIN_SDK,
+                TARGET_SDK,
+                permissions,
+                activities,
+                libraries,
+                optionalLibs);
         String permissionXml = String.format(PERMISSION, PERMISSION_A)
                 + String.format(PERMISSION, PERMISSION_B);
         String activityXml = String.format(ACTIVITY, ACTIVITY_A)
                 + String.format(ACTIVITY, ACTIVITY_B);
         String libraryXml = String.format(USES_LIBRARY, LIBRARY);
-        String expected = String.format(MANIFEST, permissionXml, libraryXml, activityXml);
+        String optionalLibraryXml = String.format(USES_OPTIONAL_LIBRARY, OPTIONAL_LIBRARY);
+        String expected =
+                String.format(MANIFEST, permissionXml, libraryXml, optionalLibraryXml, activityXml);
         assertEquals("Wrong manifest output", expected, output.toString());
     }
 
