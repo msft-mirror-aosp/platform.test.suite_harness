@@ -59,6 +59,23 @@ public class CpuFeatures {
         return uname(device, UNAME_OPTION_MACHINE_TYPE).contains("x86");
     }
 
+    /* Return true if ABI is native. */
+    public static boolean isNativeAbi(ITestDevice device, String abi)
+            throws DeviceNotAvailableException {
+        if (isArm32(device) && abi.contains("armeabi-v7a")) {
+            return true;
+        }
+        // Both armeabi-v7a and arm64-v8a are native.
+        if (isArm64(device) && abi.contains("arm")) {
+            return true;
+        }
+        // Both x86 and x86_64 are native.
+        if (isX86(device) && abi.contains("x86")) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Return true kernel if version is less than input values.
      */
