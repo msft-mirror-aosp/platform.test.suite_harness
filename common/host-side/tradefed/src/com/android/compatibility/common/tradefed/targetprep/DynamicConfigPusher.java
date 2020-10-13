@@ -27,6 +27,7 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -156,9 +157,12 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             String deviceDest = String.format("%s%s.dynamic",
                     DynamicConfig.CONFIG_FOLDER_ON_DEVICE, mModuleName);
             if (!device.pushFile(hostFile, deviceDest)) {
-                throw new TargetSetupError(String.format(
-                        "Failed to push local '%s' to remote '%s'", hostFile.getAbsolutePath(),
-                        deviceDest), device.getDeviceDescriptor());
+                throw new TargetSetupError(
+                        String.format(
+                                "Failed to push local '%s' to remote '%s'",
+                                hostFile.getAbsolutePath(), deviceDest),
+                        device.getDeviceDescriptor(),
+                        DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
             mDeviceFilePushed = deviceDest;
         }
