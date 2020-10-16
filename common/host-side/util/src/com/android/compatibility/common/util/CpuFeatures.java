@@ -55,25 +55,40 @@ public class CpuFeatures {
      * Return true if architecture is x86.
      */
     public static boolean isX86(ITestDevice device) throws DeviceNotAvailableException {
+        // Possible names: i386, i486, i686, x86_64.
+        return uname(device, UNAME_OPTION_MACHINE_TYPE).contains("86");
+    }
 
-        return uname(device, UNAME_OPTION_MACHINE_TYPE).contains("x86");
+    /* Return true if architecture is x86_64. */
+    public static boolean isX86_64(ITestDevice device) throws DeviceNotAvailableException {
+
+        return uname(device, UNAME_OPTION_MACHINE_TYPE).contains("x86_64");
+    }
+
+    /* Return true if architecture is 32-bit x86. */
+    public static boolean isX86_32(ITestDevice device) throws DeviceNotAvailableException {
+
+        return isX86(device) && !isX86_64(device);
     }
 
     /* Return true if ABI is native. */
     public static boolean isNativeAbi(ITestDevice device, String abi)
             throws DeviceNotAvailableException {
-        if (isArm32(device) && abi.contains("armeabi-v7a")) {
-            return true;
-        }
-        // Both armeabi-v7a and arm64-v8a are native.
-        if (isArm64(device) && abi.contains("arm")) {
-            return true;
-        }
-        // Both x86 and x86_64 are native.
-        if (isX86(device) && abi.contains("x86")) {
-            return true;
-        }
-        return false;
+      if (isArm32(device) && abi.equals("armeabi-v7a")) {
+          return true;
+      }
+      // Both armeabi-v7a and arm64-v8a are native.
+      if (isArm64(device) && abi.contains("arm")) {
+          return true;
+      }
+      if (isX86_32(device) && abi.equals("x86")) {
+          return true;
+      }
+      // Both x86 and x86_64 are native.
+      if (isX86_64(device) && abi.contains("x86")) {
+          return true;
+      }
+      return false;
     }
 
     /**
