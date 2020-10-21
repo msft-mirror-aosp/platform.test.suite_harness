@@ -22,7 +22,6 @@ import com.android.compatibility.common.tradefed.config.ConfigurationFactoryTest
 import com.android.compatibility.common.tradefed.presubmit.ApkPackageNameCheck;
 import com.android.compatibility.common.tradefed.presubmit.CtsConfigLoadingTest;
 import com.android.compatibility.common.tradefed.presubmit.DupFileTest;
-import com.android.compatibility.common.tradefed.presubmit.IntegrationTest;
 import com.android.compatibility.common.tradefed.presubmit.PresubmitSetupValidation;
 import com.android.compatibility.common.tradefed.presubmit.ValidateTestsAbi;
 import com.android.compatibility.common.tradefed.result.ChecksumReporterTest;
@@ -43,17 +42,13 @@ import com.android.compatibility.common.tradefed.targetprep.MediaPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.PropertyCheckTest;
 import com.android.compatibility.common.tradefed.targetprep.SettingsPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.VtsDeviceInfoCollectorTest;
-import com.android.compatibility.common.tradefed.testtype.CompatibilityTestTest;
 import com.android.compatibility.common.tradefed.testtype.JarHostTestTest;
-import com.android.compatibility.common.tradefed.testtype.ModuleDefTest;
-import com.android.compatibility.common.tradefed.testtype.ModuleRepoTest;
 import com.android.compatibility.common.tradefed.testtype.SubPlanTest;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTestTest;
 import com.android.compatibility.common.tradefed.util.CollectorUtilTest;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReaderTest;
 import com.android.compatibility.common.tradefed.util.OptionHelperTest;
 import com.android.compatibility.common.tradefed.util.RetryFilterHelperTest;
-import com.android.compatibility.common.tradefed.util.UniqueModuleCountUtilTest;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -80,7 +75,6 @@ import org.junit.runners.Suite.SuiteClasses;
     ApkPackageNameCheck.class,
     CtsConfigLoadingTest.class,
     DupFileTest.class,
-    IntegrationTest.class,
     PresubmitSetupValidation.class,
     ValidateTestsAbi.class,
 
@@ -109,10 +103,7 @@ import org.junit.runners.Suite.SuiteClasses;
     VtsDeviceInfoCollectorTest.class,
 
     // testtype
-    CompatibilityTestTest.class,
     JarHostTestTest.class,
-    ModuleDefTest.class,
-    ModuleRepoTest.class,
     SubPlanTest.class,
 
     // testtype.retry
@@ -123,7 +114,6 @@ import org.junit.runners.Suite.SuiteClasses;
     DynamicConfigFileReaderTest.class,
     OptionHelperTest.class,
     RetryFilterHelperTest.class,
-    UniqueModuleCountUtilTest.class,
 })
 public class UnitTests {
     // empty on purpose
