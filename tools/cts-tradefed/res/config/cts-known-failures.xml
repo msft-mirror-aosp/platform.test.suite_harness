@@ -227,4 +227,6 @@
      <!-- b/169419610 -->
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases[instant] android.media.cts.VideoDecoderRotationTest#testRendering800x480Rotated[OMX.qcom.video.decoder.vp9:video/x-vnd.on2.vp9:90]" />
 
+    <!-- b/168186483 -->
+    <option name="compatibility:exclude-filter" value="CtsTelecomTestCases android.telecom.cts.OutgoingCallTest#testPhoneStateListenerInvokedOnOutgoingEmergencyCall" />
 </configuration>
