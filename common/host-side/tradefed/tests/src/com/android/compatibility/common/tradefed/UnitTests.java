@@ -24,11 +24,8 @@ import com.android.compatibility.common.tradefed.presubmit.CtsConfigLoadingTest;
 import com.android.compatibility.common.tradefed.presubmit.DupFileTest;
 import com.android.compatibility.common.tradefed.presubmit.PresubmitSetupValidation;
 import com.android.compatibility.common.tradefed.presubmit.ValidateTestsAbi;
-import com.android.compatibility.common.tradefed.result.ChecksumReporterTest;
 import com.android.compatibility.common.tradefed.result.ConsoleReporterTest;
 import com.android.compatibility.common.tradefed.result.MetadataReporterTest;
-import com.android.compatibility.common.tradefed.result.ResultReporterBuildInfoTest;
-import com.android.compatibility.common.tradefed.result.ResultReporterTest;
 import com.android.compatibility.common.tradefed.result.SubPlanHelperTest;
 import com.android.compatibility.common.tradefed.result.suite.CertificationChecksumHelperTest;
 import com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporterTest;
@@ -79,11 +76,8 @@ import org.junit.runners.Suite.SuiteClasses;
     ValidateTestsAbi.class,
 
     // result
-    ChecksumReporterTest.class,
     ConsoleReporterTest.class,
     MetadataReporterTest.class,
-    ResultReporterBuildInfoTest.class,
-    ResultReporterTest.class,
     SubPlanHelperTest.class,
 
     // result.suite
