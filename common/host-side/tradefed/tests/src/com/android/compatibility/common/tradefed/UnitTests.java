@@ -39,7 +39,6 @@ import com.android.compatibility.common.tradefed.targetprep.MediaPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.PropertyCheckTest;
 import com.android.compatibility.common.tradefed.targetprep.SettingsPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.VtsDeviceInfoCollectorTest;
-import com.android.compatibility.common.tradefed.testtype.JarHostTestTest;
 import com.android.compatibility.common.tradefed.testtype.SubPlanTest;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTestTest;
 import com.android.compatibility.common.tradefed.util.CollectorUtilTest;
@@ -97,7 +96,6 @@ import org.junit.runners.Suite.SuiteClasses;
     VtsDeviceInfoCollectorTest.class,
 
     // testtype
-    JarHostTestTest.class,
     SubPlanTest.class,
 
     // testtype.retry
