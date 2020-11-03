@@ -13,12 +13,12 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Runs CTS-sim on device with SIM card">
+<configuration description="Runs cts-on-gsi on device with SIM card">
 
-    <include name="cts" />
+    <include name="cts-on-gsi" />
 
     <include name="cts-sim-include" />
 
-    <option name="plan" value="cts-sim" />
+    <option name="plan" value="cts-on-gsi-sim" />
 
 </configuration>

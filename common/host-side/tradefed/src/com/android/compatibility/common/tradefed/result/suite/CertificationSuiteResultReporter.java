@@ -382,19 +382,21 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 getMergedTestRunResults(),
                 getPrimaryBuildInfo().getBuildAttributes().get(BUILD_FINGERPRINT));
 
-        File report = createReport(reportFile);
-        if (report != null) {
-            CLog.i("Viewable report: %s", report.getAbsolutePath());
-        }
+        File report = null;
         File failureReport = null;
         if (mIncludeHtml) {
-            // Create the html report before the zip file.
+            // Create the html reports before the zip file.
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
         }
         File zippedResults = zipResults(mResultDir);
         if (!mIncludeHtml) {
-            // Create failure report after zip file so extra data is not uploaded
+            // Create html reports after zip file so extra data is not uploaded
+            report = createReport(reportFile);
             failureReport = createFailureReport(reportFile);
+        }
+        if (report != null) {
+            CLog.i("Viewable report: %s", report.getAbsolutePath());
         }
         try {
             if (failureReport.exists()) {
