@@ -16,10 +16,30 @@
 <configuration description="Excluded tests for APKs not in CSI">
 
     <!-- No Browser2 -->
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.EphemeralTest#testEphemeralQuery" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testViewNormalUrl" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testViewSecureUrl" />
     <option name="compatibility:exclude-filter" value="CtsMatchFlagTestCases android.matchflags.cts.MatchFlagTests#startNoBrowserRequireDefault" />
     <option name="compatibility:exclude-filter" value="CtsMatchFlagTestCases android.matchflags.cts.MatchFlagTests#startNoBrowserIntentWithNoMatchingApps" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppDetailsAndSetDefaultAppThenIsDefaultApp" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndAllowThenIsRoleHolder" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#dontAddRoleHolderThenIsNotRoleHolder" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppListAndSetDefaultAppThenIsDefaultApp" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyThenHasDontAskAgain" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyWithDontAskAgainThenDeniedAutomatically" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyWithDontAskAgainAndReinstallThenShowsUiWithoutDontAskAgain" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppDetailsAndSetDefaultAppAndSetAnotherThenIsNotDefaultApp" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyWithDontAskAgainAndClearDataThenShowsUiWithoutDontAskAgain" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppListAndSetDefaultAppThenIsDefaultAppInList" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleFirstTimeNoDontAskAgain" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestHoldingRoleThenAllowedAutomatically" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppDetailsThenIsNotDefaultApp" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#addAndRemoveRoleHolderThenRoleIsNotHeld" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#dontAddRoleHolderThenRoleIsNotHeld" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#addAndClearRoleHoldersThenIsNotRoleHolder" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#addAndRemoveRoleHolderThenIsNotRoleHolder" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyThenIsNotRoleHolder" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#requestRoleAndDenyWithDontAskAgainReturnsCanceled" />
 
     <!-- No Calendar -->
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testCalendarAddAppointment" />
@@ -45,6 +65,19 @@
     <!-- No Dialer -->
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testDialPhoneNumber" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testDialVoicemail" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testLockTask_defaultDialer" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedProfileOwnerTest#testLockTask_defaultDialer" />
+    <option name="compatibility:exclude-filter" value="CtsTelecomTestCases android.telecom.cts.DefaultDialerOperationsTest#testActionDialHandling" />
+    <option name="compatibility:exclude-filter" value="CtsTelecomTestCases android.telecom.cts.DefaultDialerOperationsTest#testDialerUI" />
+
+    <!-- No Gallery2 -->
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ExternalStorageHostTest#testSystemGalleryExists" />
+    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.StrictModeTest#testFileUriExposure" />
+    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.StrictModeTest#testVmPenaltyListener" />
+    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.StrictModeTest#testContentUriWithoutPermission" />
+
+    <!-- No Gallery2, Music -->
+    <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.media.MediaStoreIntentsTest" />
 
     <!-- No Launcher and Home -->
     <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilityEmbeddedDisplayTest" />
@@ -71,6 +104,7 @@
     <option name="compatibility:exclude-filter" value="CtsAppTestCases android.app.cts.ActivityManagerTest#testTimeTrackingAPI_SwitchAwayTriggers" />
     <option name="compatibility:exclude-filter" value="CtsAppTestCases android.app.cts.BooleanTileServiceTest" />
     <option name="compatibility:exclude-filter" value="CtsAppTestCases android.app.cts.TileServiceTest" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.QuietModeHostsideTest" />
     <option name="compatibility:exclude-filter" value="CtsShortcutManagerLauncher1" />
     <option name="compatibility:exclude-filter" value="CtsShortcutManagerLauncher2" />
     <option name="compatibility:exclude-filter" value="CtsShortcutManagerLauncher3" />
@@ -93,8 +127,10 @@
     <!-- No Settings -->
     <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts.AccessibilitySettingsTest" />
     <option name="compatibility:exclude-filter" value="CtsAdminTestCases android.admin.cts.DeviceAdminActivationTest" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.StorageHostTest#testFullDisk" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.SettingsIntentTest" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testAddNetworksIntent" />
+    <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testEasyConnectIntent" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testInteractAcrossProfilesSettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testLocationScanningSettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testNotificationPolicyDetailIntent" />
@@ -105,7 +141,15 @@
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testTapAnPaySettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testUsageAccessSettings" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testVoiceInputSettingsIntent" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testSettingsIntents" />
+    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.AutoRevokeTest#testAutoRevoke_userWhitelisting" />
+    <option name="compatibility:exclude-filter" value="CtsOsTestCases android.os.cts.AutoRevokeTest#testInstallGrants_notRevokedImmediately" />
+    <option name="compatibility:exclude-filter" value="CtsPackageInstallTestCases android.packageinstaller.install.cts.ExternalSourcesTestAppOpAllowed#testManageUnknownSourcesExists" />
+    <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.SettingsPanelTest" />
+    <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.settings.SettingsTest#testUserDictionarySettingsExists" />
     <option name="compatibility:exclude-filter" value="CtsSettingsHostTestCases" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleControllerManagerTest#settingsIsNotVisibleForHomeRole" />
+    <option name="compatibility:exclude-filter" value="CtsRoleTestCases android.app.role.cts.RoleManagerTest#openDefaultAppListThenIsNotDefaultAppInList" />
 
     <!-- No SettingsIntelligence -->
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.AvailableIntentsTest#testSettingsSearchIntent" />
@@ -128,14 +172,24 @@
 
     <!-- No WebView -->
     <option name="compatibility:exclude-filter" value="CtsAssistTestCases android.assist.cts.WebViewTest#testWebView" />
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.EphemeralTest#testWebViewLoads" />
+    <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.inline.InlineWebViewActivityTest" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.WebViewActivityTest" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.WebViewMultiScreenLoginActivityTest" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.inline.InlineWebViewActivityTest" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileProvisioningTest#testWebview" />
     <option name="compatibility:exclude-filter" value="CtsHostsideWebViewTests" />
+    <option name="compatibility:exclude-filter" value="CtsInputMethodTestCases android.view.inputmethod.cts.KeyboardVisibilityControlTest#testShowHideKeyboardOnWebView" />
     <option name="compatibility:exclude-filter" value="CtsTextTestCases android.text.cts.EmojiTest" />
-    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithParentLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewScaledWithParentLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithAlpha" />
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithAlphaLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithLayer" />
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithOffsetLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithParentLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithUnclippedLayer" />
+    <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithUnclippedLayerAndComplexClip" />
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.PathClippingTests#testWebViewClipWithCircle" />
+    <option name="compatibility:exclude-filter" value="CtsWebkitTestCases" />
 
 </configuration>

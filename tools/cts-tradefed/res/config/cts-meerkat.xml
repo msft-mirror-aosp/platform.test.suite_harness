@@ -24,6 +24,7 @@
 
     <!-- Overlays & touches -->
     <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.WindowInputTests"/>
+    <option name="compatibility:include-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.WindowUntrustedTouchTest"/>
     <option name="compatibility:include-filter" value="CtsSecurityTestCases android.security.cts.MotionEventTest"/>
 
     <!-- System Alert Window (SAW) -->
