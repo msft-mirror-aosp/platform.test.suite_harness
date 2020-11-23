@@ -12,31 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Build the common utility library for use device-side
-java_library_static {
-    name: "compatibility-common-util-devicesidelib",
-    sdk_version: "current",
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "guava",
-        "junit",
-    ],
-}
-
 // Build the common utility library for use host-side
 java_library_host {
     name: "compatibility-common-util-hostsidelib",
+    // Restrict visibility to only those targets that need to access it.
+    visibility: [
+         "//test/suite_harness/common/host-side/util",
+         "//test/suite_harness/common/util/tests"
+    ],
     defaults: ["cts_error_prone_rules"],
 
-    srcs: ["src/**/*.java"],
-
-    libs: [
-        "junit",
-	"guava",
-	"json-prebuilt",
-	"platform-test-annotations",
-	"kxml2-2.3.0",
+    static_libs: [
+       "compatibility-common-util-lib"
     ],
 }

@@ -33,6 +33,7 @@ java_test_host {
 
 tradefed_binary_host {
     name: "compatibility-mock-tradefed",
+    visibility: ["//visibility:private"],
     short_name: "TESTS",
     full_name: "Compatibility Tests",
     version: "1",
