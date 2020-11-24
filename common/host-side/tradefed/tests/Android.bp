@@ -26,21 +26,12 @@ java_test_host {
 
     static_libs: [
         "tradefed",
-        "compatibility-mock-tradefed",
         "junit",
         "compatibility-host-util",
-	"easymock",
-	"objenesis-host",
-	"mockito-host",
+        "cts-tradefed-harness",
+        "easymock",
+        "objenesis-host",
+        "mockito-host",
     ],
 }
 
-
-tradefed_binary_host {
-    name: "compatibility-mock-tradefed",
-    visibility: ["//visibility:private"],
-    short_name: "TESTS",
-    full_name: "Compatibility Tests",
-    version: "1",
-    static_libs: ["cts-tradefed-harness"],
-}
