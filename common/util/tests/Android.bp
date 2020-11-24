@@ -23,11 +23,11 @@ java_test_host {
         unit_test: true,
     },
 
-    libs: [
+    static_libs: [
+        "compatibility-common-util-hostsidelib",
         "junit",
         "kxml2-2.3.0",
         "tradefed",
-        "compatibility-common-util-hostsidelib",
     ],
 
     // Holds golden sample files in assets for validation

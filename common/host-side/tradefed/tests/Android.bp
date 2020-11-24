@@ -15,14 +15,19 @@
 java_test_host {
     name: "compatibility-tradefed-tests",
     defaults: ["tradefed_errorprone_defaults"],
+    // Restrict visibility to only those targets that need to access it.
+    visibility: ["//visibility:private"],
 
+    test_options: {
+        unit_test: true,
+    },
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
 
-    libs: [
+    static_libs: [
         "tradefed",
         "compatibility-mock-tradefed",
-        "junit-host",
+        "junit",
         "compatibility-host-util",
 	"easymock",
 	"objenesis-host",
