@@ -19,6 +19,11 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelperT
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProviderTest;
 import com.android.compatibility.common.tradefed.command.CompatibilityConsoleTest;
 import com.android.compatibility.common.tradefed.config.ConfigurationFactoryTest;
+import com.android.compatibility.common.tradefed.presubmit.ApkPackageNameCheck;
+import com.android.compatibility.common.tradefed.presubmit.CtsConfigLoadingTest;
+import com.android.compatibility.common.tradefed.presubmit.DupFileTest;
+import com.android.compatibility.common.tradefed.presubmit.PresubmitSetupValidation;
+import com.android.compatibility.common.tradefed.presubmit.ValidateTestsAbi;
 import com.android.compatibility.common.tradefed.result.ConsoleReporterTest;
 import com.android.compatibility.common.tradefed.result.MetadataReporterTest;
 import com.android.compatibility.common.tradefed.result.SubPlanHelperTest;
@@ -61,6 +66,13 @@ import org.junit.runners.Suite.SuiteClasses;
 
     // config
     ConfigurationFactoryTest.class,
+
+    // presubmit
+    ApkPackageNameCheck.class,
+    CtsConfigLoadingTest.class,
+    DupFileTest.class,
+    PresubmitSetupValidation.class,
+    ValidateTestsAbi.class,
 
     // result
     ConsoleReporterTest.class,
