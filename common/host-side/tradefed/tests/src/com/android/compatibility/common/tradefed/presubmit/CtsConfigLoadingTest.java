@@ -174,7 +174,16 @@ public class CtsConfigLoadingTest {
 
     static {
         ALLOWLIST_MODULE_PARAMETERS.add("CtsAccessibilityServiceTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsActivityManagerBackgroundActivityTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsAppOpsTestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsCarrierApiTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsContentCaptureServiceTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsDeqpTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchDebugClassTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWhitelistTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsHiddenApiKillswitchWildcardTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsLocationTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsLocation2TestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsMediaTestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsMediaV2TestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsOpenGlPerfTestCases.config");
@@ -182,6 +191,10 @@ public class CtsConfigLoadingTest {
         ALLOWLIST_MODULE_PARAMETERS.add("CtsPermission2TestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsPermissionTestCases.config");
         ALLOWLIST_MODULE_PARAMETERS.add("CtsProviderUiTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsRsBlasTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsSkQPTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsWrapNoWrapTestCases.config");
+        ALLOWLIST_MODULE_PARAMETERS.add("CtsWrapWrapDebugMallocDebugTestCases.config");
     }
 
     /**

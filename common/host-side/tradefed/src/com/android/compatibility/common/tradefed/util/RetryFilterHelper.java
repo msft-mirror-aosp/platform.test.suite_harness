@@ -19,6 +19,7 @@ package com.android.compatibility.common.tradefed.util;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.result.SubPlanHelper;
 import com.android.compatibility.common.tradefed.testtype.ISubPlan;
+import com.android.compatibility.common.tradefed.testtype.ModuleRepo;
 import com.android.compatibility.common.util.IInvocationResult;
 import com.android.compatibility.common.util.LightInvocationResult;
 import com.android.compatibility.common.util.ResultHandler;
@@ -32,10 +33,7 @@ import com.android.tradefed.util.ArrayUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -271,7 +269,8 @@ public class RetryFilterHelper {
         }
         if (mModuleName != null) {
             try {
-                List<String> modules = getModuleNamesMatching(mBuild.getTestsDir(), mModuleName);
+                List<String> modules = ModuleRepo.getModuleNamesMatching(
+                        mBuild.getTestsDir(), mModuleName);
                 if (modules.size() == 0) {
                     throw new IllegalArgumentException(
                             String.format("No modules found matching %s", mModuleName));
@@ -325,41 +324,5 @@ public class RetryFilterHelper {
         mRetryIncludes = null;
         mRetryExcludes = null;
         // keep references to buildInfo and session ID
-    }
-
-    /** @return the {@link List} of modules whose name contains the given pattern. */
-    public static List<String> getModuleNamesMatching(File directory, String pattern) {
-        String[] names = directory.list(new NameFilter(pattern));
-        List<String> modules = new ArrayList<String>(names.length);
-        for (String name : names) {
-            int index = name.indexOf(".config");
-            if (index > 0) {
-                String module = name.substring(0, index);
-                if (module.equals(pattern)) {
-                    // Pattern represents a single module, just return a single-item list
-                    modules = new ArrayList<>(1);
-                    modules.add(module);
-                    return modules;
-                }
-                modules.add(module);
-            }
-        }
-        return modules;
-    }
-
-    /** A {@link FilenameFilter} to find all modules in a directory who match the given pattern. */
-    public static class NameFilter implements FilenameFilter {
-
-        private String mPattern;
-
-        public NameFilter(String pattern) {
-            mPattern = pattern;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public boolean accept(File dir, String name) {
-            return name.contains(mPattern) && name.endsWith(".config");
-        }
     }
 }

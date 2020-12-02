@@ -19,6 +19,7 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.result.SubPlanHelper;
 import com.android.compatibility.common.tradefed.result.suite.CertificationResultXml;
+import com.android.compatibility.common.tradefed.testtype.ModuleRepo;
 import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.tradefed.build.BuildRetrievalError;
@@ -37,7 +38,6 @@ import com.android.tradefed.testtype.Abi;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IRuntimeHintProvider;
-import com.android.tradefed.testtype.suite.SuiteModuleLoader;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.testtype.suite.params.ModuleParameters;
 import com.android.tradefed.util.AbiUtils;
@@ -315,7 +315,7 @@ public class CompatibilityConsole extends Console {
     private void splitModules(int shards) {
         File[] files = null;
         try {
-            files = getBuildHelper().getTestsDir().listFiles(new SuiteModuleLoader.ConfigFilter());
+            files = getBuildHelper().getTestsDir().listFiles(new ModuleRepo.ConfigFilter());
         } catch (FileNotFoundException e) {
             printLine(e.getMessage());
             e.printStackTrace();
