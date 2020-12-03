@@ -16,10 +16,13 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import com.android.ddmlib.Log.LogLevel;
+import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
@@ -66,6 +69,18 @@ public class DeviceInteractionHelperInstaller extends BaseTargetPreparer {
     private String mHelperPackagePropertyKey = "ro.vendor.cts_interaction_helper_packages";
 
     private Set<String> mInstalledPackages = new HashSet<String>();
+
+    /** {@inheritDoc} */
+    @Override
+    public void setUp(ITestDevice device, IBuildInfo buildInfo)
+            throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        IInvocationContext context = new InvocationContext();
+        context.addAllocatedDevice("device", device);
+        context.addDeviceBuildInfo("device", buildInfo);
+        TestInformation testInfo =
+                TestInformation.newBuilder().setInvocationContext(context).build();
+        setUp(testInfo);
+    }
 
     /** {@inheritDoc} */
     @Override

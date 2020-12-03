@@ -30,8 +30,6 @@ import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
-import com.android.tradefed.result.error.DeviceErrorIdentifier;
-import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
@@ -89,17 +87,12 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
             if (instrument(testInfo)) {
                 CLog.d("Target preparation successful");
             } else if (mThrowError) {
-                throw new TargetSetupError(
-                        "Not all target preparation steps completed",
-                        device.getDeviceDescriptor(),
-                        DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
+                throw new TargetSetupError("Not all target preparation steps completed",
+                        device.getDeviceDescriptor());
             }
         } catch (FileNotFoundException e) {
-            throw new TargetSetupError(
-                    "Couldn't find apk to instrument",
-                    e,
-                    device.getDeviceDescriptor(),
-                    InfraErrorIdentifier.ARTIFACT_NOT_FOUND);
+            throw new TargetSetupError("Couldn't find apk to instrument", e,
+                    device.getDeviceDescriptor());
         }
     }
 

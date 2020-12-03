@@ -21,18 +21,14 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.targetprep.TestAppInstallSetup;
-import com.android.tradefed.targetprep.suite.SuiteApkInstaller;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 
 /**
  * Installs specified APKs from Compatibility repository.
- *
- * @deprecated Use {@link SuiteApkInstaller} instead. Options will be unchanged.
  */
-@Deprecated
-@OptionClass(alias = "apk-installer")
+@OptionClass(alias="apk-installer")
 public class ApkInstaller extends TestAppInstallSetup {
 
     private CompatibilityBuildHelper mBuildHelper = null;
