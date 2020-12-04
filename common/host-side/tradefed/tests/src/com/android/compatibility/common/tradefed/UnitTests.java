@@ -35,7 +35,6 @@ import com.android.compatibility.common.tradefed.targetprep.PropertyCheckTest;
 import com.android.compatibility.common.tradefed.targetprep.SettingsPreparerTest;
 import com.android.compatibility.common.tradefed.targetprep.VtsDeviceInfoCollectorTest;
 import com.android.compatibility.common.tradefed.testtype.SubPlanTest;
-import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTestTest;
 import com.android.compatibility.common.tradefed.util.CollectorUtilTest;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReaderTest;
 import com.android.compatibility.common.tradefed.util.OptionHelperTest;
@@ -85,9 +84,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
     // testtype
     SubPlanTest.class,
-
-    // testtype.retry
-    RetryFactoryTestTest.class,
 
     // util
     CollectorUtilTest.class,
