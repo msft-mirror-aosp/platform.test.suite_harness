@@ -9,8 +9,8 @@
 	<classpathentry kind="src" path="tests/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/prebuilts/misc/common/json/json-prebuilt/linux_glibc_common/combined/json-prebuilt.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/prebuilts/misc/common/kxml2/kxml2-2.3.0.jar"/>
-	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/external/guice/guice/linux_glibc_common/combined/guice.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/cts-common-util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
