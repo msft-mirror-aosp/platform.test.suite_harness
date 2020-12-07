@@ -403,4 +403,7 @@
 
     <!-- b/173662175: CtsStatsdHostTestCases due to insufficient processes running -->
     <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.validation.ProcStatsValidationTests#testProcessStatePssValue"/>
+
+    <!-- b/174735513: CtsIncrementalInstallHostTestCases (11 waiver) -->
+    <option name="compatibility:exclude-filter" value="CtsIncrementalInstallHostTestCases" />
 </configuration>
