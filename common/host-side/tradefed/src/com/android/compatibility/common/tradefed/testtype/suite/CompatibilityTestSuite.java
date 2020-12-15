@@ -44,11 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * A Test for running Compatibility Test Suite with new suite system.
- */
+/** A Test for running Compatibility Test Suite with new suite system. */
 @OptionClass(alias = "compatibility")
-public class CompatibilityTestSuite extends BaseTestSuite {
+public final class CompatibilityTestSuite extends BaseTestSuite {
 
     public static final String SUBPLAN_OPTION = "subplan";
 

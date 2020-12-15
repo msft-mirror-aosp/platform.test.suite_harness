@@ -19,7 +19,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
-import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.tradefed.build.BuildRetrievalError;
@@ -73,7 +72,10 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
 
     private static final String COMMAND_LINE_ARGS = "command_line_args";
 
-    @Option(name = RetryFactoryTest.RETRY_OPTION,
+    public static final String RETRY_OPTION = "retry";
+
+    @Option(
+            name = RETRY_OPTION,
             shortName = 'r',
             description = "retry a previous session's failed and not executed tests.",
             mandatory = true)
