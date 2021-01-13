@@ -14,15 +14,20 @@
 
 java_test_host {
     name: "compatibility-common-util-tests",
+    // Restrict visibility to only those targets that need to access it.
+    visibility: ["//visibility:private"],
     defaults: ["cts_error_prone_rules"],
 
     srcs: ["src/**/*.java"],
+//    test_options: {
+//        unit_test: true,
+//    },
 
-    libs: [
+    static_libs: [
+        "compatibility-common-util-hostsidelib",
         "junit",
         "kxml2-2.3.0",
         "tradefed",
-        "compatibility-common-util-hostsidelib",
     ],
 
     // Holds golden sample files in assets for validation
