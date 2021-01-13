@@ -27,6 +27,8 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
+import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -156,9 +158,12 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             String deviceDest = String.format("%s%s.dynamic",
                     DynamicConfig.CONFIG_FOLDER_ON_DEVICE, mModuleName);
             if (!device.pushFile(hostFile, deviceDest)) {
-                throw new TargetSetupError(String.format(
-                        "Failed to push local '%s' to remote '%s'", hostFile.getAbsolutePath(),
-                        deviceDest), device.getDeviceDescriptor());
+                throw new TargetSetupError(
+                        String.format(
+                                "Failed to push local '%s' to remote '%s'",
+                                hostFile.getAbsolutePath(), deviceDest),
+                        device.getDeviceDescriptor(),
+                        DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
             mDeviceFilePushed = deviceDest;
         }
@@ -218,7 +223,9 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
                 FileUtil.deleteFile(localConfigFile);
                 throw new TargetSetupError(
                         String.format("Fail to unpack '%s.dynamic' from resources", lookupName),
-                        e, device.getDeviceDescriptor());
+                        e,
+                        device.getDeviceDescriptor(),
+                        InfraErrorIdentifier.ARTIFACT_NOT_FOUND);
             }
             return localConfigFile;
         }
@@ -228,8 +235,11 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             String lookupName = (mDynamicConfigName != null) ? mDynamicConfigName : mModuleName;
             localConfigFile = buildHelper.getTestFile(String.format("%s.dynamic", lookupName));
         } catch (FileNotFoundException e) {
-            throw new TargetSetupError("Cannot get local dynamic config file from test directory",
-                    e, device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    "Cannot get local dynamic config file from test directory",
+                    e,
+                    device.getDeviceDescriptor(),
+                    InfraErrorIdentifier.ARTIFACT_NOT_FOUND);
         }
         return localConfigFile;
     }

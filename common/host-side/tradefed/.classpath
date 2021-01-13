@@ -12,7 +12,6 @@
 	<classpathentry kind="lib" path="tests/res/testtype/testJar1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/cts-common-util"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/cts-hostside-util"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/prebuilts/misc/common/json/json-prebuilt/linux_glibc_common/combined/json-prebuilt.jar"/>
@@ -21,5 +20,6 @@
 	<classpathentry kind="var" path="TRADEFED_ROOT/prebuilts/tools/common/google-api-java-client/1.23.0/google-api-java-client-min-repackaged-1.23.0.jar"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar"/>
 	<classpathentry kind="var" path="TRADEFED_ROOT/out/soong/.intermediates/external/guava/guava-jre/linux_glibc_common/combined/guava-jre.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/cts-common-util"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
