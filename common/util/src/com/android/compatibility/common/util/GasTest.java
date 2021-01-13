@@ -21,9 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Marks the type of test with purpose of asserting GMS requirements. */
+/** Marks the type of test with purpose of asserting GAS requirements. */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-public @interface GmsTest {
+public @interface GasTest {
     String requirement();
 }

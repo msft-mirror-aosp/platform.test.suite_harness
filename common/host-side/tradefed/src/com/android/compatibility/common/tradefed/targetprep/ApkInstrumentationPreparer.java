@@ -30,13 +30,17 @@ import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
+import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /** Target preparer that instruments an APK. */
 @OptionClass(alias = "apk-instrumentation-preparer")
@@ -59,6 +63,12 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
     @Option(name = "throw-error", description = "Whether to throw error for device test failure")
     protected boolean mThrowError = true;
 
+    @Option(
+            name = "apk-instrumentation-filter",
+            description = "The include filters of the test name to run in the apk",
+            requiredForRerun = true)
+    private Set<String> mIncludeFilters = new HashSet<>();
+
     private IConfiguration mConfiguration = null;
 
     /** {@inheritDoc} */
@@ -79,12 +89,17 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
             if (instrument(testInfo)) {
                 CLog.d("Target preparation successful");
             } else if (mThrowError) {
-                throw new TargetSetupError("Not all target preparation steps completed",
-                        device.getDeviceDescriptor());
+                throw new TargetSetupError(
+                        "Not all target preparation steps completed",
+                        device.getDeviceDescriptor(),
+                        DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
             }
         } catch (FileNotFoundException e) {
-            throw new TargetSetupError("Couldn't find apk to instrument", e,
-                    device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    "Couldn't find apk to instrument",
+                    e,
+                    device.getDeviceDescriptor(),
+                    InfraErrorIdentifier.ARTIFACT_NOT_FOUND);
         }
     }
 
@@ -128,6 +143,7 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
         instrTest.setPackageName(mPackageName);
+        instrTest.addAllIncludeFilters(mIncludeFilters);
         instrTest.setRerunMode(false);
         instrTest.setReRunUsingTestFile(false);
         // TODO: Make this configurable.
