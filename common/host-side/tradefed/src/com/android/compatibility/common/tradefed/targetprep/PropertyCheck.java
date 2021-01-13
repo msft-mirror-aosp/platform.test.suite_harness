@@ -72,7 +72,7 @@ public class PropertyCheck extends PreconditionPreparer {
                 if (mThrowError) {
                     throw new TargetSetupError(msg, device.getDeviceDescriptor());
                 } else {
-                    logWarning(msg);
+                    CLog.w(msg);
                 }
             }
             return;
