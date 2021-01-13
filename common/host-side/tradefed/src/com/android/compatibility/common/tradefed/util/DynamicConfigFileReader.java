@@ -18,8 +18,9 @@ package com.android.compatibility.common.tradefed.util;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.error.HarnessRuntimeException;
 import com.android.tradefed.log.LogUtil.CLog;
-
+import com.android.tradefed.result.error.InfraErrorIdentifier;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
@@ -93,8 +94,14 @@ public class DynamicConfigFileReader {
         CompatibilityBuildHelper helper = new CompatibilityBuildHelper(info);
         File dynamicConfig = helper.getDynamicConfigFiles().get(moduleName);
         if (dynamicConfig == null) {
-            CLog.w("Config file %s, not found in the map of dynamic configs.", moduleName);
-            return null;
+            String message =
+                    String.format(
+                            "Dynamic config file %s, not found in the map of configured dynamic"
+                                    + " configs.",
+                            moduleName);
+            CLog.w(message);
+            throw new HarnessRuntimeException(
+                    message, InfraErrorIdentifier.CONFIGURED_ARTIFACT_NOT_FOUND);
         }
         return getValuesFromConfig(dynamicConfig, key);
     }
