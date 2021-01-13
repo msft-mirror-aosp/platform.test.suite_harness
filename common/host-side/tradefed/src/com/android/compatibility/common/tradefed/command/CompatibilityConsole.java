@@ -19,7 +19,6 @@ import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider;
 import com.android.compatibility.common.tradefed.result.SubPlanHelper;
 import com.android.compatibility.common.tradefed.result.suite.CertificationResultXml;
-import com.android.compatibility.common.tradefed.testtype.ModuleRepo;
 import com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite;
 import com.android.compatibility.common.util.ResultHandler;
 import com.android.tradefed.build.BuildRetrievalError;
@@ -30,14 +29,14 @@ import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.ConfigurationFactory;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.IConfigurationFactory;
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.suite.SuiteResultHolder;
 import com.android.tradefed.testtype.Abi;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.IRemoteTest;
 import com.android.tradefed.testtype.IRuntimeHintProvider;
+import com.android.tradefed.testtype.suite.ITestSuite;
+import com.android.tradefed.testtype.suite.SuiteModuleLoader;
 import com.android.tradefed.testtype.suite.TestSuiteInfo;
 import com.android.tradefed.testtype.suite.params.ModuleParameters;
 import com.android.tradefed.util.AbiUtils;
@@ -280,19 +279,15 @@ public class CompatibilityConsole extends Console {
      * @param moduleParameter The parameter requested to be displayed. Null if all should be shown.
      */
     private void listModules(String moduleParameter) {
-        CompatibilityTestSuite test = new CompatibilityTestSuite() {
-            @Override
-            public Set<IAbi> getAbis(ITestDevice device) throws DeviceNotAvailableException {
-                Set<String> abiStrings = getAbisForBuildTargetArch();
-                Set<IAbi> abis = new LinkedHashSet<>();
-                for (String abi : abiStrings) {
-                    if (AbiUtils.isAbiSupportedByCompatibility(abi)) {
-                        abis.add(new Abi(abi, AbiUtils.getBitness(abi)));
-                    }
-                }
-                return abis;
+        CompatibilityTestSuite test = new CompatibilityTestSuite();
+        Set<String> abiStrings = ITestSuite.getAbisForBuildTargetArchFromSuite();
+        Set<IAbi> abis = new LinkedHashSet<>();
+        for (String abi : abiStrings) {
+            if (AbiUtils.isAbiSupportedByCompatibility(abi)) {
+                abis.add(new Abi(abi, AbiUtils.getBitness(abi)));
             }
-        };
+        }
+        test.setAbis(abis);
         if (getBuild() != null) {
             test.setEnableParameterizedModules(true);
             test.setEnableOptionalParameterizedModules(true);
@@ -315,7 +310,7 @@ public class CompatibilityConsole extends Console {
     private void splitModules(int shards) {
         File[] files = null;
         try {
-            files = getBuildHelper().getTestsDir().listFiles(new ModuleRepo.ConfigFilter());
+            files = getBuildHelper().getTestsDir().listFiles(new SuiteModuleLoader.ConfigFilter());
         } catch (FileNotFoundException e) {
             printLine(e.getMessage());
             e.printStackTrace();
