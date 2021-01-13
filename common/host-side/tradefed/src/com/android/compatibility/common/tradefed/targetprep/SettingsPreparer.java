@@ -21,6 +21,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 
@@ -91,10 +92,12 @@ public class SettingsPreparer extends PreconditionPreparer {
         if (mSetValue != null && !mExpectedSettingValues.isEmpty()) {
             // first ensure that the set-value given can be found in expected-values
             if (!mExpectedSettingValues.contains(mSetValue)) {
-                throw new TargetSetupError(String.format(
-                        "set-value for %s is %s, but value not found in expected-values: %s",
-                        mSettingName, mSetValue, mExpectedSettingValues.toString()),
-                        device.getDeviceDescriptor());
+                throw new TargetSetupError(
+                        String.format(
+                                "set-value for %s is %s, but value not found in expected-values: %s",
+                                mSettingName, mSetValue, mExpectedSettingValues.toString()),
+                        device.getDeviceDescriptor(),
+                        DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
             }
             String currentSettingValue = device.executeShellCommand(shellCmdGet).trim();
             // only change unexpected setting value
@@ -121,7 +124,10 @@ public class SettingsPreparer extends PreconditionPreparer {
                         "Device setting \"%s\" returned \"%s\", not found in %s",
                         mSettingName, currentSettingValue, mExpectedSettingValues.toString());
             }
-            throw new TargetSetupError(mFailureMessage, device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    mFailureMessage,
+                    device.getDeviceDescriptor(),
+                    DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
         }
     }
 

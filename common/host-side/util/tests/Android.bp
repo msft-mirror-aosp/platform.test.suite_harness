@@ -16,15 +16,19 @@ java_test_host {
     name: "compatibility-host-util-tests",
     defaults: ["cts_error_prone_rules"],
 
+    // Restrict visibility to only those targets that need to access it.
+    visibility: ["//visibility:private"],
+
+//    test_options: {
+//        unit_test: true,
+//    },
+
     srcs: ["src/**/*.java"],
 
     static_libs: [
         "objenesis-host",
         "mockito-host",
-    ],
-
-    libs: [
-        "compatibility-host-util",
+	"compatibility-host-util",
         "easymock",
         "junit",
         "json-prebuilt",
