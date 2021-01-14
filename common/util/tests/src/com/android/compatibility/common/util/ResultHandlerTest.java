@@ -92,6 +92,9 @@ public class ResultHandlerTest extends TestCase {
     private static final String METHOD_3 = "testBlah3";
     private static final String METHOD_4 = "testBlah4";
     private static final String METHOD_5 = "testBlah5";
+    private static final String METHOD_6_BRACKETS = "testBlah6[suffix]";
+    private static final String SUB_METHOD_3 = "subTestBlah3";
+    private static final String SUB_METHOD_6_BRACKETS = "subTestBlah6[suffix]";
     private static final String SUMMARY_SOURCE = String.format("%s#%s:20", CLASS_B, METHOD_4);
     private static final String SUMMARY_MESSAGE = "Headline";
     private static final double SUMMARY_VALUE = 9001;
@@ -316,7 +319,8 @@ public class ResultHandlerTest extends TestCase {
         moduleBTest3.setLog(LOGCAT);
         moduleBTest3.setScreenshot(SCREENSHOT);
         List<TestResultHistory> resultHistories = new ArrayList<TestResultHistory>();
-        TestResultHistory resultHistory = new TestResultHistory(METHOD_3, executionRecords);
+        TestResultHistory resultHistory =
+                new TestResultHistory(METHOD_3 + ":" + SUB_METHOD_3, executionRecords);
         resultHistories.add(resultHistory);
         moduleBTest3.setTestResultHistories(resultHistories);
         ITestResult moduleBTest4 = moduleBCase.getOrCreateResult(METHOD_4);
@@ -333,6 +337,15 @@ public class ResultHandlerTest extends TestCase {
         moduleBTest4.setReportLog(report);
         ITestResult moduleBTest5 = moduleBCase.getOrCreateResult(METHOD_5);
         moduleBTest5.skipped();
+        // For test name with bracket as suffix in CTS Verifier.
+        ITestResult moduleBTest6 = moduleBCase.getOrCreateResult(METHOD_6_BRACKETS);
+        moduleBTest6.setResultStatus(TestStatus.FAIL);
+        List<TestResultHistory> resultHistories2 = new ArrayList<TestResultHistory>();
+        TestResultHistory resultHistory2 =
+                new TestResultHistory(
+                        METHOD_6_BRACKETS + ":" + SUB_METHOD_6_BRACKETS, executionRecords);
+        resultHistories2.add(resultHistory2);
+        moduleBTest6.setTestResultHistories(resultHistories2);
 
         // Serialize to file
         File res =
@@ -514,7 +527,13 @@ public class ResultHandlerTest extends TestCase {
             IInvocationResult result, String expectedBuildFingerprint, boolean newTestFormat,
             boolean checkResultHistories) throws Exception {
         assertEquals("Expected 3 passes", 3, result.countResults(TestStatus.PASS));
-        assertEquals("Expected 1 failure", 1, result.countResults(TestStatus.FAIL));
+        if (checkResultHistories) {
+            assertEquals("Expected 1 failure", 1, result.countResults(TestStatus.FAIL));
+        } else {
+            // CTS Verifier needs to check the condition of the test name with bracket,
+            // so adds one more test with failure result.
+            assertEquals("Expected 2 failure", 2, result.countResults(TestStatus.FAIL));
+        }
 
         Map<String, String> buildInfo = result.getInvocationInfo();
         assertEquals("Incorrect Build Fingerprint", expectedBuildFingerprint, result.getBuildFingerprint());
@@ -558,7 +577,13 @@ public class ResultHandlerTest extends TestCase {
 
         IModuleResult moduleB = modules.get(1);
         assertEquals("Expected 2 passes", 2, moduleB.countResults(TestStatus.PASS));
-        assertEquals("Expected 1 failure", 1, moduleB.countResults(TestStatus.FAIL));
+        if (checkResultHistories) {
+            assertEquals("Expected 1 failure", 1, moduleB.countResults(TestStatus.FAIL));
+        } else {
+            // CTS Verifier needs to check the condition of the test name with bracket,
+            // so adds one more test with failure result.
+            assertEquals("Expected 2 failure", 2, moduleB.countResults(TestStatus.FAIL));
+        }
         assertEquals("Incorrect ABI", ABI, moduleB.getAbi());
         assertEquals("Incorrect name", NAME_B, moduleB.getName());
         assertEquals("Incorrect ID", ID_B, moduleB.getId());
@@ -568,7 +593,13 @@ public class ResultHandlerTest extends TestCase {
         ICaseResult moduleBCase = moduleBCases.get(0);
         assertEquals("Incorrect name", CLASS_B, moduleBCase.getName());
         List<ITestResult> moduleBResults = moduleBCase.getResults();
-        assertEquals("Expected 3 results", 3, moduleBResults.size());
+        if (checkResultHistories) {
+            assertEquals("Expected 3 results", 3, moduleBResults.size());
+        } else {
+            // CTS Verifier needs to check the condition of the test name with bracket,
+            // so adds one more test with failure result.
+            assertEquals("Expected 4 results", 4, moduleBResults.size());
+        }
         ITestResult moduleBTest3 = moduleBResults.get(0);
         assertEquals("Incorrect name", METHOD_3, moduleBTest3.getName());
         assertEquals("Incorrect result", TestStatus.FAIL, moduleBTest3.getResultStatus());
@@ -589,7 +620,10 @@ public class ResultHandlerTest extends TestCase {
             assertEquals("Expected 1 test result history", 1, resultHistories.size());
             for (TestResultHistory resultHistory : resultHistories) {
                 assertNotNull("Expected test result history", resultHistory);
-                assertEquals("Incorrect test name", METHOD_3, resultHistory.getTestName());
+                assertEquals(
+                        "Incorrect test name",
+                        SUB_METHOD_3,
+                        resultHistory.getSubTestName(METHOD_3, resultHistory.getTestName()));
                 for (TestResultHistory.ExecutionRecord execRecord :
                         resultHistory.getExecutionRecords()) {
                     assertEquals(
@@ -633,6 +667,34 @@ public class ResultHandlerTest extends TestCase {
         assertNull("Unexpected message", moduleBTest5.getMessage());
         assertNull("Unexpected stack trace", moduleBTest5.getStackTrace());
         assertNull("Unexpected report", moduleBTest5.getReportLog());
+        if (!checkResultHistories) {
+            // CTS Verifier needs to check the condition of the test name with bracket,
+            // so adds one more test with failure result.
+            ITestResult moduleBTest6 = moduleBResults.get(3);
+            assertEquals("Incorrect name", METHOD_6_BRACKETS, moduleBTest6.getName());
+            assertEquals("Incorrect result", TestStatus.FAIL, moduleBTest6.getResultStatus());
+            List<TestResultHistory> resultHistories2 = moduleBTest6.getTestResultHistories();
+            assertNotNull("Expected test result history list", resultHistories2);
+            assertEquals("Expected 1 test result history", 1, resultHistories2.size());
+            for (TestResultHistory resultHistory : resultHistories2) {
+                assertNotNull("Expected test result history", resultHistory);
+                assertEquals(
+                        "Incorrect test name",
+                        SUB_METHOD_6_BRACKETS,
+                        resultHistory.getSubTestName(
+                                METHOD_6_BRACKETS, resultHistory.getTestName()));
+                for (TestResultHistory.ExecutionRecord execRecord :
+                        resultHistory.getExecutionRecords()) {
+                    assertEquals(
+                            "Incorrect test start time", TEST_START_MS, execRecord.getStartTime());
+                    assertEquals("Incorrect test end time", TEST_END_MS, execRecord.getEndTime());
+                    assertEquals(
+                            "Incorrect test is automated",
+                            TEST_IS_AUTOMATED,
+                            execRecord.getIsAutomated());
+                }
+            }
+        }
     }
 
     /** Return all XML nodes that match the given xPathExpression. */

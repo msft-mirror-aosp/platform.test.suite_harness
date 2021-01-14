@@ -75,6 +75,14 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             description = "Whether device info collection should be skipped")
     private boolean mSkipDeviceInfo = false;
 
+    @Option(
+            name = "force-collect-device-info",
+            description =
+                    "Force device info collection. If set to true, "
+                            + SKIP_DEVICE_INFO_OPTION
+                            + " is ignored.")
+    private boolean mForceCollectDeviceInfo = false;
+
     @Option(name= "src-dir", description = "The directory to copy to the results dir")
     private String mSrcDir;
 
@@ -133,7 +141,7 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             String property = nullToEmpty(device.getProperty(entry.getValue()));
             buildInfo.addBuildAttribute(entry.getKey(), property);
         }
-        if (mSkipDeviceInfo) {
+        if (mSkipDeviceInfo && !mForceCollectDeviceInfo) {
             return;
         }
         run(testInfo);
@@ -152,6 +160,9 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
                             mLogger.testLog(deviceInfoFile.getName(), LogDataType.TEXT, source);
                         }
                     }
+                    // Some host tests depends on this code. E.g. SELinuxHostTestCases reads device
+                    // info files by querying DEVICE_INFO_DIR against buildInfo. Change this with
+                    // caution.
                     buildInfo.setFile(
                             DEVICE_INFO_DIR,
                             deviceInfoDir,
