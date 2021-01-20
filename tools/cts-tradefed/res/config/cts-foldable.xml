@@ -23,4 +23,8 @@
     <!-- CTS tests to be excluded in this plan-->
     <option name="compatibility:exclude-filter" value="CtsDeqpTestCases" />
 
+    <!-- b/171021650: CtsCameraTestCases failures due to covered lenses in folded mode-->
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.CaptureRequestTest#testAntiBandingModes" />
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.StillCaptureTest#testAeCompensation" />
+
 </configuration>
