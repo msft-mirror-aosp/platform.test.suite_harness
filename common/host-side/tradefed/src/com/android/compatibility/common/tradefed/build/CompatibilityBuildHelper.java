@@ -45,7 +45,6 @@ public class CompatibilityBuildHelper {
     public static final String START_TIME_MS = "START_TIME_MS";
     public static final String COMMAND_LINE_ARGS = "command_line_args";
 
-    private static final String ROOT_DIR2 = "ROOT_DIR2";
     private static final String DYNAMIC_CONFIG_OVERRIDE_URL = "DYNAMIC_CONFIG_OVERRIDE_URL";
     private static final String BUSINESS_LOGIC_HOST_FILE = "BUSINESS_LOGIC_HOST_FILE";
     private static final String RETRY_COMMAND_LINE_ARGS = "retry_command_line_args";
@@ -207,15 +206,14 @@ public class CompatibilityBuildHelper {
             dir = ((IFolderBuildInfo) mBuildInfo).getRootDir();
         }
         if (dir == null || !dir.exists()) {
-            dir = new File(mBuildInfo.getBuildAttributes().get(ROOT_DIR));
-            if (!dir.exists()) {
-                dir = new File(mBuildInfo.getBuildAttributes().get(ROOT_DIR2));
+            String rootDir = mBuildInfo.getBuildAttributes().get(ROOT_DIR);
+            if (rootDir != null) {
+                dir = new File(rootDir);
             }
         }
-        if (!dir.exists()) {
-            throw new FileNotFoundException(String.format(
-                    "Compatibility root directory %s does not exist",
-                    dir.getAbsolutePath()));
+        if (dir == null || !dir.exists()) {
+            throw new FileNotFoundException(
+                    String.format("Compatibility root directory %s does not exist", dir));
         }
         return dir;
     }
@@ -226,7 +224,8 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the directory does not exist
      */
     public File getDir() throws FileNotFoundException {
-        File dir = new File(getRootDir(), String.format("android-%s", getSuiteName().toLowerCase()));
+        File dir =
+                new File(getRootDir(), String.format("android-%s", getSuiteName().toLowerCase()));
         if (!dir.exists()) {
             throw new FileNotFoundException(String.format(
                     "Compatibility install folder %s does not exist",
