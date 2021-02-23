@@ -243,4 +243,7 @@
     <!-- b/146010393 -->
     <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.ImportWrappedKeyTest#testKeyStore_ImportWrappedKey_3DES_StrongBox" />
     <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.ImportWrappedKeyTest#testKeyStore_ImportWrappedKey_AES_StrongBox" />
+
+    <!-- b/175319005 -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testAppLinks_verificationStatus" />
 </configuration>
