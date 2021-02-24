@@ -28,8 +28,8 @@ import com.android.tradefed.config.Option.Importance;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.invoker.ExecutionFiles.FilesKey;
 import com.android.tradefed.invoker.ExecutionFiles;
+import com.android.tradefed.invoker.ExecutionFiles.FilesKey;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.logger.CurrentInvocation;
 import com.android.tradefed.testtype.IInvocationContextReceiver;
@@ -220,6 +220,11 @@ public class CompatibilityBuildProvider implements IDeviceBuildProvider, IInvoca
             List<File> doNotDelete = new ArrayList<>();
             // Clean up everything except the tests dir
             doNotDelete.add(((IDeviceBuildInfo) info).getTestsDir());
+            // Skip deleting dynamic config files
+            CompatibilityBuildHelper helper = new CompatibilityBuildHelper(info);
+            doNotDelete.addAll(helper.getDynamicConfigFiles().values());
+            // Still mark all those files as delete on exit to be deleted eventually
+            helper.getDynamicConfigFiles().values().forEach(f -> f.deleteOnExit());
             info.cleanUp(doNotDelete);
         } else {
             info.cleanUp();
