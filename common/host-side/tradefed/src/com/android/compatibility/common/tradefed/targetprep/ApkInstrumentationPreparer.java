@@ -135,7 +135,8 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
             CLog.i("Package %s already present on the device, uninstalling ...", mPackageName);
             device.uninstallPackage(mPackageName);
         }
-
+        // Ensure device online before attempting instrumentation
+        testInfo.getDevice().waitForDeviceAvailable();
         CLog.i("Instrumenting package: %s", mPackageName);
         CollectingTestListener listener = new CollectingTestListener();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
