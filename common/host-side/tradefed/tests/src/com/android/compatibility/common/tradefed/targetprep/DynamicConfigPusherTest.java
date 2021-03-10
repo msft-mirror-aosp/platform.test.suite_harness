@@ -247,15 +247,25 @@ public class DynamicConfigPusherTest {
     @Test
     public void testSetUp() throws Exception {
         final File[] localConfig = new File[1];
-        mPreparer = new DynamicConfigPusher() {
-            @Override
-            File mergeConfigFiles(
-                    File localConfigFile, String apfeConfigInJson, String moduleName,
-                    ITestDevice device) throws TargetSetupError {
-                localConfig[0] = localConfigFile;
-                return super.mergeConfigFiles(localConfigFile,apfeConfigInJson,moduleName,device);
-            }
-        };
+        mPreparer =
+                new DynamicConfigPusher() {
+                    @Override
+                    File mergeConfigFiles(
+                            File localConfigFile,
+                            String apfeConfigInJson,
+                            String moduleName,
+                            ITestDevice device)
+                            throws TargetSetupError {
+                        localConfig[0] = localConfigFile;
+                        return super.mergeConfigFiles(
+                                localConfigFile, apfeConfigInJson, moduleName, device);
+                    }
+
+                    @Override
+                    String resolveUrl(String suiteName) throws TargetSetupError {
+                        return null;
+                    }
+                };
         OptionSetter setter = new OptionSetter(mPreparer);
         setter.setOptionValue("config-filename", "moduleName");
         setter.setOptionValue("extract-from-resource", "true");
