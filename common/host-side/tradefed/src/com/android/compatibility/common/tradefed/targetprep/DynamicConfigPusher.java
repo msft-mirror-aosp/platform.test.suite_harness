@@ -138,19 +138,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             mVersion = buildHelper.getSuiteVersion();
         }
 
-        String apfeConfigInJson = null;
-        String requestUrl = null;
-        try {
-            requestUrl = mConfigUrl.replace("{suite-name}", suiteName)
-                    .replace("{module}", mModuleName)
-                    .replace("{version}", mVersion)
-                    .replace("{api-key}", mApiKey);
-            java.net.URL request = new URL(requestUrl);
-            apfeConfigInJson = StreamUtil.getStringFromStream(request.openStream());
-        } catch (IOException e) {
-            CLog.w(e);
-        }
-
+        String apfeConfigInJson = resolveUrl(suiteName);
         // Use DynamicConfigHandler to merge local and service configuration into one file
         File hostFile = mergeConfigFiles(localConfigFile, apfeConfigInJson, mModuleName, device);
 
@@ -259,6 +247,30 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             if (mExtractFromResource) {
                 FileUtil.deleteFile(localConfigFile);
             }
+        }
+    }
+
+    @VisibleForTesting
+    String resolveUrl(String suiteName) throws TargetSetupError {
+        try {
+            String requestUrl =
+                    mConfigUrl
+                            .replace("{suite-name}", suiteName)
+                            .replace("{module}", mModuleName)
+                            .replace("{version}", mVersion)
+                            .replace("{api-key}", mApiKey);
+            java.net.URL request = new URL(requestUrl);
+            return StreamUtil.getStringFromStream(request.openStream());
+        } catch (IOException e) {
+            throw new TargetSetupError(
+                    String.format(
+                            "Trying to access android partner remote server over internet but"
+                                    + " failed: %s",
+                            e.getMessage()),
+                    e,
+                    null,
+                    false,
+                    InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
         }
     }
 }
