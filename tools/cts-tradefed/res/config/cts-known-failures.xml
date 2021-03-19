@@ -232,7 +232,4 @@
 
     <!-- b/168186483 -->
     <option name="compatibility:exclude-filter" value="CtsTelecomTestCases android.telecom.cts.OutgoingCallTest#testPhoneStateListenerInvokedOnOutgoingEmergencyCall" />
-
-    <!-- b/175319005 -->
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileTest#testAppLinks_verificationStatus" />
 </configuration>
