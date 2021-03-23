@@ -95,12 +95,9 @@ public class MetadataReporter implements IShardableListener {
         this.mCurrentModule = id;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void testStarted(TestDescription test) {
-        mStartTime = System.currentTimeMillis();
+    public void testStarted(TestDescription test, long startTime) {
+        mStartTime = startTime;
         mTestFailed = false;
     }
 
@@ -128,12 +125,9 @@ public class MetadataReporter implements IShardableListener {
         mTestFailed = true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void testEnded(TestDescription test, HashMap<String, Metric> testMetrics) {
-        long duration = System.currentTimeMillis() - mStartTime;
+    public void testEnded(TestDescription test, long endTime, HashMap<String, Metric> testMetrics) {
+        long duration = endTime - mStartTime;
         if (mTestFailed && !mIncludeFailures) {
             return;
         }
