@@ -16,6 +16,9 @@
 
 package com.android.compatibility.common.tradefed.result;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.AbiUtils;
 import com.android.tradefed.build.BuildInfo;
@@ -28,16 +31,19 @@ import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.RunUtil;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 
-/**
- * Unit Tests for {@link MetadataReporter}
- */
-public class MetadataReporterTest extends TestCase {
+/** Unit Tests for {@link MetadataReporter}. */
+@RunWith(JUnit4.class)
+public class MetadataReporterTest {
 
     private static final String MIN_TEST_DURATION = "10";
     private static final String BUILD_NUMBER = "2";
@@ -62,7 +68,7 @@ public class MetadataReporterTest extends TestCase {
     private File mBase = null;
     private File mTests = null;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         mReporter = new MetadataReporter();
         OptionSetter setter = new OptionSetter(mReporter);
@@ -80,28 +86,26 @@ public class MetadataReporterTest extends TestCase {
         mContext.addDeviceBuildInfo("fakeDevice", mBuildInfo);
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         mReporter = null;
         FileUtil.recursiveDelete(mRoot);
     }
 
-    /**
-     * Test that when tests execute faster than the threshold we do not report then.
-     */
+    /** Test that when tests execute faster than the threshold we do not report then. */
+    @Test
     public void testResultReportingFastTests() throws Exception {
         mReporter.invocationStarted(mContext);
         mReporter.testRunStarted(ID, 3);
-        runTests(0l);
+        runTests(0L);
         Collection<MetadataReporter.TestMetadata> metadata = mReporter.getTestMetadata();
         assertTrue(metadata.isEmpty());
         mReporter.testRunEnded(10, new HashMap<String, String>());
         mReporter.invocationEnded(10);
     }
 
-    /**
-     * Test that when tests execute slower than the limit we report them if they passed.
-     */
+    /** Test that when tests execute slower than the limit we report them if they passed. */
+    @Test
     public void testResultReportingSlowTests() throws Exception {
         mReporter.invocationStarted(mContext);
         mReporter.testRunStarted(ID, 3);
@@ -117,25 +121,22 @@ public class MetadataReporterTest extends TestCase {
     /** Run 4 test. */
     private void runTests(long waitTime) {
         TestDescription test1 = new TestDescription(CLASS, METHOD_1);
-        mReporter.testStarted(test1);
-        RunUtil.getDefault().sleep(waitTime);
-        mReporter.testEnded(test1, new HashMap<String, Metric>());
+        mReporter.testStarted(test1, 0L);
+        mReporter.testEnded(test1, waitTime, new HashMap<String, Metric>());
 
         TestDescription test2 = new TestDescription(CLASS, METHOD_2);
-        mReporter.testStarted(test2);
-        RunUtil.getDefault().sleep(waitTime);
-        mReporter.testEnded(test1, new HashMap<String, Metric>());
+        mReporter.testStarted(test2, 0L);
+        mReporter.testEnded(test1, waitTime, new HashMap<String, Metric>());
 
         TestDescription test3 = new TestDescription(CLASS, METHOD_3);
-        mReporter.testStarted(test3);
-        RunUtil.getDefault().sleep(waitTime);
+        mReporter.testStarted(test3, 0L);
         mReporter.testFailed(test3, STACK_TRACE);
-        mReporter.testEnded(test3, new HashMap<String, Metric>());
+        mReporter.testEnded(test3, waitTime, new HashMap<String, Metric>());
 
         TestDescription test4 = new TestDescription(CLASS, METHOD_3);
-        mReporter.testStarted(test4);
+        mReporter.testStarted(test4, 0L);
         RunUtil.getDefault().sleep(waitTime);
         mReporter.testIgnored(test4);
-        mReporter.testEnded(test4, new HashMap<String, Metric>());
+        mReporter.testEnded(test4, waitTime, new HashMap<String, Metric>());
     }
 }
