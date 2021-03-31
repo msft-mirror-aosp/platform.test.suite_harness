@@ -42,7 +42,7 @@ import com.android.tradefed.testtype.suite.retry.ITestSuiteResultLoader;
 import com.android.tradefed.util.TestRecordInterpreter;
 import com.android.tradefed.util.proto.TestRecordProtoUtil;
 
-import com.google.api.client.util.Strings;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -201,7 +201,7 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
             newRun.passedTests = holder.passedTests;
             newRun.failedTests = holder.failedTests;
             newRun.commandLineArgs =
-                    com.google.common.base.Strings.nullToEmpty(
+                    Strings.nullToEmpty(
                             holder.context.getAttributes().getUniqueMap().get(COMMAND_LINE_ARGS));
             newRun.hostName = holder.hostName;
             mRunHistories.add(newRun);
