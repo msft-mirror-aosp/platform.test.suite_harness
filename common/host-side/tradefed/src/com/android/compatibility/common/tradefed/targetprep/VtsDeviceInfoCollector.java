@@ -26,7 +26,7 @@ import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.ArrayUtil;
 
-import com.google.api.client.util.Strings;
+import com.google.common.base.Strings;
 
 import java.util.HashMap;
 import java.util.Map;
