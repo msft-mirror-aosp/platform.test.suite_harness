@@ -455,4 +455,7 @@
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.NativeCameraDeviceTest#testCameraDeviceSharedOutputUpdate" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.NativeStillCaptureTest#testStillCapture" />
 
+    <!-- b/182588418: No AccessibilityService -->
+    <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts" />
+
 </configuration>
