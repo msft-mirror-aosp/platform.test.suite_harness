@@ -255,10 +255,8 @@
     <!-- b/110261912: Flaky tests -->
     <option name="compatibility:exclude-filter" value="CtsProviderTestCases android.provider.cts.BlockedNumberContractTest#testProviderInteractionsAsRegularApp_fails" />
 
-    <!-- b/80077839: Incompatibility with GSI (waiver) -->
-    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.HostAtomTests#testBluetoothActivityInfo" />
-    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.atom.HostAtomTests#testScreenStateChangedAtom" />
-    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases android.cts.statsd.validation.ValidationTests#testPartialWakelock" />
+    <!-- b/182949999: Remove Statsd from cts-on-gsi -->
+    <option name="compatibility:exclude-filter" value="CtsStatsdHostTestCases" />
 
     <!-- b/110417203: Flaky tests -->
     <option name="compatibility:exclude-filter" value="CtsUsageStatsTestCases android.app.usage.cts.NetworkUsageStatsTest#testUidTagStateDetails" />
@@ -456,5 +454,8 @@
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.NativeCameraDeviceTest#testCameraDeviceLogicalPhysicalSettings" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.NativeCameraDeviceTest#testCameraDeviceSharedOutputUpdate" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.NativeStillCaptureTest#testStillCapture" />
+
+    <!-- b/182588418: No AccessibilityService -->
+    <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts" />
 
 </configuration>
