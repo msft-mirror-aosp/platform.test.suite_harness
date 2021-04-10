@@ -210,15 +210,6 @@
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.cts.ContentProviderCursorWindowTest#testQuery" />
     <option name="compatibility:exclude-filter" value="CtsContentTestCases android.content.res.cts.PrivateAttributeTest#testNoAttributesAfterLastPublicAttribute" />
 
-    <!-- b/80388296: CtsDevicePolicyManagerTestCases failure flaky -->
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testDisallowAutofill_allowed" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPackageInstallUserRestrictions" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPermissionAppUpdate" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPermissionGrant" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPermissionMixedPolicies" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testPermissionPolicy" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testSuspendPackage" />
-
     <!-- b/80407835: CtsServicesHostTestCases failure flaky -->
     <option name="compatibility:exclude-filter" value="CtsServicesHostTestCases android.server.cts.KeyguardTests#testDialogShowWhenLockedActivity" />
     <option name="compatibility:exclude-filter" value="CtsServicesHostTestCases android.server.cts.KeyguardTests#testTranslucentShowWhenLockedActivity" />
@@ -233,13 +224,6 @@
     <option name="compatibility:exclude-filter" value="CtsAlarmManagerTestCases android.alarmmanager.cts.AppStandbyTests#testFrequentDelay" />
     <option name="compatibility:exclude-filter" value="CtsAlarmManagerTestCases android.alarmmanager.cts.AppStandbyTests#testRareDelay" />
     <option name="compatibility:exclude-filter" value="CtsAlarmManagerTestCases android.alarmmanager.cts.AppStandbyTests#testWorkingSetDelay" />
-
-    <!-- b/110260628: A confirmed GSI incompatibility (waiver) -->
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testCreateAndManageUser_DontSkipSetupWizard" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.DeviceOwnerTest#testSecurityLoggingWithSingleUser" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testKeyManagement" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedProfileOwnerTest#testKeyManagement" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedManagedProfileOwnerTest#testKeyManagement" />
 
     <!-- b/110405497: Flaky tests (waiver) -->
     <option name="compatibility:exclude-filter" value="CtsKeystoreTestCases android.keystore.cts.KeyAttestationTest#testDeviceIdAttestation" />
@@ -392,11 +376,6 @@
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.LayerTests#testWebViewWithLayerAndComplexClip" />
     <option name="compatibility:exclude-filter" value="CtsUiRenderingTestCases android.uirendering.cts.testclasses.PathClippingTests#testWebViewClipWithCircle" />
 
-    <!-- b/159295445, b/159294948: CtsDevicePolicyManagerTestCases -->
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.MixedDeviceOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDelegatedCertInstallerDeviceIdAttestation" />
-    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.OrgOwnedProfileOwnerTest#testDeviceIdAttestationForProfileOwner" />
-
     <!-- b/153032202: CtsSystemUiTestCases (10_r3 waiver) -->
     <option name="compatibility:exclude-filter" value="CtsSystemUiTestCases android.systemui.cts.WindowInsetsBehaviorTests#swipeOutsideLimit_systemUiVisible_allEventsCanceled"/>
 
@@ -457,5 +436,8 @@
 
     <!-- b/182588418: No AccessibilityService -->
     <option name="compatibility:exclude-filter" value="CtsAccessibilityServiceTestCases android.accessibilityservice.cts" />
+
+    <!-- b/183234756, b/80388296, b/110260628, b/159295445, b/159294948 CtsDevicePolicyManagerTestCases -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases" />
 
 </configuration>
