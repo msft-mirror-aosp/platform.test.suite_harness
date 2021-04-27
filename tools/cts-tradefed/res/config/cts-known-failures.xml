@@ -232,4 +232,7 @@
 
     <!-- b/168186483 -->
     <option name="compatibility:exclude-filter" value="CtsTelecomTestCases android.telecom.cts.OutgoingCallTest#testPhoneStateListenerInvokedOnOutgoingEmergencyCall" />
+
+    <!-- b/182630972 -->
+    <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.PinnedStackTests#testEnterPipWithMinimalSize" />
 </configuration>
