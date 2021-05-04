@@ -25,5 +25,23 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface GasTest {
+    // The GAS requirement ID the GasTest applies to.
+    // Example: @GasTest(requirement = "G-0-000")
     String requirement();
+
+    // The minimum GAS software requirement version the GasTest applies to.
+    // Example: @GasTest(requirement = "G-0-000", minSoftwareVersion = 0.1)
+    double minSoftwareVersion() default 0;
+
+    // The maximum GAS software requirement version the GasTest applies to.
+    // Example: @GasTest(requirement = "G-0-000", maxSoftwareVersion = 0.1)
+    double maxSoftwareVersion() default 0;
+
+    // The minimum GAS hardware requirement version the GasTest applies to.
+    // Example: @GasTest(requirement = "G-0-000", minHardwareVersion = 0.1)
+    double minHardwareVersion() default 0;
+
+    // The maximum GAS hardware requirement version the GasTest applies to.
+    // Example: @GasTest(requirement = "G-0-000", maxHardwareVersion = 0.1)
+    double maxHardwareVersion() default 0;
 }
