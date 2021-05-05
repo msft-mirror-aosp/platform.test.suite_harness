@@ -121,7 +121,6 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
                         "Cannot parse ODM fingerprint: " + buildFingerprint,
                         device.getDeviceDescriptor());
             }
-            // Need root to read that property
             buildVersionIncremental = device.getProperty("ro.odm.build.version.incremental");
 
             String odmDevice = device.getProperty("ro.product.odm.device");
@@ -137,7 +136,6 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
             }
         } else {
             buildFingerprint = device.getProperty("ro.vendor.build.fingerprint");
-            // Need root to read that property
             buildVersionIncremental = device.getProperty("ro.vendor.build.version.incremental");
         }
 
