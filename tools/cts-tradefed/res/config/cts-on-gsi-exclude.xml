@@ -394,4 +394,7 @@
 
     <!-- b/153032202: CtsSystemUiTestCases (10_r3 waiver) -->
     <option name="compatibility:exclude-filter" value="CtsSystemUiTestCases android.systemui.cts.WindowInsetsBehaviorTests#swipeOutsideLimit_systemUiVisible_allEventsCanceled"/>
+
+    <!-- b/183636777 Remove CtsShortcutManagerPackage4 from cts-on-gsi -->
+    <option name="compatibility:exclude-filter" value="CtsShortcutManagerPackage4" />
 </configuration>
