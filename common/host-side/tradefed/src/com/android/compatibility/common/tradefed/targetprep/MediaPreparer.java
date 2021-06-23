@@ -239,7 +239,7 @@ public class MediaPreparer extends BaseTargetPreparer {
         return device.doesFileExist(mBaseDeviceImagesDir);
     }
 
-    private static final String TOC_NAME = "contents.toc";
+    protected static final String TOC_NAME = "contents.toc";
 
     /*
      * After downloading and unzipping the media files, mLocalMediaPath must be the path to the
