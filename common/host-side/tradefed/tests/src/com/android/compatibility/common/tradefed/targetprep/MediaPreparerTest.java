@@ -30,6 +30,9 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.TargetSetupError;
+import com.android.tradefed.util.FileUtil;
+
+import java.io.File;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -237,5 +240,96 @@ public class MediaPreparerTest {
         EasyMock.replay(mMockDevice);
         mMediaPreparer.setUp(mTestInfo);
         EasyMock.verify(mMockDevice);
+    }
+
+    private void setUpTocTests() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mOptionSetter.setOptionValue("media-folder-name", "toc");
+        mOptionSetter.setOptionValue("simple-caching-semantics", "false");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/toc/";
+
+        EasyMock.expect(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE))
+                .andReturn("/sdcard")
+                .once();
+        EasyMock.expect(mMockDevice.doesFileExist(EasyMock.anyObject()))
+                .andReturn(false)
+                .anyTimes();
+        EasyMock.expect(mMockDevice.getDeviceDescriptor()).andStubReturn(null);
+        EasyMock.expect(mMockDevice.pushDir(EasyMock.anyObject(), EasyMock.anyObject()))
+                .andReturn(true)
+                .anyTimes();
+        EasyMock.expect(mMockDevice.executeShellCommand(EasyMock.anyObject()))
+                .andReturn("")
+                .anyTimes();
+
+        EasyMock.replay(mMockDevice);
+    }
+
+    /** Test that if TOC doesn't exist, we download again */
+    @Test
+    public void testMissingTOC() throws Exception {
+        setUpTocTests();
+
+        File mediaFolder = mMediaPreparer.getMediaDir();
+        mediaFolder.mkdirs();
+
+        // In order to test non-existent TOC triggers a download, need to ensure there is at
+        // least a file in the folder, otherwise empty folder triggers a download */
+        File file = new File(mediaFolder, "file");
+        file.createNewFile();
+
+        try {
+            mMediaPreparer.setUp(mTestInfo);
+            fail("TargetSetupError expected");
+        } catch (TargetSetupError e) {
+            // Expected
+        }
+
+        EasyMock.verify(mMockDevice);
+        FileUtil.recursiveDelete(mediaFolder);
+    }
+
+    /** Test that if TOC has a non-existent file, we download again */
+    @Test
+    public void testNonExistentFileInTOC() throws Exception {
+        setUpTocTests();
+        File mediaFolder = mMediaPreparer.getMediaDir();
+        mediaFolder.mkdirs();
+
+        File file = new File(mediaFolder, "file");
+        file.createNewFile();
+
+        File tocFile = new File(mediaFolder, mMediaPreparer.TOC_NAME);
+        String content = "file\n" + "non-existent-file";
+        FileUtil.writeToFile(content, tocFile);
+
+        try {
+            mMediaPreparer.setUp(mTestInfo);
+            fail("TargetSetupError expected");
+        } catch (TargetSetupError e) {
+            // Expected
+        }
+
+        EasyMock.verify(mMockDevice);
+        FileUtil.recursiveDelete(mediaFolder);
+    }
+
+    /** Test that if TOC is valid, we don't download again */
+    @Test
+    public void testValidTOC() throws Exception {
+        setUpTocTests();
+
+        File mediaFolder = mMediaPreparer.getMediaDir();
+        mediaFolder.mkdirs();
+        File file = new File(mediaFolder, "file");
+        file.createNewFile();
+
+        File tocFile = new File(mediaFolder, mMediaPreparer.TOC_NAME);
+        String content = "file\n";
+        FileUtil.writeToFile(content, tocFile);
+
+        mMediaPreparer.setUp(mTestInfo);
+        EasyMock.verify(mMockDevice);
+        FileUtil.recursiveDelete(mediaFolder);
     }
 }
