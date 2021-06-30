@@ -40,6 +40,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,8 +90,8 @@ public final class CompatibilityTestSuite extends BaseTestSuite {
 
     @Override
     public SuiteModuleLoader createModuleLoader(
-            Map<String, List<SuiteTestFilter>> includeFiltersFormatted,
-            Map<String, List<SuiteTestFilter>> excludeFiltersFormatted,
+            Map<String, LinkedHashSet<SuiteTestFilter>> includeFiltersFormatted,
+            Map<String, LinkedHashSet<SuiteTestFilter>> excludeFiltersFormatted,
             List<String> testArgs,
             List<String> moduleArgs) {
         return new CompatibilitySuiteModuleLoader(includeFiltersFormatted,
