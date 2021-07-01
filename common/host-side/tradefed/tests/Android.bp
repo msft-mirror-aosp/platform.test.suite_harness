@@ -22,9 +22,9 @@ java_test_host {
     // Restrict visibility to only those targets that need to access it.
     visibility: ["//visibility:private"],
 
-//    test_options: {
-//       unit_test: true,
-//  },
+    test_options: {
+        unit_test: true,
+    },
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
 
