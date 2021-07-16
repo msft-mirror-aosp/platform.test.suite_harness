@@ -16,13 +16,13 @@
 
 package com.android.compatibility.common.util;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.android.compatibility.common.util.BusinessLogic.BusinessLogicRule;
 import com.android.compatibility.common.util.BusinessLogic.BusinessLogicRuleAction;
@@ -235,7 +235,7 @@ public class BusinessLogicTest {
     public void testLogicWithWrongNodeName() throws Exception {
         File file = createFileFromStr(CORRECT_LOGIC.replace("testName", "testNam3"));
         try {
-            BusinessLogic bl = BusinessLogicFactory.createFromFile(file);
+            BusinessLogicFactory.createFromFile(file);
         } finally {
             FileUtil.deleteFile(file);
         }
