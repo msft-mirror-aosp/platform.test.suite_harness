@@ -19,15 +19,16 @@ package com.android.compatibility.common.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 /** Unit tests for {@link PropertyUtil} */
 @RunWith(JUnit4.class)
@@ -37,93 +38,81 @@ public class PropertyUtilTest {
     private static final String VENDOR_FIRST_API_LEVEL = "ro.board.first_api_level";
     private static final String VNDK_VERSION = "ro.vndk.version";
 
-    private PropertyUtil mPropertyUtil;
     private ITestDevice mMockDevice;
 
     @Before
     public void setUp() {
-        mPropertyUtil = new PropertyUtil();
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
+        mMockDevice = Mockito.mock(ITestDevice.class);
     }
 
     @Test
     public void testGetFirstApiLevelFromProductFirstApiLevel() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(FIRST_API_LEVEL)).andReturn("31");
-        EasyMock.replay(mMockDevice);
-        assertEquals(31, mPropertyUtil.getFirstApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(FIRST_API_LEVEL)).thenReturn("31");
+        assertEquals(31, PropertyUtil.getFirstApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetFirstApiLevelFromSdkVersion() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(FIRST_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getApiLevel()).andReturn(31);
-        EasyMock.replay(mMockDevice);
-        assertEquals(31, mPropertyUtil.getFirstApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(FIRST_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getApiLevel()).thenReturn(31);
+
+        assertEquals(31, PropertyUtil.getFirstApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetVendorApiLevelFromVendorApiLevel() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn("31");
-        EasyMock.replay(mMockDevice);
-        assertEquals(31, mPropertyUtil.getVendorApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn("31");
+
+        assertEquals(31, PropertyUtil.getVendorApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetVendorApiLevelFromVendorFirstApiLevel() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).andReturn("31");
-        EasyMock.replay(mMockDevice);
-        assertEquals(31, mPropertyUtil.getVendorApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn("31");
+
+        assertEquals(31, PropertyUtil.getVendorApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetVendorApiLevelFromVndkVersion() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VNDK_VERSION)).andReturn("31");
-        EasyMock.replay(mMockDevice);
-        assertEquals(31, mPropertyUtil.getVendorApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VNDK_VERSION)).thenReturn("31");
+
+        assertEquals(31, PropertyUtil.getVendorApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetVendorApiLevelCurrent() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VNDK_VERSION)).andReturn(null);
-        EasyMock.replay(mMockDevice);
-        assertEquals(PropertyUtil.API_LEVEL_CURRENT, mPropertyUtil.getVendorApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VNDK_VERSION)).thenReturn(null);
+
+        assertEquals(PropertyUtil.API_LEVEL_CURRENT, PropertyUtil.getVendorApiLevel(mMockDevice));
     }
 
     @Test
     public void testGetVendorApiLevelCurrent2() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VNDK_VERSION)).andReturn("S");
-        EasyMock.replay(mMockDevice);
-        assertEquals(PropertyUtil.API_LEVEL_CURRENT, mPropertyUtil.getVendorApiLevel(mMockDevice));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VNDK_VERSION)).thenReturn("S");
+
+        assertEquals(PropertyUtil.API_LEVEL_CURRENT, PropertyUtil.getVendorApiLevel(mMockDevice));
     }
 
     @Test
     public void testIsVendorApiLevelNewerThan() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn(null);
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).andReturn("30");
-        EasyMock.replay(mMockDevice);
-        assertFalse(mPropertyUtil.isVendorApiLevelNewerThan(mMockDevice, 30));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn("30");
+
+        assertFalse(PropertyUtil.isVendorApiLevelNewerThan(mMockDevice, 30));
     }
 
     @Test
     public void testIsVendorApiLevelAtLeast() throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty(VENDOR_API_LEVEL)).andReturn("30");
-        EasyMock.replay(mMockDevice);
-        assertTrue(mPropertyUtil.isVendorApiLevelAtLeast(mMockDevice, 30));
-        EasyMock.verify(mMockDevice);
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn("30");
+
+        assertTrue(PropertyUtil.isVendorApiLevelAtLeast(mMockDevice, 30));
     }
 }

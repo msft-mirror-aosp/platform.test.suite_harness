@@ -16,6 +16,9 @@
 
 package com.android.compatibility.common.tradefed.targetprep;
 
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
+
 import com.android.tradefed.build.DeviceBuildInfo;
 import com.android.tradefed.build.IDeviceBuildInfo;
 import com.android.tradefed.config.OptionSetter;
@@ -25,11 +28,17 @@ import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.TargetSetupError;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
-import org.easymock.EasyMock;
-
-public class PropertyCheckTest extends TestCase {
+/**
+ * Unit tests for {@link PropertyCheck}.
+ */
+@RunWith(JUnit4.class)
+public class PropertyCheckTest {
 
     private PropertyCheck mPropertyCheck;
     private IDeviceBuildInfo mMockBuildInfo;
@@ -41,50 +50,53 @@ public class PropertyCheckTest extends TestCase {
     private static final String ACTUAL_VALUE = "mock_actual_value";
     private static final String BAD_VALUE = "mock_bad_value";
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         mPropertyCheck = new PropertyCheck();
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
+        mMockDevice = Mockito.mock(ITestDevice.class);
         mMockBuildInfo = new DeviceBuildInfo("0", "");
         mOptionSetter = new OptionSetter(mPropertyCheck);
-        EasyMock.expect(mMockDevice.getProperty(PROPERTY)).andReturn(ACTUAL_VALUE).anyTimes();
-        EasyMock.expect(mMockDevice.getDeviceDescriptor()).andReturn(null).anyTimes();
+        when(mMockDevice.getProperty(PROPERTY)).thenReturn(ACTUAL_VALUE);
+        when(mMockDevice.getDeviceDescriptor()).thenReturn(null);
         IInvocationContext context = new InvocationContext();
         context.addAllocatedDevice("device", mMockDevice);
         context.addDeviceBuildInfo("device", mMockBuildInfo);
         mTestInfo = TestInformation.newBuilder().setInvocationContext(context).build();
     }
 
+    @Test
     public void testWarningMatch() throws Exception {
         mOptionSetter.setOptionValue("property-name", PROPERTY);
         mOptionSetter.setOptionValue("expected-value", ACTUAL_VALUE);
         mOptionSetter.setOptionValue("throw-error", "false");
-        EasyMock.replay(mMockDevice);
+
         mPropertyCheck.run(mTestInfo); // no warnings or errors
     }
 
+    @Test
     public void testWarningMismatch() throws Exception {
         mOptionSetter.setOptionValue("property-name", PROPERTY);
         mOptionSetter.setOptionValue("expected-value", BAD_VALUE);
         mOptionSetter.setOptionValue("throw-error", "false");
-        EasyMock.replay(mMockDevice);
+
         mPropertyCheck.run(mTestInfo); // should only print a warning
     }
 
+    @Test
     public void testErrorMatch() throws Exception {
         mOptionSetter.setOptionValue("property-name", PROPERTY);
         mOptionSetter.setOptionValue("expected-value", ACTUAL_VALUE);
         mOptionSetter.setOptionValue("throw-error", "true");
-        EasyMock.replay(mMockDevice);
+
         mPropertyCheck.run(mTestInfo); // no warnings or errors
     }
 
+    @Test
     public void testErrorMismatch() throws Exception {
         mOptionSetter.setOptionValue("property-name", PROPERTY);
         mOptionSetter.setOptionValue("expected-value", BAD_VALUE);
         mOptionSetter.setOptionValue("throw-error", "true");
-        EasyMock.replay(mMockDevice);
+
         try {
             mPropertyCheck.run(mTestInfo); // expecting TargetSetupError
             fail("TargetSetupError expected");
