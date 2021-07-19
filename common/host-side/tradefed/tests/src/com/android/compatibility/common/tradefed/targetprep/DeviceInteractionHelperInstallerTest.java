@@ -31,7 +31,6 @@ import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.AaptParser;
 import com.android.tradefed.util.FileUtil;
 
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,9 +54,9 @@ public class DeviceInteractionHelperInstallerTest {
 
     @Before
     public void setUp() throws Exception {
-        mMockDevice = EasyMock.createStrictMock(ITestDevice.class);
-        EasyMock.expect(mMockDevice.getDeviceDescriptor()).andStubReturn(null);
-        EasyMock.expect(mMockDevice.getSerialNumber()).andStubReturn("SERIAL");
+        mMockDevice = Mockito.mock(ITestDevice.class);
+        when(mMockDevice.getDeviceDescriptor()).thenReturn(null);
+        when(mMockDevice.getSerialNumber()).thenReturn("SERIAL");
         mPreparer =
                 new DeviceInteractionHelperInstaller() {
                     @Override
@@ -69,16 +68,16 @@ public class DeviceInteractionHelperInstallerTest {
     }
 
     private void expectHelperInstall(File file) throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.isAppEnumerationSupported()).andReturn(true);
-        EasyMock.expect(
+        when(mMockDevice.isAppEnumerationSupported()).thenReturn(true);
+        when(
                         mMockDevice.installPackage(
-                                EasyMock.eq(file), EasyMock.anyBoolean(), EasyMock.anyObject()))
-                .andReturn(null);
+                                Mockito.eq(file), Mockito.anyBoolean(), Mockito.any()))
+                .thenReturn(null);
     }
 
     private void expectDeviceProperty(String value) throws DeviceNotAvailableException {
-        EasyMock.expect(mMockDevice.getProperty("ro.vendor.cts_interaction_helper_packages"))
-                .andReturn(value);
+        when(mMockDevice.getProperty("ro.vendor.cts_interaction_helper_packages"))
+                .thenReturn(value);
     }
 
     /** Creates a local file in dir and makes testInfo.getDependencyFile() return it. */
@@ -118,9 +117,7 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(baseApk);
             expectDeviceProperty(null);
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -138,9 +135,7 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(baseApk);
             expectDeviceProperty("");
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -164,13 +159,10 @@ public class DeviceInteractionHelperInstallerTest {
 
             expectHelperInstall(baseApk);
             expectDeviceProperty("com.helper1:com.helper2");
-            EasyMock.checkOrder(mMockDevice, false); // Package install order is nondeterministic.
             expectHelperInstall(extraApk);
             expectHelperInstall(extraApk2);
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -192,9 +184,7 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(otherApk);
             expectDeviceProperty(null);
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -218,15 +208,12 @@ public class DeviceInteractionHelperInstallerTest {
             mockApkPackage(extraApk2, "com.helper2");
 
             expectHelperInstall(baseApk);
-            EasyMock.expect(mMockDevice.getProperty("ro.other_property"))
-                    .andReturn("com.helper1:com.helper2");
-            EasyMock.checkOrder(mMockDevice, false); // Package install order is nondeterministic.
+            when(mMockDevice.getProperty("ro.other_property"))
+                    .thenReturn("com.helper1:com.helper2");
             expectHelperInstall(extraApk);
             expectHelperInstall(extraApk2);
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -246,15 +233,12 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(baseApk);
             expectDeviceProperty("MyCtsHelpers");
 
-            EasyMock.replay(mMockDevice);
             try {
                 mPreparer.setUp(testInfo);
                 fail("BuildError not thrown");
             } catch (BuildError e) {
                 // expected
             }
-
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -275,15 +259,12 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(baseApk);
             expectDeviceProperty("MyCtsHelpers");
 
-            EasyMock.replay(mMockDevice);
             try {
                 mPreparer.setUp(testInfo);
                 fail("BuildError not thrown");
             } catch (BuildError e) {
                 // expected
             }
-
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -305,14 +286,12 @@ public class DeviceInteractionHelperInstallerTest {
             expectHelperInstall(baseApk);
             expectDeviceProperty("MyCtsHelpers");
 
-            EasyMock.replay(mMockDevice);
             try {
                 mPreparer.setUp(testInfo);
                 fail("BuildError not thrown");
             } catch (BuildError e) {
                 // expected
             }
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -335,9 +314,7 @@ public class DeviceInteractionHelperInstallerTest {
             // Skips installing MyMissingHelpers and installs remaining packages in the list.
             expectHelperInstall(extraApk);
 
-            EasyMock.replay(mMockDevice);
             mPreparer.setUp(testInfo);
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -354,14 +331,12 @@ public class DeviceInteractionHelperInstallerTest {
             // Should throw TargetSetupError after failing to find the default helpers.
             // No search for other files.
 
-            EasyMock.replay(mMockDevice);
             try {
                 mPreparer.setUp(testInfo);
                 fail("BuildError not thrown");
             } catch (BuildError e) {
                 // expected
             }
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
@@ -376,23 +351,21 @@ public class DeviceInteractionHelperInstallerTest {
             File baseApk =
                     createFindableFile(testsDir, "com.android.cts.helpers.aosp.apk", testInfo);
 
-            EasyMock.expect(mMockDevice.isAppEnumerationSupported()).andReturn(true);
-            EasyMock.expect(
+            when(mMockDevice.isAppEnumerationSupported()).thenReturn(true);
+            when(
                             mMockDevice.installPackage(
-                                    EasyMock.eq(baseApk),
-                                    EasyMock.anyBoolean(),
-                                    EasyMock.anyObject()))
-                    .andReturn("Install failed");
+                                    Mockito.eq(baseApk),
+                                    Mockito.anyBoolean(),
+                                    Mockito.any()))
+                    .thenReturn("Install failed");
             // Should throw TargetSetupError after failing to install and not do any further steps.
 
-            EasyMock.replay(mMockDevice);
             try {
                 mPreparer.setUp(testInfo);
                 fail("TargetSetupError not thrown");
             } catch (TargetSetupError e) {
                 // expected
             }
-            EasyMock.verify(mMockDevice);
         } finally {
             FileUtil.recursiveDelete(testsDir);
         }
