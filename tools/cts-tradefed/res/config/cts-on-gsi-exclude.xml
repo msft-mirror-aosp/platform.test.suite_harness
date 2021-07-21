@@ -451,5 +451,7 @@
     <option name="compatibility:module-arg" value="CtsDeqpTestCases:include-filter:dEQP-GLES2.functional.prerequisite#*" />
     <option name="compatibility:module-arg" value="CtsDeqpTestCases:include-filter:dEQP-GLES3.functional.prerequisite#*" />
     <option name="compatibility:module-arg" value="CtsDeqpTestCases:include-filter:dEQP-VK.api.smoke#*" />
+    <!-- CtsCameraTestCases 11.0_r4 (159151247 and 193269651)  -->
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.ExtendedCameraCharacteristicsTest#testCameraOrientationAlignedWithDevice"/>
 
 </configuration>
