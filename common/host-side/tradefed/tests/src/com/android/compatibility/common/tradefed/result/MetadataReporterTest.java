@@ -109,7 +109,7 @@ public class MetadataReporterTest {
     public void testResultReportingSlowTests() throws Exception {
         mReporter.invocationStarted(mContext);
         mReporter.testRunStarted(ID, 3);
-        runTests(50l);
+        runTests(50L);
 
         Collection<MetadataReporter.TestMetadata> metadata = mReporter.getTestMetadata();
         assertEquals(metadata.size(), 2); // Two passing slow tests.
