@@ -107,6 +107,9 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             CLog.i("Device info already collected, skipping DeviceInfoCollector.");
             return;
         }
+        if (mSkipDeviceInfo && !mForceCollectDeviceInfo) {
+            return;
+        }
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
         DevicePropertyInfo devicePropertyInfo =
@@ -140,9 +143,6 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
                 devicePropertyInfo.getPropertytMapWithPrefix(PREFIX_TAG).entrySet()) {
             String property = nullToEmpty(device.getProperty(entry.getValue()));
             buildInfo.addBuildAttribute(entry.getKey(), property);
-        }
-        if (mSkipDeviceInfo && !mForceCollectDeviceInfo) {
-            return;
         }
         run(testInfo);
         try {
