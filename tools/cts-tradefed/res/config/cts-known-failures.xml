@@ -235,4 +235,11 @@
 
     <!-- b/182630972 -->
     <option name="compatibility:exclude-filter" value="CtsWindowManagerDeviceTestCases android.server.wm.PinnedStackTests#testEnterPipWithMinimalSize" />
+
+    <!-- b/192998823 -->
+    <option name="compatibility:exclude-filter" value="CtsCarrierApiTestCases android.carrierapi.cts.CarrierApiTest#testVoiceMailNumber" />
+
+    <!-- b/194293021 -->
+    <option name="compatibility:exclude-filter" value="CtsPrintTestCases" />
+    <option name="compatibility:exclude-filter" value="CtsPrintTestCases[instant]" />
 </configuration>
