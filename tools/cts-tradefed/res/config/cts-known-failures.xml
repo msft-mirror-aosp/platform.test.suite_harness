@@ -241,4 +241,5 @@
 
     <!-- b/194293021 -->
     <option name="compatibility:exclude-filter" value="CtsPrintTestCases" />
+    <option name="compatibility:exclude-filter" value="CtsPrintTestCases[instant]" />
 </configuration>
