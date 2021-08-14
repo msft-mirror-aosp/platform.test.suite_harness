@@ -23,9 +23,9 @@ java_test_host {
     defaults: ["cts_error_prone_rules"],
 
     srcs: ["src/**/*.java"],
-    test_options: {
-        unit_test: true,
-    },
+//    test_options: {
+//        unit_test: true,
+//    },
 
     static_libs: [
         "compatibility-common-util-hostsidelib",
