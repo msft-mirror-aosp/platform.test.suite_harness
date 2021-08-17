@@ -51,6 +51,8 @@ public class PropertyUtil {
     public static final String GOOGLE_SETTINGS_QUERY =
             "content query --uri content://com.google.settings/partner";
 
+    private PropertyUtil() {}
+
     /** Returns whether the device build is a user build */
     public static boolean isUserBuild(ITestDevice device) throws DeviceNotAvailableException {
         return propertyEquals(device, BUILD_TYPE_PROPERTY, "user");

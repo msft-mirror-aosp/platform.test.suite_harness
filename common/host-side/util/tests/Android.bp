@@ -33,7 +33,6 @@ java_test_host {
         "objenesis-host",
         "mockito-host",
 	"compatibility-host-util",
-        "easymock",
         "junit",
         "json-prebuilt",
         "tradefed",
