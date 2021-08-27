@@ -80,6 +80,7 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
         BUILD_KEYS.put("cts:build_vendor_fingerprint", "ro.vendor.build.fingerprint");
         BUILD_KEYS.put("cts:build_vendor_manufacturer", "ro.product.vendor.manufacturer");
         BUILD_KEYS.put("cts:build_vendor_model", "ro.product.vendor.model");
+        BUILD_KEYS.put("cts:build_bootimage_fingerprint", "ro.bootimage.build.fingerprint");
 
         BUILD_LEGACY_PROPERTIES.put(
                 "ro.product.vendor.manufacturer", "ro.vendor.product.manufacturer");
