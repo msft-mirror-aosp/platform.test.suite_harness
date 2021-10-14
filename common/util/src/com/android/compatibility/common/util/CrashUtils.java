@@ -53,6 +53,9 @@ public class CrashUtils {
     public static final String PID = "pid";
     public static final String TID = "tid";
     public static final String FAULT_ADDRESS = "faultaddress";
+    public static final String FILENAME = "filename";
+    public static final String METHOD = "method";
+    public static final String BACKTRACE = "backtrace";
     // Matches the smallest blob that has the appropriate header and footer
     private static final Pattern sCrashBlobPattern =
             Pattern.compile("DEBUG\\s+?:( [*]{3})+?.*?DEBUG\\s+?:\\s+?backtrace:", Pattern.DOTALL);
@@ -67,6 +70,20 @@ public class CrashUtils {
     // Matches the abort message line
     private static Pattern sAbortMessagePattern =
             Pattern.compile("(?i)Abort message: (.*)");
+    // Matches one backtrace NOTE line, exactly as tombstone_proto_to_text's print_thread_backtrace
+    private static Pattern sBacktraceNotePattern =
+            Pattern.compile("[0-9\\-\\s:.]+[A-Z] DEBUG\\s+:\\s+NOTE: .*");
+    // Matches one backtrace frame, exactly as tombstone_proto_to_text's print_backtrace
+    // Two versions, because we want to exclude the BuildID section if it exists
+    private static Pattern sBacktraceFrameWithBuildIdPattern =
+            Pattern.compile(
+                    "[0-9\\-\\s:.]+[A-Z] DEBUG\\s+:\\s+#[0-9]+ pc [0-9a-fA-F]+  "
+                            + "(?<filename>[^\\s]+)(\\s+\\((?<method>.*)\\))?"
+                            + "\\s+\\(BuildId: .*\\)");
+    private static Pattern sBacktraceFrameWithoutBuildIdPattern =
+            Pattern.compile(
+                    "[0-9\\-\\s:.]+[A-Z] DEBUG\\s+:\\s+#[0-9]+ pc [0-9a-fA-F]+  "
+                            + "(?<filename>[^\\s]+)(\\s+\\((?<method>.*)\\))?");
 
     public static final String SIGSEGV = "SIGSEGV";
     public static final String SIGBUS = "SIGBUS";
@@ -185,6 +202,7 @@ public class CrashUtils {
             String process = null;
             String signal = null;
             String abortMessage = null;
+            List<BacktraceFrameInfo> backtraceFrames = new ArrayList<BacktraceFrameInfo>();
 
             Matcher pidtidNameMatcher = sPidtidNamePattern.matcher(crashStr);
             if (pidtidNameMatcher.find()) {
@@ -214,6 +232,46 @@ public class CrashUtils {
                 abortMessage = abortMessageMatcher.group(1);
             }
 
+            // Continue on after the crash block to find all the stacktrace entries.
+            // The format is from tombstone_proto_to_text.cpp's print_thread_backtrace()
+            // This will scan the logcat lines until it finds a line that does not match,
+            // or end of log.
+            int currentIndex = crashBlobFinder.end();
+            while (true) {
+                int firstEndline = input.indexOf('\n', currentIndex);
+                int secondEndline = input.indexOf('\n', firstEndline + 1);
+                currentIndex = secondEndline;
+                if (firstEndline == -1 || secondEndline == -1) break;
+
+                String nextLine = input.substring(firstEndline + 1, secondEndline);
+
+                Matcher backtraceNoteMatcher = sBacktraceNotePattern.matcher(nextLine);
+                if (backtraceNoteMatcher.matches()) {
+                    continue;
+                }
+
+                Matcher backtraceFrameWithBuildIdMatcher =
+                        sBacktraceFrameWithBuildIdPattern.matcher(nextLine);
+                Matcher backtraceFrameWithoutBuildIdMatcher =
+                        sBacktraceFrameWithoutBuildIdPattern.matcher(nextLine);
+
+                Matcher backtraceFrameMatcher = null;
+                if (backtraceFrameWithBuildIdMatcher.matches()) {
+                    backtraceFrameMatcher = backtraceFrameWithBuildIdMatcher;
+
+                } else if (backtraceFrameWithoutBuildIdMatcher.matches()) {
+                    backtraceFrameMatcher = backtraceFrameWithoutBuildIdMatcher;
+
+                } else {
+                    break;
+                }
+
+                backtraceFrames.add(
+                        new BacktraceFrameInfo(
+                                backtraceFrameMatcher.group("filename"),
+                                backtraceFrameMatcher.group("method")));
+            }
+
             try {
                 JSONObject crash = new JSONObject();
                 crash.put(PID, pid);
@@ -224,10 +282,36 @@ public class CrashUtils {
                         faultAddress == null ? null : faultAddress.toString(16));
                 crash.put(SIGNAL, signal);
                 crash.put(ABORT_MESSAGE, abortMessage);
+                JSONArray backtrace = new JSONArray();
+                for (BacktraceFrameInfo frame : backtraceFrames) {
+                    backtrace.put(
+                            new JSONObject()
+                                    .put(FILENAME, frame.getFilename())
+                                    .put(METHOD, frame.getMethod()));
+                }
+                crash.put(BACKTRACE, backtrace);
                 crashes.put(crash);
             } catch (JSONException e) {}
         }
         return crashes;
+    }
+
+    public static class BacktraceFrameInfo {
+        private final String filename;
+        private final String method;
+
+        public BacktraceFrameInfo(String filename, String method) {
+            this.filename = filename;
+            this.method = method;
+        }
+
+        public String getFilename() {
+            return this.filename;
+        }
+
+        public String getMethod() {
+            return this.method;
+        }
     }
 
     public static class Config {
