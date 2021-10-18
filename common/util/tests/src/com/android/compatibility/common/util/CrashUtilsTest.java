@@ -16,6 +16,7 @@
 
 package com.android.compatibility.common.util;
 
+import com.android.compatibility.common.util.CrashUtils.Config.BacktraceFilterPattern;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -501,13 +502,13 @@ public class CrashUtilsTest {
     }
 
     public JSONObject createCrashJson(
-                int pid,
-                int tid,
-                String name,
-                String process,
-                String faultaddress,
-                String signal,
-                String abortMessage) {
+            int pid,
+            int tid,
+            String name,
+            String process,
+            String faultaddress,
+            String signal,
+            String abortMessage) {
         return createCrashJson(
                 pid, tid, name, process, faultaddress, signal, abortMessage, ImmutableList.of());
     }
@@ -655,5 +656,146 @@ public class CrashUtilsTest {
                 .appendSignals(CrashUtils.SIGABRT)
                 .setProcessPatterns(Pattern.compile("CVE-2015-6616-2"))));
 
+    }
+
+    @Test
+    public void testBacktraceFilterIncludeFilename() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libstagefright", null),
+                                        new BacktraceFilterPattern("libaudioflinger\\.so", null))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libstagefright", null))));
+    }
+
+    @Test
+    public void testBacktraceFilterExcludeFilename() throws Exception {
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libaudioutils", null))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libstagefright", null),
+                                        new BacktraceFilterPattern("libaudioflinger\\.so", null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libstagefright", null))));
+    }
+
+    @Test
+    public void testBacktraceFilterIncludeMethodName() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern(null, "memcpy_to_float"))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern(null, "strlen"),
+                                        new BacktraceFilterPattern(null, "memcpy_[^_]+_float"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(new BacktraceFilterPattern(null, "strlen"))));
+    }
+
+    @Test
+    public void testBacktraceFilterExcludeMethodName() throws Exception {
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern(null, "memcpy_to_float"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern(null, "strlen"),
+                                        new BacktraceFilterPattern(null, "memcpy_[^_]+_float"))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(new BacktraceFilterPattern(null, "strlen"))));
+    }
+
+    @Test
+    public void testBacktraceFilterCombinations() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(new BacktraceFilterPattern(null, null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", "memcpy"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", "strlen"))));
     }
 }
