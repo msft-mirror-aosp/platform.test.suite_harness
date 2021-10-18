@@ -332,4 +332,33 @@
 06-15 19:57:33.678 26192 26192 F DEBUG   :     #14 pc 00019e3d  /system/lib/libc.so (__start_thread+6)
 06-15 19:57:33.839   934  2991 W NativeCrashListener: Couldn't find ProcessRecord for pid 12736
 06-15 19:57:33.846   934   952 I BootReceiver: Copying /data/tombstones/tombstone_01 to DropBox (SYSTEM_TOMBSTONE)
+--------- beginning of main
+10-01 10:04:58.301  8937  8937 E DEBUG   : failed to read /proc/uptime: Permission denied
+--------- beginning of crash
+10-01 10:04:58.337  8937  8937 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-01 10:04:58.338  8937  8937 F DEBUG   : Build fingerprint: 'generic/cf_x86_64_phone/vsoc_x86_64:12/SC/eng.duytru.20210930.171415:userdebug/dev-keys'
+10-01 10:04:58.338  8937  8937 F DEBUG   : Revision: '0'
+10-01 10:04:58.338  8937  8937 F DEBUG   : ABI: 'x86_64'
+10-01 10:04:58.338  8937  8937 F DEBUG   : Timestamp: 2021-10-01 10:04:58.301278442-0700
+10-01 10:04:58.338  8937  8937 F DEBUG   : Process uptime: 0s
+10-01 10:04:58.338  8937  8937 F DEBUG   : Cmdline: /data/local/tmp/CVE-2021-0684
+10-01 10:04:58.338  8937  8937 F DEBUG   : pid: 8925, tid: 8925, name: CVE-2021-0684  >>> /data/local/tmp/CVE-2021-0684 <<<
+10-01 10:04:58.338  8937  8937 F DEBUG   : uid: 2000
+10-01 10:04:58.338  8937  8937 F DEBUG   : signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0x7e772b8cfbe0
+10-01 10:04:58.338  8937  8937 F DEBUG   :     rax 0000000000000001  rbx 00007e776addf910  rcx 0000000000000010  rdx 00000000000002f0
+10-01 10:04:58.338  8937  8937 F DEBUG   :     r8  0000000000000010  r9  0000000000000000  r10 0000000000000001  r11 0000000000000206
+10-01 10:04:58.338  8937  8937 F DEBUG   :     r12 00007e772b995bd0  r13 00007e772b996000  r14 00007e772b8cfbd0  r15 00000000000004d2
+10-01 10:04:58.338  8937  8937 F DEBUG   :     rdi 00007e772b8cfbd0  rsi 00007e772b995bd0
+10-01 10:04:58.338  8937  8937 F DEBUG   :     rbp 0000000000000000  rsp 00007fff3ba711e0  rip 00007e77a1fcd285
+10-01 10:04:58.339  8937  8937 F DEBUG   : backtrace:
+10-01 10:04:58.339  8937  8937 F DEBUG   :   NOTE: Function names and BuildId information is missing for some frames due
+10-01 10:04:58.339  8937  8937 F DEBUG   :   NOTE: to unreadable libraries. For unwinds of apps, only shared libraries
+10-01 10:04:58.339  8937  8937 F DEBUG   :   NOTE: found under the lib/ directory are readable.
+10-01 10:04:58.339  8937  8937 F DEBUG   :   NOTE: On this device, run setenforce 0 to make the libraries readable.
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #00 pc 000000000007e285  /system/lib64/libinputreader.so (android::TouchInputMapper::assignPointerIds(android::TouchInputMapper::RawState const*, android::TouchInputMapper::RawState*)+37) (BuildId: b406aecf0bd895d134334367c8cf5f84)
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #01 pc 000000000007e20d  /system/lib64/libinputreader.so (android::TouchInputMapper::sync(long, long)+285) (BuildId: b406aecf0bd895d134334367c8cf5f84)
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #02 pc 0000000000073c1e  /system/lib64/libinputreader.so (android::MultiTouchInputMapper::process(android::RawEvent const*)+14) (BuildId: b406aecf0bd895d134334367c8cf5f84)
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #03 pc 000000000000af84  /data/local/tmp/CVE-2021-0684
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #04 pc 000000000000b256  /data/local/tmp/CVE-2021-0684
+10-01 10:04:58.339  8937  8937 F DEBUG   :       #05 pc 000000000004faf6  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+86) (BuildId: 284d864ffe434d73dc722b84a1d3d9ca)
 
