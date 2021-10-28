@@ -18,9 +18,9 @@ package com.android.compatibility.common.tradefed.testtype;
 
 import static org.junit.Assert.assertTrue;
 
-import com.android.compatibility.common.tradefed.util.MultiLogHost;
 import com.android.compatibility.common.util.BusinessLogicExecutor;
 import com.android.compatibility.common.util.BusinessLogicHostExecutor;
+import com.android.tradefed.log.LogUtil.CLog;
 
 import org.junit.Before;
 
@@ -30,19 +30,15 @@ import java.util.List;
  * Host-side base class for tests to run extra Business Logics in addition to the test-specific
  * Business Logics.
  *
- * Used when running a common set of business logics against several tests.
+ * <p>Used when running a common set of business logics against several tests.
  *
- * Usage:
- * 1. Implement the common logic in an interface with default methods.
- * 2. Extend this class and implement the interface.
+ * <p>Usage: 1. Implement the common logic in an interface with default methods. 2. Extend this
+ * class and implement the interface.
  *
- * Now Business Logics rules and actions can be called from the GCL by using the interface fully
+ * <p>Now Business Logics rules and actions can be called from the GCL by using the interface fully
  * qualified name.
  */
-public abstract class ExtraBusinessLogicHostTestBase
-        extends BusinessLogicHostTestBase implements MultiLogHost {
-
-    private static final String LOG_TAG = ExtraBusinessLogicHostTestBase.class.getSimpleName();
+public abstract class ExtraBusinessLogicHostTestBase extends BusinessLogicHostTestBase {
 
     protected boolean mDependentOnBusinessLogic = true;
 
@@ -57,7 +53,7 @@ public abstract class ExtraBusinessLogicHostTestBase
                     "Test \"%s\" is unable to execute as it depends on the missing remote "
                     + "configuration.", mTestCase.getMethodName()), mCanReadBusinessLogic);
         } else if (!mCanReadBusinessLogic) {
-            logInfo(LOG_TAG, "Skipping Business Logic for %s", mTestCase.getMethodName());
+            CLog.i("Skipping Business Logic for %s", mTestCase.getMethodName());
             return;
         }
 
@@ -72,5 +68,4 @@ public abstract class ExtraBusinessLogicHostTestBase
         }
         executeBusinessLogic();
     }
-
 }
