@@ -242,4 +242,8 @@
     <!-- b/194293021 -->
     <option name="compatibility:exclude-filter" value="CtsPrintTestCases" />
     <option name="compatibility:exclude-filter" value="CtsPrintTestCases[instant]" />
+
+    <!-- b/206074567 -->
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileCrossProfileTest#testSetCrossProfilePackages_resetsAppOps" />
+    <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileCrossProfileTest#testSetCrossProfilePackages_killsApps" />
 </configuration>
