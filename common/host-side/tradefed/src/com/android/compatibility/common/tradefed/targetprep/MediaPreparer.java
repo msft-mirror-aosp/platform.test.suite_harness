@@ -19,7 +19,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.Option;
@@ -27,7 +26,6 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
-import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
@@ -151,8 +149,6 @@ public class MediaPreparer extends BaseTargetPreparer {
 
     /* Key to retrieve resolution string in metrics upon MediaPreparerListener.testEnded() */
     private static final String RESOLUTION_STRING_KEY = "resolution";
-
-    private static final String LOG_TAG = "MediaPreparer";
 
     /*
      * In the case of MediaPreparer error, the default maximum resolution to push to the device.
@@ -326,15 +322,11 @@ public class MediaPreparer extends BaseTargetPreparer {
 
                 if (mSimpleCachingSemantics) {
                     // old semantics: assumes all necessary media files exist inside
-                    LogUtil.printLog(
-                            Log.LogLevel.INFO,
-                            LOG_TAG,
-                            "old cache semantics: local directory exists, all is well");
+                    CLog.i("old cache semantics: local directory exists, all is well");
                     return mediaFolder;
                 }
 
-                LogUtil.printLog(
-                        Log.LogLevel.INFO, LOG_TAG, "new cache semantics: verify against a TOC");
+                CLog.i("new cache semantics: verify against a TOC");
                 // new caching semantics:
                 // verify that the contents are still present.
                 // use the TOC file generated when first downloaded/unpacked.
@@ -371,18 +363,14 @@ public class MediaPreparer extends BaseTargetPreparer {
                         }
                     }
                 } catch (IOException | SecurityException | NullPointerException e) {
-                    LogUtil.printLog(
-                            Log.LogLevel.INFO, LOG_TAG, "TOC or contents missing, redownload");
+                    CLog.i("TOC or contents missing, redownload");
                     passing = false;
                 } finally {
                     StreamUtil.close(tocReader);
                 }
 
                 if (passing) {
-                    LogUtil.printLog(
-                            Log.LogLevel.INFO,
-                            LOG_TAG,
-                            "Host-cached copy is complete in " + mediaFolder);
+                    CLog.i("Host-cached copy is complete in " + mediaFolder);
                     return mediaFolder;
                 }
             }
@@ -407,22 +395,19 @@ public class MediaPreparer extends BaseTargetPreparer {
             File mediaFolderZip = new File(mediaFolder.getAbsolutePath() + ".zip");
             FileWriter tocWriter = null;
             try {
-                LogUtil.printLog(
-                        Log.LogLevel.INFO,
-                        LOG_TAG,
-                        String.format("Downloading media files from %s", url.toString()));
+                CLog.i("Downloading media files from %s", url.toString());
                 URLConnection conn = url.openConnection();
                 InputStream in = conn.getInputStream();
                 mediaFolderZip.createNewFile();
                 FileUtil.writeToFile(in, mediaFolderZip);
-                LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Unzipping media files");
+                CLog.i("Unzipping media files");
                 ZipUtil.extractZip(new ZipFile(mediaFolderZip), mediaFolder);
 
                 // create the TOC when running the new caching scheme
                 if (!mSimpleCachingSemantics) {
                     // create a TOC, recursively listing all files/directories.
                     // used to verify all files still exist before we re-use a prior copy
-                    LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Generating cache TOC");
+                    CLog.i("Generating cache TOC");
                     File tocFile = new File(mediaFolder, TOC_NAME);
                     tocWriter = new FileWriter(tocFile, /*append*/ false);
                     generateDirectoryToc(tocWriter, mediaFolder, "");
@@ -540,7 +525,7 @@ public class MediaPreparer extends BaseTargetPreparer {
         }
         if (mediaFilesExistOnDevice(device)) {
             // if files already on device, do nothing
-            LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Media files found on the device");
+            CLog.i("Media files found on the device");
             return;
         }
 
@@ -551,8 +536,7 @@ public class MediaPreparer extends BaseTargetPreparer {
             // set mLocalMediaPath to extraction location of media files
             updateLocalMediaPath(device, mediaFolder);
         }
-        LogUtil.printLog(
-                Log.LogLevel.INFO, LOG_TAG, "Media files located on host at: " + mLocalMediaPath);
+        CLog.i("Media files located on host at: " + mLocalMediaPath);
         copyMediaFiles(device);
     }
 
