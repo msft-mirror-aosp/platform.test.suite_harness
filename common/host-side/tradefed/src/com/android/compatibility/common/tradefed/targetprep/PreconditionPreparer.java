@@ -16,7 +16,6 @@
 
 package com.android.compatibility.common.tradefed.targetprep;
 
-import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.Option;
@@ -24,7 +23,6 @@ import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
-import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
@@ -57,8 +55,6 @@ public abstract class PreconditionPreparer extends BaseTargetPreparer {
                         + "\"<arg-name>:<arg-value>\""
     )
     private List<String> mPreconditionArgs = new ArrayList<>();
-
-    protected final String mLogTag = getClass().getSimpleName();
 
     @Override
     public void setUp(TestInformation testInfo)
@@ -106,44 +102,44 @@ public abstract class PreconditionPreparer extends BaseTargetPreparer {
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logInfo(String info) {
-        LogUtil.printLog(Log.LogLevel.INFO, mLogTag, info);
+        CLog.i(info);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logInfo(String infoFormat, Object... args) {
-        LogUtil.printLog(Log.LogLevel.INFO, mLogTag, String.format(infoFormat, args));
+        CLog.i(infoFormat, args);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logWarning(String warning) {
-        LogUtil.printLog(Log.LogLevel.WARN, mLogTag, warning);
+        CLog.w(warning);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logWarning(String warningFormat, Object... args) {
-        LogUtil.printLog(Log.LogLevel.WARN, mLogTag, String.format(warningFormat, args));
+        CLog.w(warningFormat, args);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logError(String error) {
-        LogUtil.printLog(Log.LogLevel.ERROR, mLogTag, error);
+        CLog.e(error);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logError(String errorFormat, Object... args) {
-        LogUtil.printLog(Log.LogLevel.ERROR, mLogTag, String.format(errorFormat, args));
+        CLog.e(errorFormat, args);
     }
 
     /** @deprecated Use {@link CLog} instead. */
     @Deprecated
     protected void logError(Throwable t) {
         if (t != null) {
-            Log.e(mLogTag, t);
+            CLog.e(t);
         }
     }
 }
