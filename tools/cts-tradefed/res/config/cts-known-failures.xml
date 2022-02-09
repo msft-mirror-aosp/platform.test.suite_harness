@@ -246,4 +246,7 @@
     <!-- b/206074567 -->
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileCrossProfileTest#testSetCrossProfilePackages_resetsAppOps" />
     <option name="compatibility:exclude-filter" value="CtsDevicePolicyManagerTestCases com.android.cts.devicepolicy.ManagedProfileCrossProfileTest#testSetCrossProfilePackages_killsApps" />
+
+    <!-- b/216174963 -->
+    <option name="compatibility:exclude-filter" value="CtsPermission2TestCases android.permission2.cts.PermissionPolicyTest#platformPermissionPolicyIsUnaltered" />
 </configuration>
