@@ -115,4 +115,22 @@ public class PropertyUtilTest {
 
         assertTrue(PropertyUtil.isVendorApiLevelAtLeast(mMockDevice, 30));
     }
+
+    @Test
+    public void testGetVsrApiLevelEmptyBoardVersions() throws DeviceNotAvailableException {
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(FIRST_API_LEVEL)).thenReturn("30");
+
+        assertEquals(30, PropertyUtil.getVsrApiLevel(mMockDevice));
+    }
+
+    @Test
+    public void testGetVsrApiLevelFromBoardVersions() throws DeviceNotAvailableException {
+        when(mMockDevice.getProperty(VENDOR_API_LEVEL)).thenReturn(null);
+        when(mMockDevice.getProperty(VENDOR_FIRST_API_LEVEL)).thenReturn("30");
+        when(mMockDevice.getProperty(FIRST_API_LEVEL)).thenReturn("31");
+
+        assertEquals(30, PropertyUtil.getVsrApiLevel(mMockDevice));
+    }
 }
