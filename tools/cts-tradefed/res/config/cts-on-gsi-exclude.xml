@@ -454,4 +454,6 @@
     <!-- CtsCameraTestCases 11.0_r4 (159151247 and 193269651)  -->
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.ExtendedCameraCharacteristicsTest#testCameraOrientationAlignedWithDevice"/>
 
+    <!-- b/192912975 Remove CtsMediaTestCases android.media.cts.DecodeAccuracyTest from cts-on-gsi -->
+    <option name="compatibility:exclude-filter" value="CtsMediaTestCases android.media.cts.DecodeAccuracyTest" />
 </configuration>
