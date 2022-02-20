@@ -441,7 +441,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             InputStream is = zipFile.getInputStream(entry);
             Properties prop = new Properties();
             prop.load(is);
-            fingerprint = prop.getProperty("ro.vendor.build.fingerprint");
+            fingerprint = prop.getProperty("ro.system.build.fingerprint");
         } catch (IOException e) {
             throw new TargetSetupError(
                     String.format("Fail to get fingerprint from: %s", targetFile.getName()),

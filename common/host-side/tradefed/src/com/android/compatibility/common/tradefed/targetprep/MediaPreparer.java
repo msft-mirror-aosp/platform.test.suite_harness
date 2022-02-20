@@ -18,6 +18,9 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
+import com.android.compatibility.dependencies.ExternalDependency;
+import com.android.compatibility.dependencies.IExternalDependency;
+import com.android.compatibility.dependencies.connectivity.NetworkDependency;
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
@@ -50,13 +53,15 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 /** Ensures that the appropriate media files exist on the device */
 @OptionClass(alias = "media-preparer")
-public class MediaPreparer extends BaseTargetPreparer {
+public class MediaPreparer extends BaseTargetPreparer implements IExternalDependency {
 
     @Option(
         name = "local-media-path",
@@ -165,6 +170,16 @@ public class MediaPreparer extends BaseTargetPreparer {
             new Resolution(1280, 720),
             new Resolution(1920, 1080)
     };
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<ExternalDependency> getDependencies() {
+        Set<ExternalDependency> dependencies = new HashSet<>();
+        if (!mSkipMediaDownload) {
+            dependencies.add(new NetworkDependency());
+        }
+        return dependencies;
+    }
 
     /** Helper class for generating and retrieving width-height pairs */
     protected static final class Resolution {
