@@ -249,4 +249,7 @@
 
     <!-- b/216174963 -->
     <option name="compatibility:exclude-filter" value="CtsPermission2TestCases android.permission2.cts.PermissionPolicyTest#platformPermissionPolicyIsUnaltered" />
+
+    <!-- b/221001219 -->
+    <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ListeningPortsTest#testNoRemotelyAccessibleListeningUdpPorts" />
 </configuration>
