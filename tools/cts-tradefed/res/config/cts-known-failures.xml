@@ -252,4 +252,7 @@
 
     <!-- b/221001219 -->
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ListeningPortsTest#testNoRemotelyAccessibleListeningUdpPorts" />
+
+    <!-- b/219830271 -->
+    <option name="compatibility:exclude-filter" value="CtsHdmiCecHostTestCases android.hdmicec.cts.playback.HdmiCecRoutingControlTest#cect_11_2_2_4_InactiveSourceOnStandby" />
 </configuration>
