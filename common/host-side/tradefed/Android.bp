@@ -21,11 +21,11 @@ java_library_host {
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
     defaults: ["tradefed_errorprone_defaults"],
-    static_libs: [
-        "xts-external-dependencies"
-    ],
     libs: [
         "tradefed",
         "compatibility-host-util",
+    ],
+    static_libs: [
+        "tradefed-external-dependencies"
     ],
 }

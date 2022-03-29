@@ -18,9 +18,9 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
-import com.android.compatibility.dependencies.ExternalDependency;
-import com.android.compatibility.dependencies.IExternalDependency;
-import com.android.compatibility.dependencies.connectivity.NetworkDependency;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
@@ -138,6 +138,11 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
     protected String mFailureStackTrace = null;
 
     /*
+     * Track the user being prepared through setUp to avoid re-querying it.
+     */
+    private int mCurrentUser = -1;
+
+    /*
      * The default name of local directory into which media files will be downloaded, if option
      * "local-media-path" is not provided. This directory will live inside the temp directory.
      */
@@ -233,7 +238,7 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
         if (mPushAll) {
-            return device.doesFileExist(mBaseDeviceModuleDir);
+            return device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser);
         } else if (!mImagesOnly) {
             for (Resolution resolution : RESOLUTIONS) {
                 if (resolution.width > mMaxRes.width) {
@@ -241,13 +246,13 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
                 }
                 String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
                 String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-                if (!device.doesFileExist(deviceShortFilePath)
-                        || !device.doesFileExist(deviceFullFilePath)) {
+                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                        || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                     return false;
                 }
             }
         }
-        return device.doesFileExist(mBaseDeviceImagesDir);
+        return device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser);
     }
 
     protected static final String TOC_NAME = "contents.toc";
@@ -475,19 +480,19 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath) ||
-                    !device.doesFileExist(deviceFullFilePath)) {
+            if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                    || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                 CLog.i("Copying files of resolution %s to device", resolution.toString());
                 String localShortDirName = "bbb_short/" + resolution.toString();
                 String localFullDirName = "bbb_full/" + resolution.toString();
                 File localShortDir = new File(mLocalMediaPath, localShortDirName);
                 File localFullDir = new File(mLocalMediaPath, localFullDirName);
                 // push short directory of given resolution, if not present on device
-                if(!device.doesFileExist(deviceShortFilePath)) {
+                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)) {
                     device.pushDir(localShortDir, deviceShortFilePath);
                 }
                 // push full directory of given resolution, if not present on device
-                if(!device.doesFileExist(deviceFullFilePath)) {
+                if (!device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                     device.pushDir(localFullDir, deviceFullFilePath);
                 }
             }
@@ -496,7 +501,7 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
 
     // copy image files to the device
     protected void copyImagesFiles(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceImagesDir)) {
+        if (!device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser)) {
             CLog.i("Copying images files to device");
             device.pushDir(new File(mLocalMediaPath, "images"), mBaseDeviceImagesDir);
         }
@@ -504,7 +509,7 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
 
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceModuleDir)) {
+        if (!device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser)) {
             CLog.i("Copying files to device");
             device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir);
         }
@@ -524,6 +529,7 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
+        mCurrentUser = device.getCurrentUser();
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
                     "'images-only' and 'push-all' cannot be set to true together.",
@@ -553,6 +559,11 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
         }
         CLog.i("Media files located on host at: " + mLocalMediaPath);
         copyMediaFiles(device);
+    }
+
+    @VisibleForTesting
+    protected void setUserId(int testUser) {
+        mCurrentUser = testUser;
     }
 
     // Initialize maximum resolution of media files to copy
