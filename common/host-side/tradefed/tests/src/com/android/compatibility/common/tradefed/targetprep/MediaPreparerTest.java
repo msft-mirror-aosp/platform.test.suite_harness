@@ -54,6 +54,7 @@ public class MediaPreparerTest {
     @Before
     public void setUp() throws Exception {
         mMediaPreparer = new MediaPreparer();
+        mMediaPreparer.setUserId(0);
         mMockDevice = Mockito.mock(ITestDevice.class);
         mMockBuildInfo = new BuildInfo("0", "");
         mOptionSetter = new OptionSetter(mMediaPreparer);
@@ -132,11 +133,10 @@ public class MediaPreparerTest {
                     resolution.toString());
             String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
                     resolution.toString());
-            when(mMockDevice.doesFileExist(shortFile)).thenReturn(true);
-            when(mMockDevice.doesFileExist(fullFile)).thenReturn(true);
+            when(mMockDevice.doesFileExist(shortFile, 0)).thenReturn(true);
+            when(mMockDevice.doesFileExist(fullFile, 0)).thenReturn(true);
         }
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir))
-                .thenReturn(true);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir, 0)).thenReturn(true);
 
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
@@ -145,8 +145,7 @@ public class MediaPreparerTest {
     public void testMediaFilesExistOnDeviceTrueWithPushAll() throws Exception {
         mOptionSetter.setOptionValue("push-all", "true");
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
-                .thenReturn(true);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, 0)).thenReturn(true);
 
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
@@ -176,14 +175,10 @@ public class MediaPreparerTest {
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
         mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
-                .thenReturn(true);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir))
-                .thenReturn(false);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir))
-                .thenReturn(false);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir))
-                .thenReturn(false);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, 0)).thenReturn(true);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir, 0)).thenReturn(false);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, 0)).thenReturn(false);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, 0)).thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
     }
