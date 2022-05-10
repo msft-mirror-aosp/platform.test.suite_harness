@@ -19,6 +19,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
 import com.android.compatibility.common.util.DynamicConfigHandler;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
@@ -45,11 +48,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Pushes dynamic config files from config repository */
 @OptionClass(alias = "dynamic-config-pusher")
-public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocationContextReceiver {
+public class DynamicConfigPusher extends BaseTargetPreparer
+        implements IInvocationContextReceiver, IExternalDependency {
     public enum TestTarget {
         DEVICE,
         HOST
@@ -115,6 +121,14 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
 
     /** {@inheritDoc} */
     @Override
+    public Set<ExternalDependency> getDependencies() {
+        Set<ExternalDependency> dependencies = new HashSet<>();
+        dependencies.add(new NetworkDependency());
+        return dependencies;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
         IBuildInfo buildInfo = testInfo.getBuildInfo();
@@ -138,19 +152,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             mVersion = buildHelper.getSuiteVersion();
         }
 
-        String apfeConfigInJson = null;
-        String requestUrl = null;
-        try {
-            requestUrl = mConfigUrl.replace("{suite-name}", suiteName)
-                    .replace("{module}", mModuleName)
-                    .replace("{version}", mVersion)
-                    .replace("{api-key}", mApiKey);
-            java.net.URL request = new URL(requestUrl);
-            apfeConfigInJson = StreamUtil.getStringFromStream(request.openStream());
-        } catch (IOException e) {
-            CLog.w(e);
-        }
-
+        String apfeConfigInJson = resolveUrl(suiteName);
         // Use DynamicConfigHandler to merge local and service configuration into one file
         File hostFile = mergeConfigFiles(localConfigFile, apfeConfigInJson, mModuleName, device);
 
@@ -259,6 +261,30 @@ public class DynamicConfigPusher extends BaseTargetPreparer implements IInvocati
             if (mExtractFromResource) {
                 FileUtil.deleteFile(localConfigFile);
             }
+        }
+    }
+
+    @VisibleForTesting
+    String resolveUrl(String suiteName) throws TargetSetupError {
+        try {
+            String requestUrl =
+                    mConfigUrl
+                            .replace("{suite-name}", suiteName)
+                            .replace("{module}", mModuleName)
+                            .replace("{version}", mVersion)
+                            .replace("{api-key}", mApiKey);
+            java.net.URL request = new URL(requestUrl);
+            return StreamUtil.getStringFromStream(request.openStream());
+        } catch (IOException e) {
+            throw new TargetSetupError(
+                    String.format(
+                            "Trying to access android partner remote server over internet but"
+                                    + " failed: %s",
+                            e.getMessage()),
+                    e,
+                    null,
+                    false,
+                    InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
         }
     }
 }

@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 java_test_host {
     name: "compatibility-tradefed-tests",
     defaults: ["tradefed_errorprone_defaults"],
     // Restrict visibility to only those targets that need to access it.
     visibility: ["//visibility:private"],
 
-//    test_options: {
-//       unit_test: true,
-//  },
+    test_options: {
+        unit_test: true,
+    },
     srcs: ["src/**/*.java"],
     java_resource_dirs: ["res"],
 
@@ -29,9 +33,7 @@ java_test_host {
         "junit",
         "compatibility-host-util",
         "cts-tradefed-harness",
-        "easymock",
         "objenesis-host",
         "mockito-host",
     ],
 }
-
