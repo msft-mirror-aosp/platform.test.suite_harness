@@ -16,6 +16,7 @@
 package com.android.compatibility.common.tradefed.result.suite;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.targetprep.BuildFingerPrintPreparer;
@@ -39,12 +40,12 @@ import com.android.tradefed.util.FileUtil;
 
 import com.google.protobuf.Any;
 
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -67,7 +68,7 @@ public class PreviousResultLoaderTest {
 
     @Before
     public void setUp() throws Exception {
-        mMockProvider = EasyMock.createMock(IBuildProvider.class);
+        mMockProvider = Mockito.mock(IBuildProvider.class);
         mLoader = new PreviousResultLoader();
         mLoader.setProvider(mMockProvider);
         OptionSetter setter = new OptionSetter(mLoader);
@@ -77,7 +78,7 @@ public class PreviousResultLoaderTest {
         mContext.addInvocationAttribute(TestInvocation.COMMAND_ARGS_KEY,
                 "cts -m CtsGesture --skip-all-system-status-check");
         mContext.addDeviceBuildInfo(ConfigurationDef.DEFAULT_DEVICE_NAME, new BuildInfo());
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
+        mMockDevice = Mockito.mock(ITestDevice.class);
     }
 
     @After
@@ -90,18 +91,16 @@ public class PreviousResultLoaderTest {
      */
     @Test
     public void testReloadTests_failed() throws Exception {
-        EasyMock.expect(mMockProvider.getBuild()).andReturn(createFakeBuild("", false));
+        when(mMockProvider.getBuild()).thenReturn(createFakeBuild("", false));
         // Delete the proto file
         mProtoFile.delete();
         try {
-            EasyMock.replay(mMockProvider);
             mLoader.init();
             fail("Should have thrown an exception.");
         } catch (RuntimeException expected) {
             // expected
             assertEquals("Could not find any test-record.pb to load.", expected.getMessage());
         }
-        EasyMock.verify(mMockProvider);
     }
 
     /**
@@ -117,11 +116,10 @@ public class PreviousResultLoaderTest {
                         + "\"commandLineArgs\":\"cts -m CtsGesture "
                         + "--skip-all-system-status-check\","
                         + "\"hostName\":\"user.android.com\"}]";
-        EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createBasicResults(), false));
+        when(mMockProvider.getBuild())
+                .thenReturn(createFakeBuild(createBasicResults(), false));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
-        EasyMock.replay(mMockDevice, mMockProvider);
         mLoader.init();
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
         IConfiguration config = new Configuration("name", "desc");
@@ -136,7 +134,6 @@ public class PreviousResultLoaderTest {
         String runHistory =
                 config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
         assertEquals(EXPECTED_RUN_HISTORY, runHistory);
-        EasyMock.verify(mMockDevice, mMockProvider);
     }
 
     @Test
@@ -149,11 +146,10 @@ public class PreviousResultLoaderTest {
                         + "\"commandLineArgs\":\"cts -m CtsGesture "
                         + "--skip-all-system-status-check\","
                         + "\"hostName\":\"user.android.com\"}]";
-        EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createBasicResults(), true));
+        when(mMockProvider.getBuild())
+                .thenReturn(createFakeBuild(createBasicResults(), true));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
 
-        EasyMock.replay(mMockDevice, mMockProvider);
         mLoader.init();
         assertEquals("cts -m CtsGesture --skip-all-system-status-check", mLoader.getCommandLine());
         CollectingTestListener listener = mLoader.loadPreviousResults();
@@ -170,7 +166,6 @@ public class PreviousResultLoaderTest {
         String runHistory =
                 config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
         assertEquals(EXPECTED_RUN_HISTORY, runHistory);
-        EasyMock.verify(mMockDevice, mMockProvider);
     }
 
     /** Test that the loader can correctly provide the run history back. */
@@ -194,10 +189,9 @@ public class PreviousResultLoaderTest {
         final String OLD_RUN_HISTORY = String.format("[%s]", RUN_HISTORY_1);
         final String EXPECTED_RUN_HISTORY = String.format("[%s,%s]", RUN_HISTORY_1, RUN_HISTORY_2);
         mContext.addInvocationAttribute(RUN_HISTORY_KEY, OLD_RUN_HISTORY);
-        EasyMock.expect(mMockProvider.getBuild())
-                .andReturn(createFakeBuild(createResultsWithRunHistory(), false));
+        when(mMockProvider.getBuild())
+                .thenReturn(createFakeBuild(createResultsWithRunHistory(), false));
         mContext.addAllocatedDevice(ConfigurationDef.DEFAULT_DEVICE_NAME, mMockDevice);
-        EasyMock.replay(mMockDevice, mMockProvider);
 
         mLoader.init();
         IConfiguration config = new Configuration("name", "desc");
@@ -206,7 +200,6 @@ public class PreviousResultLoaderTest {
                 config.getCommandOptions().getInvocationData().getUniqueMap().get(RUN_HISTORY_KEY);
 
         assertEquals(EXPECTED_RUN_HISTORY, runHistory);
-        EasyMock.verify(mMockDevice, mMockProvider);
     }
 
     private IBuildInfo createFakeBuild(String resultContent, boolean index) throws Exception {

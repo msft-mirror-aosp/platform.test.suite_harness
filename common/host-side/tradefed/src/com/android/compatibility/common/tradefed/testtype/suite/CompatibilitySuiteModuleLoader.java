@@ -22,6 +22,7 @@ import com.android.tradefed.testtype.suite.SuiteModuleLoader;
 import com.android.tradefed.testtype.suite.SuiteTestFilter;
 import com.android.tradefed.util.AbiUtils;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,8 +37,8 @@ public class CompatibilitySuiteModuleLoader extends SuiteModuleLoader {
      * @param moduleArgs the list of module arguments.
      */
     public CompatibilitySuiteModuleLoader(
-            Map<String, List<SuiteTestFilter>> includeFilters,
-            Map<String, List<SuiteTestFilter>> excludeFilters,
+            Map<String, LinkedHashSet<SuiteTestFilter>> includeFilters,
+            Map<String, LinkedHashSet<SuiteTestFilter>> excludeFilters,
             List<String> testArgs,
             List<String> moduleArgs) {
         super(includeFilters,excludeFilters,testArgs,moduleArgs);
@@ -51,8 +52,8 @@ public class CompatibilitySuiteModuleLoader extends SuiteModuleLoader {
             IRemoteTest test,
             IAbi abi,
             String name,
-            Map<String, List<SuiteTestFilter>> includeFilters,
-            Map<String, List<SuiteTestFilter>> excludeFilters) {
+            Map<String, LinkedHashSet<SuiteTestFilter>> includeFilters,
+            Map<String, LinkedHashSet<SuiteTestFilter>> excludeFilters) {
         String moduleId = AbiUtils.createId(abi.getName(), name);
         // Override the default behavior. Compatibility Suites expect the filter receiver.
         if (!(test instanceof ITestFilterReceiver)) {
