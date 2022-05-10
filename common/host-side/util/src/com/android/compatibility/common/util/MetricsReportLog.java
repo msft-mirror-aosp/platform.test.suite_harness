@@ -24,7 +24,10 @@ import java.util.List;
 
 /**
  * A {@link ReportLog} that can be used with the in memory metrics store used for host side metrics.
+ *
+ * @deprecated Do not use, those metrics are not reported anywhere in final report.
  */
+@Deprecated
 public final class MetricsReportLog extends ReportLog {
     private final String mAbi;
     private final String mClassMethodName;
