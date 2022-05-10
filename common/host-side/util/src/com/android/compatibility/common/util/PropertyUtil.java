@@ -34,12 +34,13 @@ public class PropertyUtil {
      * shipped. Property should be undefined for factory ROM products.
      */
     public static final String FIRST_API_LEVEL = "ro.product.first_api_level";
+
+    private static final String BOARD_API_LEVEL = "ro.board.api_level";
+    private static final String BOARD_FIRST_API_LEVEL = "ro.board.first_api_level";
     private static final String BUILD_TAGS_PROPERTY = "ro.build.tags";
     private static final String BUILD_TYPE_PROPERTY = "ro.build.type";
     private static final String MANUFACTURER_PROPERTY = "ro.product.manufacturer";
     private static final String TAG_DEV_KEYS = "dev-keys";
-    private static final String VENDOR_API_LEVEL = "ro.board.api_level";
-    private static final String VENDOR_FIRST_API_LEVEL = "ro.board.first_api_level";
     private static final String VNDK_VERSION = "ro.vndk.version";
 
     /** Value to be returned by getPropertyInt() if property is not found */
@@ -50,6 +51,8 @@ public class PropertyUtil {
 
     public static final String GOOGLE_SETTINGS_QUERY =
             "content query --uri content://com.google.settings/partner";
+
+    private PropertyUtil() {}
 
     /** Returns whether the device build is a user build */
     public static boolean isUserBuild(ITestDevice device) throws DeviceNotAvailableException {
@@ -77,6 +80,23 @@ public class PropertyUtil {
     }
 
     /**
+     * Return the API level that the VSR requirement must be fulfilled. It reads
+     * ro.product.first_api_level and ro.board.first_api_level to find the minimum required VSR
+     * api_level for the DUT.
+     */
+    public static int getVsrApiLevel(ITestDevice device) throws DeviceNotAvailableException {
+        // Api level properties of the board. The order of the properties must be kept.
+        String[] boardApiLevelProps = {BOARD_API_LEVEL, BOARD_FIRST_API_LEVEL};
+        for (String apiLevelProp : boardApiLevelProps) {
+            int apiLevel = getPropertyInt(device, apiLevelProp);
+            if (apiLevel != INT_VALUE_IF_UNSET) {
+                return Math.min(apiLevel, getFirstApiLevel(device));
+            }
+        }
+        return getFirstApiLevel(device);
+    }
+
+    /**
      * Return the API level of the vendor partition. It will read the following properties in order
      * and returns the value of the first defined property. If none of them are defined, or the
      * value is a VERSION CODENAME, returns the current API level which is defined in
@@ -91,7 +111,7 @@ public class PropertyUtil {
     public static int getVendorApiLevel(ITestDevice device) throws DeviceNotAvailableException {
         String[] vendorApiLevelProps = {
             // Use the properties in order.
-            VENDOR_API_LEVEL, VENDOR_FIRST_API_LEVEL, VNDK_VERSION,
+            BOARD_API_LEVEL, BOARD_FIRST_API_LEVEL, VNDK_VERSION,
         };
         for (String prop : vendorApiLevelProps) {
             int apiLevel = getPropertyInt(device, prop);

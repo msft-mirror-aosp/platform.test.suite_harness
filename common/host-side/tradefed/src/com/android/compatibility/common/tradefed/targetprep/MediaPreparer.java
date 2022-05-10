@@ -18,8 +18,10 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.Option;
@@ -27,7 +29,6 @@ import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
-import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
@@ -37,24 +38,30 @@ import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.StreamUtil;
 import com.android.tradefed.util.ZipUtil;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 /** Ensures that the appropriate media files exist on the device */
 @OptionClass(alias = "media-preparer")
-public class MediaPreparer extends BaseTargetPreparer {
+public class MediaPreparer extends BaseTargetPreparer implements IExternalDependency {
 
     @Option(
         name = "local-media-path",
@@ -69,6 +76,11 @@ public class MediaPreparer extends BaseTargetPreparer {
         description = "Whether to skip the media files precondition"
     )
     private boolean mSkipMediaDownload = false;
+
+    @Option(
+            name = "simple-caching-semantics",
+            description = "Whether to use the original, simple MediaPreparer caching semantics")
+    private boolean mSimpleCachingSemantics = false;
 
     /** @deprecated do not use it. */
     @Deprecated
@@ -126,6 +138,11 @@ public class MediaPreparer extends BaseTargetPreparer {
     protected String mFailureStackTrace = null;
 
     /*
+     * Track the user being prepared through setUp to avoid re-querying it.
+     */
+    private int mCurrentUser = -1;
+
+    /*
      * The default name of local directory into which media files will be downloaded, if option
      * "local-media-path" is not provided. This directory will live inside the temp directory.
      */
@@ -143,8 +160,6 @@ public class MediaPreparer extends BaseTargetPreparer {
     /* Key to retrieve resolution string in metrics upon MediaPreparerListener.testEnded() */
     private static final String RESOLUTION_STRING_KEY = "resolution";
 
-    private static final String LOG_TAG = "MediaPreparer";
-
     /*
      * In the case of MediaPreparer error, the default maximum resolution to push to the device.
      * Pushing higher resolutions may lead to insufficient storage for installing test APKs.
@@ -160,6 +175,16 @@ public class MediaPreparer extends BaseTargetPreparer {
             new Resolution(1280, 720),
             new Resolution(1920, 1080)
     };
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<ExternalDependency> getDependencies() {
+        Set<ExternalDependency> dependencies = new HashSet<>();
+        if (!mSkipMediaDownload) {
+            dependencies.add(new NetworkDependency());
+        }
+        return dependencies;
+    }
 
     /** Helper class for generating and retrieving width-height pairs */
     protected static final class Resolution {
@@ -213,7 +238,7 @@ public class MediaPreparer extends BaseTargetPreparer {
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
         if (mPushAll) {
-            return device.doesFileExist(mBaseDeviceModuleDir);
+            return device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser);
         } else if (!mImagesOnly) {
             for (Resolution resolution : RESOLUTIONS) {
                 if (resolution.width > mMaxRes.width) {
@@ -221,14 +246,16 @@ public class MediaPreparer extends BaseTargetPreparer {
                 }
                 String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
                 String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-                if (!device.doesFileExist(deviceShortFilePath)
-                        || !device.doesFileExist(deviceFullFilePath)) {
+                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                        || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                     return false;
                 }
             }
         }
-        return device.doesFileExist(mBaseDeviceImagesDir);
+        return device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser);
     }
+
+    protected static final String TOC_NAME = "contents.toc";
 
     /*
      * After downloading and unzipping the media files, mLocalMediaPath must be the path to the
@@ -241,13 +268,55 @@ public class MediaPreparer extends BaseTargetPreparer {
      */
     private void updateLocalMediaPath(ITestDevice device, File mediaFolder)
             throws TargetSetupError {
-        String[] subDirs = mediaFolder.list();
-        if (subDirs.length != 1) {
+        String[] entries = mediaFolder.list();
+
+        // directory should contain:
+        // -- content subdirectory
+        // -- TOC (if we've run with the new caching semantics)
+        // if we've run new semantics, old semantics should ignore the TOC if present.
+        //
+        if (entries.length == 0) {
+            throw new TargetSetupError(
+                    String.format("Unexpectedly empty directory %s", mediaFolder.getAbsolutePath()),
+                    device.getDeviceDescriptor());
+        } else if (entries.length > 2) {
             throw new TargetSetupError(String.format(
                     "Unexpected contents in directory %s", mediaFolder.getAbsolutePath()),
                     device.getDeviceDescriptor());
         }
-        mLocalMediaPath = new File(mediaFolder, subDirs[0]).getAbsolutePath();
+
+        // choose the entry that represents the contents to be sent, not the TOC
+        int slot = 0;
+        if (entries[slot].equals(TOC_NAME)) {
+            if (entries.length == 1) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Missing contents in directory %s", mediaFolder.getAbsolutePath()),
+                        device.getDeviceDescriptor());
+            }
+            slot = 1;
+        }
+        mLocalMediaPath = new File(mediaFolder, entries[slot]).getAbsolutePath();
+    }
+
+    private void generateDirectoryToc(FileWriter myWriter, File myFolder, String leadingPath)
+            throws IOException {
+        String prefixPath;
+        if (leadingPath.equals("")) {
+            prefixPath = "";
+        } else {
+            prefixPath = leadingPath + File.separator;
+        }
+        for (String fileName : myFolder.list()) {
+            // list myself
+            myWriter.write(prefixPath + fileName + "\n");
+            // and recurse if i'm a directory
+            File oneFile = new File(myFolder, fileName);
+            if (oneFile.isDirectory()) {
+                String newLeading = prefixPath + fileName;
+                generateDirectoryToc(myWriter, oneFile, newLeading);
+            }
+        }
     }
 
     /*
@@ -259,15 +328,75 @@ public class MediaPreparer extends BaseTargetPreparer {
      */
     private File downloadMediaToHost(ITestDevice device, IBuildInfo buildInfo)
             throws TargetSetupError {
+
         // Make sure the synchronization is on the class and not the object
         synchronized (MediaPreparer.class) {
             // Retrieve default directory for storing media files
             File mediaFolder = getMediaDir();
+
+            // manage caching the content on the host side
+            //
             if (mediaFolder.exists() && mediaFolder.list().length > 0) {
-                // Folder has already been created and populated by previous MediaPreparer runs,
-                // assume all necessary media files exist inside.
-                return mediaFolder;
+                // Folder has been created and populated by a previous MediaPreparer run.
+                //
+
+                if (mSimpleCachingSemantics) {
+                    // old semantics: assumes all necessary media files exist inside
+                    CLog.i("old cache semantics: local directory exists, all is well");
+                    return mediaFolder;
+                }
+
+                CLog.i("new cache semantics: verify against a TOC");
+                // new caching semantics:
+                // verify that the contents are still present.
+                // use the TOC file generated when first downloaded/unpacked.
+                // if TOC or any files are missing -- redownload.
+                //
+                // we're chatty about why we decide to re-download
+
+                boolean passing = true;
+                BufferedReader tocReader = null;
+                try {
+                    File tocFile = new File(mediaFolder, TOC_NAME);
+                    if (!tocFile.exists()) {
+                        passing = false;
+                        CLog.i(
+                                "missing/inaccessible TOC: "
+                                        + mediaFolder
+                                        + File.separator
+                                        + TOC_NAME);
+                    } else {
+                        tocReader = new BufferedReader(new FileReader(tocFile));
+                        String line = tocReader.readLine();
+                        while (line != null) {
+                            File oneFile = new File(mediaFolder, line);
+                            if (!oneFile.exists()) {
+                                CLog.i(
+                                        "missing TOC-listed file: "
+                                                + mediaFolder
+                                                + File.separator
+                                                + line);
+                                passing = false;
+                                break;
+                            }
+                            line = tocReader.readLine();
+                        }
+                    }
+                } catch (IOException | SecurityException | NullPointerException e) {
+                    CLog.i("TOC or contents missing, redownload");
+                    passing = false;
+                } finally {
+                    StreamUtil.close(tocReader);
+                }
+
+                if (passing) {
+                    CLog.i("Host-cached copy is complete in " + mediaFolder);
+                    return mediaFolder;
+                }
             }
+
+            // uncached (or broken cache), so download again
+
             mediaFolder.mkdirs();
             URL url;
             try {
@@ -284,29 +413,39 @@ public class MediaPreparer extends BaseTargetPreparer {
                         device.getDeviceDescriptor());
             }
             File mediaFolderZip = new File(mediaFolder.getAbsolutePath() + ".zip");
+            FileWriter tocWriter = null;
             try {
-                LogUtil.printLog(
-                        Log.LogLevel.INFO,
-                        LOG_TAG,
-                        String.format("Downloading media files from %s", url.toString()));
+                CLog.i("Downloading media files from %s", url.toString());
                 URLConnection conn = url.openConnection();
                 InputStream in = conn.getInputStream();
                 mediaFolderZip.createNewFile();
                 FileUtil.writeToFile(in, mediaFolderZip);
-                LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, "Unzipping media files");
+                CLog.i("Unzipping media files");
                 ZipUtil.extractZip(new ZipFile(mediaFolderZip), mediaFolder);
+
+                // create the TOC when running the new caching scheme
+                if (!mSimpleCachingSemantics) {
+                    // create a TOC, recursively listing all files/directories.
+                    // used to verify all files still exist before we re-use a prior copy
+                    CLog.i("Generating cache TOC");
+                    File tocFile = new File(mediaFolder, TOC_NAME);
+                    tocWriter = new FileWriter(tocFile, /*append*/ false);
+                    generateDirectoryToc(tocWriter, mediaFolder, "");
+                }
+
             } catch (IOException e) {
                 FileUtil.recursiveDelete(mediaFolder);
                 throw new TargetSetupError(
                         String.format(
                                 "Failed to download and open media files on host machine at '%s'."
-                                        + " These media files are required for compatibility tests.",
+                                    + " These media files are required for compatibility tests.",
                                 mediaFolderZip),
                         e,
                         device.getDeviceDescriptor(),
                         /* device side */ false);
             } finally {
                 FileUtil.deleteFile(mediaFolderZip);
+                StreamUtil.close(tocWriter);
             }
             return mediaFolder;
         }
@@ -341,19 +480,19 @@ public class MediaPreparer extends BaseTargetPreparer {
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath) ||
-                    !device.doesFileExist(deviceFullFilePath)) {
+            if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                    || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                 CLog.i("Copying files of resolution %s to device", resolution.toString());
                 String localShortDirName = "bbb_short/" + resolution.toString();
                 String localFullDirName = "bbb_full/" + resolution.toString();
                 File localShortDir = new File(mLocalMediaPath, localShortDirName);
                 File localFullDir = new File(mLocalMediaPath, localFullDirName);
                 // push short directory of given resolution, if not present on device
-                if(!device.doesFileExist(deviceShortFilePath)) {
+                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)) {
                     device.pushDir(localShortDir, deviceShortFilePath);
                 }
                 // push full directory of given resolution, if not present on device
-                if(!device.doesFileExist(deviceFullFilePath)) {
+                if (!device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                     device.pushDir(localFullDir, deviceFullFilePath);
                 }
             }
@@ -362,7 +501,7 @@ public class MediaPreparer extends BaseTargetPreparer {
 
     // copy image files to the device
     protected void copyImagesFiles(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceImagesDir)) {
+        if (!device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser)) {
             CLog.i("Copying images files to device");
             device.pushDir(new File(mLocalMediaPath, "images"), mBaseDeviceImagesDir);
         }
@@ -370,7 +509,7 @@ public class MediaPreparer extends BaseTargetPreparer {
 
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceModuleDir)) {
+        if (!device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser)) {
             CLog.i("Copying files to device");
             device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir);
         }
@@ -390,6 +529,7 @@ public class MediaPreparer extends BaseTargetPreparer {
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
+        mCurrentUser = device.getCurrentUser();
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
                     "'images-only' and 'push-all' cannot be set to true together.",
@@ -417,8 +557,13 @@ public class MediaPreparer extends BaseTargetPreparer {
             // set mLocalMediaPath to extraction location of media files
             updateLocalMediaPath(device, mediaFolder);
         }
-        CLog.i("Media files located on host at: %s", mLocalMediaPath);
+        CLog.i("Media files located on host at: " + mLocalMediaPath);
         copyMediaFiles(device);
+    }
+
+    @VisibleForTesting
+    protected void setUserId(int testUser) {
+        mCurrentUser = testUser;
     }
 
     // Initialize maximum resolution of media files to copy

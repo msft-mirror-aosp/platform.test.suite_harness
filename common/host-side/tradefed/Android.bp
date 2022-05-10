@@ -25,4 +25,7 @@ java_library_host {
         "tradefed",
         "compatibility-host-util",
     ],
+    static_libs: [
+        "tradefed-external-dependencies"
+    ],
 }
