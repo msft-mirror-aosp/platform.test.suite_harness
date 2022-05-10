@@ -18,6 +18,7 @@ package com.android.compatibility.common.tradefed.build;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IDeviceBuildInfo;
@@ -26,12 +27,12 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.ExecutionFiles;
 import com.android.tradefed.util.FileUtil;
 
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.io.File;
 
@@ -47,7 +48,7 @@ public class CompatibilityBuildProviderTest {
 
     @Before
     public void setUp() throws Exception {
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
+        mMockDevice = Mockito.mock(ITestDevice.class);
         mRootDir = FileUtil.createTempDir("cts-root-dir");
         mProvider =
                 new CompatibilityBuildProvider() {
@@ -78,9 +79,7 @@ public class CompatibilityBuildProviderTest {
      */
     @Test
     public void testBaseGetBuild() throws Exception {
-        EasyMock.replay(mMockDevice);
         IBuildInfo info = mProvider.getBuild(mMockDevice);
-        EasyMock.verify(mMockDevice);
         // Still creates a device build for us.
         assertTrue(info instanceof IDeviceBuildInfo);
         // tests dir should be populated
@@ -97,14 +96,13 @@ public class CompatibilityBuildProviderTest {
         OptionSetter setter = new OptionSetter(mProvider);
         setter.setOptionValue("use-device-build-info", "true");
         setter.setOptionValue("branch", "build_branch");
-        EasyMock.expect(mMockDevice.getBuildId()).andReturn("8888");
-        EasyMock.expect(mMockDevice.getBuildFlavor()).andReturn("flavor");
-        EasyMock.expect(mMockDevice.getBuildAlias()).andReturn("alias");
-        EasyMock.expect(mMockDevice.getProperty("ro.product.name")).andReturn("product");
-        EasyMock.expect(mMockDevice.getProperty("ro.build.type")).andReturn("userdebug");
-        EasyMock.replay(mMockDevice);
+        when(mMockDevice.getBuildId()).thenReturn("8888");
+        when(mMockDevice.getBuildFlavor()).thenReturn("flavor");
+        when(mMockDevice.getBuildAlias()).thenReturn("alias");
+        when(mMockDevice.getProperty("ro.product.name")).thenReturn("product");
+        when(mMockDevice.getProperty("ro.build.type")).thenReturn("userdebug");
+
         IBuildInfo info = mProvider.getBuild(mMockDevice);
-        EasyMock.verify(mMockDevice);
         assertTrue(info instanceof IDeviceBuildInfo);
         // tests dir should be populated
         assertNotNull(((IDeviceBuildInfo)info).getTestsDir());
@@ -122,14 +120,13 @@ public class CompatibilityBuildProviderTest {
         setter.setOptionValue("use-device-build-info", "true");
         setter.setOptionValue("branch", "build_branch");
         setter.setOptionValue("build-flavor-prefix", "prefix-");
-        EasyMock.expect(mMockDevice.getBuildId()).andReturn("8888");
-        EasyMock.expect(mMockDevice.getBuildFlavor()).andReturn("flavor");
-        EasyMock.expect(mMockDevice.getBuildAlias()).andReturn("alias");
-        EasyMock.expect(mMockDevice.getProperty("ro.product.name")).andReturn("product");
-        EasyMock.expect(mMockDevice.getProperty("ro.build.type")).andReturn("userdebug");
-        EasyMock.replay(mMockDevice);
+        when(mMockDevice.getBuildId()).thenReturn("8888");
+        when(mMockDevice.getBuildFlavor()).thenReturn("flavor");
+        when(mMockDevice.getBuildAlias()).thenReturn("alias");
+        when(mMockDevice.getProperty("ro.product.name")).thenReturn("product");
+        when(mMockDevice.getProperty("ro.build.type")).thenReturn("userdebug");
+
         IBuildInfo info = mProvider.getBuild(mMockDevice);
-        EasyMock.verify(mMockDevice);
         assertTrue(info instanceof IDeviceBuildInfo);
         assertEquals("prefix-flavor", ((IDeviceBuildInfo) info).getBuildFlavor());
         // tests dir should be populated
@@ -149,14 +146,13 @@ public class CompatibilityBuildProviderTest {
         setter.setOptionValue("branch", "build_branch");
         setter.setOptionValue("build-flavor", "artificial-flavor");
         setter.setOptionValue("build-flavor-prefix", "prefix-");
-        EasyMock.expect(mMockDevice.getBuildId()).andReturn("8888");
-        EasyMock.expect(mMockDevice.getBuildFlavor()).andReturn("flavor").anyTimes();
-        EasyMock.expect(mMockDevice.getBuildAlias()).andReturn("alias");
-        EasyMock.expect(mMockDevice.getProperty("ro.product.name")).andReturn("product");
-        EasyMock.expect(mMockDevice.getProperty("ro.build.type")).andReturn("userdebug");
-        EasyMock.replay(mMockDevice);
+        when(mMockDevice.getBuildId()).thenReturn("8888");
+        when(mMockDevice.getBuildFlavor()).thenReturn("flavor");
+        when(mMockDevice.getBuildAlias()).thenReturn("alias");
+        when(mMockDevice.getProperty("ro.product.name")).thenReturn("product");
+        when(mMockDevice.getProperty("ro.build.type")).thenReturn("userdebug");
+
         IBuildInfo info = mProvider.getBuild(mMockDevice);
-        EasyMock.verify(mMockDevice);
         assertTrue(info instanceof IDeviceBuildInfo);
         assertEquals("prefix-artificial-flavor", ((IDeviceBuildInfo) info).getBuildFlavor());
         // tests dir should be populated
@@ -175,9 +171,8 @@ public class CompatibilityBuildProviderTest {
         final String uniquePattern = "UNIQUE_SUITE_NAME_PATTERN";
         OptionSetter setter = new OptionSetter(mProvider);
         setter.setOptionValue("url-suite-name-override", uniquePattern);
-        EasyMock.replay(mMockDevice);
+
         IBuildInfo info = mProvider.getBuild(mMockDevice);
-        EasyMock.verify(mMockDevice);
         String url = info.getBuildAttributes().get(
                 CompatibilityBuildProvider.DYNAMIC_CONFIG_OVERRIDE_URL);
         assertTrue(String.format("URL was %s and should have contained %s", url, uniquePattern),

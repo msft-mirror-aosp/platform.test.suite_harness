@@ -18,6 +18,7 @@ package com.android.compatibility.common.tradefed.targetprep;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.targetprep.ApkInstrumentationPreparer.When;
 import com.android.compatibility.common.util.FileUtil;
@@ -29,13 +30,14 @@ import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 
-import org.easymock.EasyMock;
-import org.easymock.IAnswer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
 
@@ -51,7 +53,7 @@ public class DeviceInfoCollectorTest {
     @Before
     public void setUp() throws Exception {
         mCollector = new DeviceInfoCollector();
-        mDevice = EasyMock.createMock(ITestDevice.class);
+        mDevice = Mockito.mock(ITestDevice.class);
         mBuildInfo = new BuildInfo();
         IInvocationContext context = new InvocationContext();
         context.addDeviceBuildInfo("device", mBuildInfo);
@@ -69,36 +71,33 @@ public class DeviceInfoCollectorTest {
     @Test
     public void pullDeviceInfo_fail() throws Exception {
         mCollector.mWhen = When.AFTER;
-        EasyMock.expect(mDevice.getProperty(EasyMock.anyObject())).andStubReturn("value");
-        EasyMock.expect(
-                        mDevice.pullDir(
-                                EasyMock.eq("/sdcard/device-info-files/"), EasyMock.anyObject()))
-                .andAnswer(
-                        new IAnswer<Boolean>() {
-                            @Override
-                            public Boolean answer() throws Throwable {
-                                File dir = (File) EasyMock.getCurrentArguments()[1];
-                                FileUtil.recursiveDelete(dir);
-                                return true;
-                            }
-                        });
-        EasyMock.replay(mDevice);
+        when(mDevice.getProperty(Mockito.any())).thenReturn("value");
+        when(
+                mDevice.pullDir(
+                        Mockito.eq("/sdcard/device-info-files/"), Mockito.any()))
+                .then(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                File dir = (File) invocation.getArgument(1);
+                FileUtil.recursiveDelete(dir);
+                return true;
+            }
+        });
+
         mCollector.setUp(mTestInfo);
-        EasyMock.verify(mDevice);
         assertNull(mBuildInfo.getFile(DeviceInfoCollector.DEVICE_INFO_DIR));
     }
 
     @Test
     public void pullDeviceInfo() throws Exception {
         mCollector.mWhen = When.AFTER;
-        EasyMock.expect(mDevice.getProperty(EasyMock.anyObject())).andStubReturn("value");
-        EasyMock.expect(
+        when(mDevice.getProperty(Mockito.any())).thenReturn("value");
+        when(
                         mDevice.pullDir(
-                                EasyMock.eq("/sdcard/device-info-files/"), EasyMock.anyObject()))
-                .andReturn(true);
-        EasyMock.replay(mDevice);
+                                Mockito.eq("/sdcard/device-info-files/"), Mockito.any()))
+                .thenReturn(true);
+
         mCollector.setUp(mTestInfo);
-        EasyMock.verify(mDevice);
         File infoDir = mBuildInfo.getFile(DeviceInfoCollector.DEVICE_INFO_DIR);
         assertNotNull(infoDir);
         assertTrue(infoDir.isDirectory());
