@@ -26,7 +26,7 @@ import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.ArrayUtil;
 
-import com.google.api.client.util.Strings;
+import com.google.common.base.Strings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,6 +80,7 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
         BUILD_KEYS.put("cts:build_vendor_fingerprint", "ro.vendor.build.fingerprint");
         BUILD_KEYS.put("cts:build_vendor_manufacturer", "ro.product.vendor.manufacturer");
         BUILD_KEYS.put("cts:build_vendor_model", "ro.product.vendor.model");
+        BUILD_KEYS.put("cts:build_bootimage_fingerprint", "ro.bootimage.build.fingerprint");
 
         BUILD_LEGACY_PROPERTIES.put(
                 "ro.product.vendor.manufacturer", "ro.vendor.product.manufacturer");
@@ -121,7 +122,6 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
                         "Cannot parse ODM fingerprint: " + buildFingerprint,
                         device.getDeviceDescriptor());
             }
-            // Need root to read that property
             buildVersionIncremental = device.getProperty("ro.odm.build.version.incremental");
 
             String odmDevice = device.getProperty("ro.product.odm.device");
@@ -137,7 +137,6 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
             }
         } else {
             buildFingerprint = device.getProperty("ro.vendor.build.fingerprint");
-            // Need root to read that property
             buildVersionIncremental = device.getProperty("ro.vendor.build.version.incremental");
         }
 

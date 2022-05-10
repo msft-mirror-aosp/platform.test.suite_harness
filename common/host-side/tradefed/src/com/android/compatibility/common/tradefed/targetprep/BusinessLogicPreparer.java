@@ -30,6 +30,8 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
+import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -192,6 +194,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             CLog.i("Attempting to connect to business logic service...");
         }
         long start = System.currentTimeMillis();
+        Exception connectIssue = null;
         while (businessLogicString == null
                 && System.currentTimeMillis() < (start + (mMaxConnectionTime * 1000))) {
             try {
@@ -199,6 +202,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             } catch (IOException e) {
                 // ignore, re-attempt connection with remaining time
                 CLog.d("BusinessLogic connection failure message: %s\nRetrying...", e.getMessage());
+                connectIssue = e;
                 RunUtil.getDefault().sleep(SLEEP_BETWEEN_CONNECTIONS_MS);
             }
         }
@@ -208,11 +212,21 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
                         + "invocation, tests depending on the remote configuration will fail.\n");
                 return;
             } else {
-                throw new TargetSetupError(String.format("Cannot connect to business logic "
-                        + "service for config %s.\nIf this problem persists, re-invoking with "
-                        + "option '--ignore-business-logic-failure' will cause tests to execute "
-                        + "anyways (though tests depending on the remote configuration will fail).",
-                        mModuleName), device.getDeviceDescriptor());
+                String baseMessage =
+                        String.format(
+                                "Cannot connect to business logic service for config %s. If this"
+                                        + " problem persists, re-invoking with option"
+                                        + " '--ignore-business-logic-failure' will cause tests to"
+                                        + " execute anyways (though tests depending on the remote"
+                                        + " configuration will fail).",
+                                mModuleName);
+                if (connectIssue != null) {
+                    baseMessage = String.format("%s.\n%s", connectIssue.getMessage(), baseMessage);
+                }
+                throw new TargetSetupError(
+                        baseMessage,
+                        device.getDeviceDescriptor(),
+                        InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
             }
         }
 
@@ -228,18 +242,25 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             String bitness = (mAbi != null) ? mAbi.getBitness() : "";
             buildHelper.setBusinessLogicHostFile(hostFile, bitness + mModuleName);
         } catch (IOException e) {
-            throw new TargetSetupError(String.format(
-                    "Retrieved business logic for config %s could not be written to host",
-                    mModuleName), device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    String.format(
+                            "Retrieved business logic for config %s could not be written to host",
+                            mModuleName),
+                    device.getDeviceDescriptor(),
+                    InfraErrorIdentifier.FAIL_TO_CREATE_FILE);
         }
         // Push business logic string to device file
         removeDeviceFile(device); // remove any existing business logic file from device
         if (device.pushString(businessLogicString, BusinessLogic.DEVICE_FILE)) {
             mDeviceFilePushed = BusinessLogic.DEVICE_FILE;
         } else {
-            throw new TargetSetupError(String.format(
-                    "Retrieved business logic for config %s could not be written to device %s",
-                    mModuleName, device.getSerialNumber()), device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    String.format(
+                            "Retrieved business logic for config %s could not be written to device"
+                                    + " %s",
+                            mModuleName, device.getSerialNumber()),
+                    device.getDeviceDescriptor(),
+                    DeviceErrorIdentifier.FAIL_PUSH_FILE);
         }
     }
 
