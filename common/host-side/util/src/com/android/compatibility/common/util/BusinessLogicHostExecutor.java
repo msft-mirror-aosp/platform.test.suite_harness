@@ -16,10 +16,8 @@
 
 package com.android.compatibility.common.util;
 
-import com.android.ddmlib.Log;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.log.LogUtil.CLog;
 
 import java.lang.reflect.Method;
@@ -53,15 +51,21 @@ public class BusinessLogicHostExecutor extends BusinessLogicExecutor {
 
     /**
      * {@inheritDoc}
+     *
+     * @deprecated Use CLog directly
      */
+    @Deprecated
     @Override
     public void logInfo(String format, Object... args) {
-        LogUtil.printLog(Log.LogLevel.INFO, LOG_TAG, String.format(format, args));
+        CLog.i(format, args);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @deprecated Use CLog directly
      */
+    @Deprecated
     @Override
     public void logDebug(String format, Object... args) {
         CLog.d(format, args);
