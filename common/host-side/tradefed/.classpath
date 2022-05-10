@@ -9,7 +9,6 @@
 	<classpathentry kind="src" path="tests/res"/>
 	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="src" path="tests/src"/>
-	<classpathentry kind="lib" path="tests/res/testtype/testJar1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ddmlib"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tradefederation"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>

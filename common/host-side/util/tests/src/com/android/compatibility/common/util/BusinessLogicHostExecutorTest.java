@@ -16,28 +16,26 @@
 
 package com.android.compatibility.common.util;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.device.ITestDevice;
 
-import org.easymock.EasyMock;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import junit.framework.AssertionFailedError;
 
 /**
  * Tests for {@link BusinessLogicHostExecutor}.
@@ -71,8 +69,8 @@ public class BusinessLogicHostExecutorTest {
 
     @Before
     public void setUp() {
-        mMockBuild = EasyMock.createMock(IBuildInfo.class);
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
+        mMockBuild = Mockito.mock(IBuildInfo.class);
+        mMockDevice = Mockito.mock(ITestDevice.class);
         mExecutor =
                 new BusinessLogicHostExecutor(
                         mMockDevice, mMockBuild, this, new ArrayList<String>());
@@ -302,7 +300,7 @@ public class BusinessLogicHostExecutorTest {
 
     // throw AssertionFailedError
     @Ignore
-    public void method9() throws AssertionFailedError {
+    public void method9() {
         assertTrue(false);
     }
 
