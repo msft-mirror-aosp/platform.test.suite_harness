@@ -54,6 +54,7 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
     private static final String DEVICE = "ro.product.device";
     private static final String FINGERPRINT = "ro.build.fingerprint";
     private static final String VENDOR_FINGERPRINT = "ro.vendor.build.fingerprint";
+    private static final String BOOTIMAGE_FINGERPRINT = "ro.bootimage.build.fingerprint";
     private static final String ID = "ro.build.id";
     private static final String MANUFACTURER = "ro.product.manufacturer";
     private static final String MODEL = "ro.product.model";
@@ -107,6 +108,9 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
             CLog.i("Device info already collected, skipping DeviceInfoCollector.");
             return;
         }
+        if (mSkipDeviceInfo && !mForceCollectDeviceInfo) {
+            return;
+        }
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
         DevicePropertyInfo devicePropertyInfo =
@@ -133,16 +137,14 @@ public class DeviceInfoCollector extends ApkInstrumentationPreparer implements I
                         VERSION_RELEASE,
                         VERSION_SDK,
                         VERSION_SECURITY_PATCH,
-                        VERSION_INCREMENTAL);
+                        VERSION_INCREMENTAL,
+                        BOOTIMAGE_FINGERPRINT);
 
         // add device properties to the result with a prefix tag for each key
         for (Entry<String, String> entry :
                 devicePropertyInfo.getPropertytMapWithPrefix(PREFIX_TAG).entrySet()) {
             String property = nullToEmpty(device.getProperty(entry.getValue()));
             buildInfo.addBuildAttribute(entry.getKey(), property);
-        }
-        if (mSkipDeviceInfo && !mForceCollectDeviceInfo) {
-            return;
         }
         run(testInfo);
         try {

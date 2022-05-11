@@ -16,6 +16,9 @@
 
 package com.android.compatibility.common.tradefed.targetprep;
 
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
+
 import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionSetter;
@@ -25,14 +28,17 @@ import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.TargetSetupError;
 
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 /**
  * Tests for {@link SettingsPreparer}
  */
-public class SettingsPreparerTest extends TestCase {
+@RunWith(JUnit4.class)
+public class SettingsPreparerTest {
 
     private SettingsPreparer mSettingsPreparer;
     private IBuildInfo mMockBuildInfo;
@@ -44,12 +50,11 @@ public class SettingsPreparerTest extends TestCase {
     private static final String SHELL_CMD_PUT_7 = "settings put GLOBAL stay_on_while_plugged_in 7";
     private static final String SHELL_CMD_PUT_8 = "settings put GLOBAL stay_on_while_plugged_in 8";
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         mSettingsPreparer = new SettingsPreparer();
-        mMockDevice = EasyMock.createMock(ITestDevice.class);
-        EasyMock.expect(mMockDevice.getDeviceDescriptor()).andReturn(null).anyTimes();
+        mMockDevice = Mockito.mock(ITestDevice.class);
+        when(mMockDevice.getDeviceDescriptor()).thenReturn(null);
         mMockBuildInfo = new BuildInfo("0", "");
         mOptionSetter = new OptionSetter(mSettingsPreparer);
         mOptionSetter.setOptionValue("device-setting", "stay_on_while_plugged_in");
@@ -60,27 +65,30 @@ public class SettingsPreparerTest extends TestCase {
         mTestInfo = TestInformation.newBuilder().setInvocationContext(context).build();
     }
 
+    @Test
     public void testCorrectOneExpected() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_GET)).andReturn("\n3\n").once();
+        when(mMockDevice.executeShellCommand(SHELL_CMD_GET)).thenReturn("\n3\n");
         mOptionSetter.setOptionValue("expected-values", "3");
-        EasyMock.replay(mMockDevice);
+
         mSettingsPreparer.run(mTestInfo);
     }
 
+    @Test
     public void testCorrectManyExpected() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_GET)).andReturn("\n3\n").once();
+        when(mMockDevice.executeShellCommand(SHELL_CMD_GET)).thenReturn("\n3\n");
         mOptionSetter.setOptionValue("expected-values", "2");
         mOptionSetter.setOptionValue("expected-values", "3");
         mOptionSetter.setOptionValue("expected-values", "6");
         mOptionSetter.setOptionValue("expected-values", "7");
-        EasyMock.replay(mMockDevice);
+
         mSettingsPreparer.run(mTestInfo);
     }
 
+    @Test
     public void testIncorrectOneExpected() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_GET)).andReturn("\n0\n").once();
+        when(mMockDevice.executeShellCommand(SHELL_CMD_GET)).thenReturn("\n0\n");
         mOptionSetter.setOptionValue("expected-values", "3");
-        EasyMock.replay(mMockDevice);
+
         try {
             mSettingsPreparer.run(mTestInfo);
             fail("TargetSetupError expected");
@@ -89,13 +97,14 @@ public class SettingsPreparerTest extends TestCase {
         }
     }
 
+    @Test
     public void testIncorrectManyExpected() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_GET)).andReturn("\n0\n").once();
+        when(mMockDevice.executeShellCommand(SHELL_CMD_GET)).thenReturn("\n0\n");
         mOptionSetter.setOptionValue("expected-values", "2");
         mOptionSetter.setOptionValue("expected-values", "3");
         mOptionSetter.setOptionValue("expected-values", "6");
         mOptionSetter.setOptionValue("expected-values", "7");
-        EasyMock.replay(mMockDevice);
+
         try {
             mSettingsPreparer.run(mTestInfo);
             fail("TargetSetupError expected");
@@ -104,18 +113,20 @@ public class SettingsPreparerTest extends TestCase {
         }
     }
 
+    @Test
     public void testCommandRun() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_PUT_7)).andReturn("\n");
+        when(mMockDevice.executeShellCommand(SHELL_CMD_PUT_7)).thenReturn("\n");
         mOptionSetter.setOptionValue("set-value", "7");
-        EasyMock.replay(mMockDevice);
+
         mSettingsPreparer.run(mTestInfo);
     }
 
+    @Test
     public void testCommandRunWrongSetValue() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_PUT_8)).andReturn("\n");
+        when(mMockDevice.executeShellCommand(SHELL_CMD_PUT_8)).thenReturn("\n");
         mOptionSetter.setOptionValue("set-value", "8");
         mOptionSetter.setOptionValue("expected-values", "7");
-        EasyMock.replay(mMockDevice);
+
         try {
             mSettingsPreparer.run(mTestInfo);
             fail("TargetSetupError expected");
@@ -124,9 +135,10 @@ public class SettingsPreparerTest extends TestCase {
         }
     }
 
+    @Test
     public void testIncorrectOneExpectedCommandRun() throws Exception {
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_GET)).andReturn("\n0\n").once();
-        EasyMock.expect(mMockDevice.executeShellCommand(SHELL_CMD_PUT_7)).andReturn("\n");
+        when(mMockDevice.executeShellCommand(SHELL_CMD_GET)).thenReturn("\n0\n");
+        when(mMockDevice.executeShellCommand(SHELL_CMD_PUT_7)).thenReturn("\n");
         mOptionSetter.setOptionValue("set-value", "7");
         mOptionSetter.setOptionValue("expected-values", "7");
     }
