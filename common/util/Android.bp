@@ -13,13 +13,17 @@
 // limitations under the License.
 
 // Build the common utility library for use host-side
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 java_library_host {
     name: "compatibility-common-util-hostsidelib",
     // Restrict visibility to only those targets that need to access it.
-//    visibility: [
-//         "//test/suite_harness/common/host-side/util",
-//         "//test/suite_harness/common/util/tests"
-//    ],
+    visibility: [
+         "//test/suite_harness/common/host-side/util",
+         "//test/suite_harness/common/util/tests"
+    ],
     defaults: ["cts_error_prone_rules"],
 
     static_libs: [
