@@ -60,6 +60,8 @@
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.LoginActivityTest#testAutofillManuallyAlwaysCallServiceAgain" />
     <option name="compatibility:exclude-filter" value="CtsAutoFillServiceTestCases android.autofillservice.cts.LoginWithCustomHighlightActivityTest#testAutofillCustomHighligth" />
     <option name="compatibility:exclude-filter" value="CtsBluetoothTestCases android.bluetooth.cts.BasicAdapterTest#test_setName_getName" />
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.ExtendedCameraCharacteristicsTest#testCameraOrientationAlignedWithDevice[0]" />
+    <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.ExtendedCameraCharacteristicsTest#testCameraOrientationAlignedWithDevice[1]" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.RecordingTest#testBasicVideoStabilizationRecording[1]" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.RecordingTest#testBasicRecording[1]" />
     <option name="compatibility:exclude-filter" value="CtsCameraTestCases android.hardware.camera2.cts.RecordingTest#testRecordingFromPersistentSurface[1]" />
