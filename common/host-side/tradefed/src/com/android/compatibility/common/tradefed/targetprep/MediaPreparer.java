@@ -18,16 +18,17 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
-import com.android.tradefed.dependencies.ExternalDependency;
-import com.android.tradefed.dependencies.IExternalDependency;
-import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
@@ -590,6 +591,9 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
             device.uninstallPackage(APP_PKG_NAME);
         }
         CLog.i("Instrumenting package %s:", APP_PKG_NAME);
+        // We usually discourage from referencing the content provider utility
+        // but in this case, the helper needs it installed.
+        new ContentProviderHandler(device).setUp();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
