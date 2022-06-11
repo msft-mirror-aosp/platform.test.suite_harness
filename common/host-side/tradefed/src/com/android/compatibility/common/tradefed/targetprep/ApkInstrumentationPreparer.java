@@ -26,6 +26,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.observatory.IDiscoverDependencies;
 import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
@@ -45,7 +46,7 @@ import java.util.Set;
 /** Target preparer that instruments an APK. */
 @OptionClass(alias = "apk-instrumentation-preparer")
 public class ApkInstrumentationPreparer extends PreconditionPreparer
-        implements IConfigurationReceiver {
+        implements IConfigurationReceiver, IDiscoverDependencies {
 
     @Option(name = "apk", description = "Name of the apk to instrument", mandatory = true)
     protected String mApkFileName = null;
@@ -118,6 +119,13 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
             CLog.e("Couldn't find apk to instrument");
             CLog.e(e1);
         }
+    }
+
+    @Override
+    public Set<String> reportDependencies() {
+        Set<String> deps = new HashSet<>();
+        deps.add(mApkFileName);
+        return deps;
     }
 
     private boolean instrument(TestInformation testInfo)
