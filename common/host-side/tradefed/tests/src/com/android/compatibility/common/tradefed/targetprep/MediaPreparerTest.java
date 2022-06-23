@@ -24,12 +24,14 @@ import static org.mockito.Mockito.when;
 
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.DeviceBuildInfo;
+import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 
@@ -41,6 +43,8 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Unit tests for {@link MediaPreparer}. */
 @RunWith(JUnit4.class)
@@ -326,6 +330,37 @@ public class MediaPreparerTest {
             mMediaPreparer.setUp(mTestInfo);
         } finally {
             FileUtil.recursiveDelete(mediaFolder);
+        }
+    }
+
+    @Test
+    public void testGetDynamicConfig() throws Exception {
+        Configuration config = new Configuration("name", "test");
+        mMediaPreparer.setConfiguration(config);
+        List<ITargetPreparer> preparers = new ArrayList<>();
+        DynamicConfigPusher pusher = new DynamicConfigPusher();
+        pusher.setModuleName("CtsModuleName");
+        preparers.add(pusher);
+        preparers.add(mMediaPreparer);
+        config.setTargetPreparers(preparers);
+        assertEquals("CtsModuleName.dynamic", mMediaPreparer.getDynamicModuleName());
+    }
+
+    @Test
+    public void testGetDynamicConfig_outOfOrder() throws Exception {
+        Configuration config = new Configuration("name", "test");
+        mMediaPreparer.setConfiguration(config);
+        List<ITargetPreparer> preparers = new ArrayList<>();
+        preparers.add(mMediaPreparer);
+        DynamicConfigPusher pusher = new DynamicConfigPusher();
+        pusher.setModuleName("CtsModuleName");
+        preparers.add(pusher);
+        config.setTargetPreparers(preparers);
+        try {
+            mMediaPreparer.getDynamicModuleName();
+            fail("Should have thrown an exception.");
+        } catch (TargetSetupError expected) {
+            // Expected
         }
     }
 }
