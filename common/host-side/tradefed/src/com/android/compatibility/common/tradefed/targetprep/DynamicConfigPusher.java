@@ -109,7 +109,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     private IInvocationContext mModuleContext = null;
 
-    void setModuleName(String moduleName) {
+    public void setModuleName(String moduleName) {
         mModuleName = moduleName;
     }
 
@@ -157,8 +157,8 @@ public class DynamicConfigPusher extends BaseTargetPreparer
         File hostFile = mergeConfigFiles(localConfigFile, apfeConfigInJson, mModuleName, device);
 
         if (TestTarget.DEVICE.equals(mTarget)) {
-            String deviceDest = String.format("%s%s.dynamic",
-                    DynamicConfig.CONFIG_FOLDER_ON_DEVICE, mModuleName);
+            String deviceDest =
+                    String.format("%s%s", DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
             if (!device.pushFile(hostFile, deviceDest)) {
                 throw new TargetSetupError(
                         String.format(
@@ -286,5 +286,9 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                     false,
                     InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
         }
+    }
+
+    public String createModuleName() {
+        return String.format("%s.dynamic", mModuleName);
     }
 }
