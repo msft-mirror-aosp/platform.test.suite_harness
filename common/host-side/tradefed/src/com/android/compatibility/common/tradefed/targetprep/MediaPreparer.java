@@ -21,6 +21,9 @@ import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
+import com.android.tradefed.config.IDeviceConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.dependencies.ExternalDependency;
@@ -38,6 +41,7 @@ import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.util.FileUtil;
@@ -64,7 +68,8 @@ import java.util.zip.ZipFile;
 
 /** Ensures that the appropriate media files exist on the device */
 @OptionClass(alias = "media-preparer")
-public class MediaPreparer extends BaseTargetPreparer implements IExternalDependency {
+public class MediaPreparer extends BaseTargetPreparer
+        implements IExternalDependency, IConfigurationReceiver {
 
     @Option(
         name = "local-media-path",
@@ -145,6 +150,9 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
      */
     private int mCurrentUser = -1;
 
+    /** The module level configuration to check the target preparers. */
+    private IConfiguration mModuleConfiguration;
+
     /*
      * The default name of local directory into which media files will be downloaded, if option
      * "local-media-path" is not provided. This directory will live inside the temp directory.
@@ -179,6 +187,11 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
             dependencies.add(new NetworkDependency());
         }
         return dependencies;
+    }
+
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mModuleConfiguration = configuration;
     }
 
     /** Helper class for generating and retrieving width-height pairs */
@@ -593,6 +606,10 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
         instrTest.setPackageName(APP_PKG_NAME);
+        String moduleName = getDynamicModuleName();
+        if (moduleName != null) {
+            instrTest.addInstrumentationArg("module-name", moduleName);
+        }
         // AndroidJUnitTest requires a IConfiguration to work properly, add a stub to this
         // implementation to avoid an NPE.
         instrTest.setConfiguration(new Configuration("stub", "stub"));
@@ -625,5 +642,33 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
         public void testFailed(TestDescription test, String trace) {
             mFailureStackTrace = trace;
         }
+    }
+
+    @VisibleForTesting
+    protected String getDynamicModuleName() throws TargetSetupError {
+        String moduleName = null;
+        boolean sameDevice = false;
+        for (IDeviceConfiguration deviceConfig : mModuleConfiguration.getDeviceConfig()) {
+            for (ITargetPreparer prep : deviceConfig.getTargetPreparers()) {
+                if (prep instanceof DynamicConfigPusher) {
+                    moduleName = ((DynamicConfigPusher) prep).createModuleName();
+                    if (sameDevice) {
+                        throw new TargetSetupError(
+                                "DynamicConfigPusher needs to be configured before MediaPreparer"
+                                        + " in your module configuration.",
+                                InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
+                    }
+                }
+                if (prep.equals(this)) {
+                    sameDevice = true;
+                    if (moduleName != null) {
+                        return moduleName;
+                    }
+                }
+            }
+            moduleName = null;
+            sameDevice = false;
+        }
+        return null;
     }
 }
