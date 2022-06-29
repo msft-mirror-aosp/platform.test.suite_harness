@@ -23,45 +23,67 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.ddmlib.IDevice;
-import com.android.tradefed.build.BuildInfo;
-import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.build.DeviceBuildInfo;
+import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.OptionSetter;
+import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.TestInformation;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 
-import java.io.File;
-
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 /** Unit tests for {@link MediaPreparer}. */
 @RunWith(JUnit4.class)
 public class MediaPreparerTest {
 
     private MediaPreparer mMediaPreparer;
-    private IBuildInfo mMockBuildInfo;
+    private DeviceBuildInfo mMockBuildInfo;
     private ITestDevice mMockDevice;
     private OptionSetter mOptionSetter;
     private TestInformation mTestInfo;
+    private File mTestsDir;
 
     @Before
     public void setUp() throws Exception {
-        mMediaPreparer = new MediaPreparer();
+        mMediaPreparer =
+                new MediaPreparer() {
+                    @Override
+                    protected void setMaxRes(TestInformation testInfo)
+                            throws DeviceNotAvailableException, TargetSetupError {
+                        if (mMaxRes != null) return;
+                        super.setMaxRes(testInfo);
+                    }
+                };
         mMediaPreparer.setUserId(0);
         mMockDevice = Mockito.mock(ITestDevice.class);
-        mMockBuildInfo = new BuildInfo("0", "");
+        mMockBuildInfo = new DeviceBuildInfo("0", "");
+        mTestsDir = FileUtil.createTempDir("media-unit-tests");
+        mMockBuildInfo.setTestsDir(mTestsDir, "1");
+        new File(mTestsDir, "CtsMediaPreparerApp.apk").createNewFile();
         mOptionSetter = new OptionSetter(mMediaPreparer);
         IInvocationContext context = new InvocationContext();
         context.addDeviceBuildInfo("device", mMockBuildInfo);
         context.addAllocatedDevice("device", mMockDevice);
         mTestInfo = TestInformation.newBuilder().setInvocationContext(context).build();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        FileUtil.recursiveDelete(mTestsDir);
     }
 
     @Test
@@ -97,13 +119,13 @@ public class MediaPreparerTest {
 
     @Test
     public void testCopyMediaFiles() throws Exception {
-        mMediaPreparer.mMaxRes = MediaPreparer.DEFAULT_MAX_RESOLUTION;
+        mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
         mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
-            if (resolution.getWidth() > MediaPreparer.DEFAULT_MAX_RESOLUTION.getWidth()) {
+            if (resolution.getWidth() > MediaPreparer.RESOLUTIONS[1].getWidth()) {
                 // Stop when we reach the default max resolution
                 continue;
             }
@@ -124,7 +146,7 @@ public class MediaPreparerTest {
 
     @Test
     public void testMediaFilesExistOnDeviceTrue() throws Exception {
-        mMediaPreparer.mMaxRes = MediaPreparer.DEFAULT_MAX_RESOLUTION;
+        mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
         mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
@@ -152,7 +174,7 @@ public class MediaPreparerTest {
 
     @Test
     public void testMediaFilesExistOnDeviceFalse() throws Exception {
-        mMediaPreparer.mMaxRes = MediaPreparer.DEFAULT_MAX_RESOLUTION;
+        mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         String firstFileChecked = "/sdcard/test/bbb_short/176x144";
         when(mMockDevice.doesFileExist(firstFileChecked)).thenReturn(false);
@@ -201,6 +223,7 @@ public class MediaPreparerTest {
     /** Test that if we decide to run and files are on the device, we don't download again. */
     @Test
     public void testMediaDownloadOnly_existsOnDevice() throws Exception {
+        mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[3];
         mOptionSetter.setOptionValue("local-media-path", "/fake/media/dir");
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
@@ -208,7 +231,7 @@ public class MediaPreparerTest {
         when(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE))
                 .thenReturn("/sdcard");
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
-            if (resolution.getWidth() > MediaPreparer.DEFAULT_MAX_RESOLUTION.getWidth()) {
+            if (resolution.getWidth() > MediaPreparer.RESOLUTIONS[1].getWidth()) {
                 // Stop when we reach the default max resolution
                 continue;
             }
@@ -307,6 +330,37 @@ public class MediaPreparerTest {
             mMediaPreparer.setUp(mTestInfo);
         } finally {
             FileUtil.recursiveDelete(mediaFolder);
+        }
+    }
+
+    @Test
+    public void testGetDynamicConfig() throws Exception {
+        Configuration config = new Configuration("name", "test");
+        mMediaPreparer.setConfiguration(config);
+        List<ITargetPreparer> preparers = new ArrayList<>();
+        DynamicConfigPusher pusher = new DynamicConfigPusher();
+        pusher.setModuleName("CtsModuleName");
+        preparers.add(pusher);
+        preparers.add(mMediaPreparer);
+        config.setTargetPreparers(preparers);
+        assertEquals("CtsModuleName.dynamic", mMediaPreparer.getDynamicModuleName());
+    }
+
+    @Test
+    public void testGetDynamicConfig_outOfOrder() throws Exception {
+        Configuration config = new Configuration("name", "test");
+        mMediaPreparer.setConfiguration(config);
+        List<ITargetPreparer> preparers = new ArrayList<>();
+        preparers.add(mMediaPreparer);
+        DynamicConfigPusher pusher = new DynamicConfigPusher();
+        pusher.setModuleName("CtsModuleName");
+        preparers.add(pusher);
+        config.setTargetPreparers(preparers);
+        try {
+            mMediaPreparer.getDynamicModuleName();
+            fail("Should have thrown an exception.");
+        } catch (TargetSetupError expected) {
+            // Expected
         }
     }
 }
