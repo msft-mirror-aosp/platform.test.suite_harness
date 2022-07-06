@@ -343,7 +343,7 @@ public class MediaPreparerTest {
         preparers.add(pusher);
         preparers.add(mMediaPreparer);
         config.setTargetPreparers(preparers);
-        assertEquals("CtsModuleName.dynamic", mMediaPreparer.getDynamicModuleName());
+        assertEquals("CtsModuleName", mMediaPreparer.getDynamicModuleName());
     }
 
     @Test
