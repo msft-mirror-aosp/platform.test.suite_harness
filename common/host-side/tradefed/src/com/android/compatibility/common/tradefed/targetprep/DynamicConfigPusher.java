@@ -158,7 +158,9 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
         if (TestTarget.DEVICE.equals(mTarget)) {
             String deviceDest =
-                    String.format("%s%s", DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
+                    String.format(
+                            "%s%s.dynamic",
+                            DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
             if (!device.pushFile(hostFile, deviceDest)) {
                 throw new TargetSetupError(
                         String.format(
@@ -289,6 +291,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     }
 
     public String createModuleName() {
-        return String.format("%s.dynamic", mModuleName);
+        // Device side utility already adds .dynamic extension
+        return String.format("%s", mModuleName);
     }
 }
