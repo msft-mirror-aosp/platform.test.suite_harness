@@ -18,23 +18,30 @@ package com.android.compatibility.common.tradefed.targetprep;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
-import com.android.compatibility.dependencies.ExternalDependency;
-import com.android.compatibility.dependencies.IExternalDependency;
-import com.android.compatibility.dependencies.connectivity.NetworkDependency;
 import com.android.ddmlib.IDevice;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
+import com.android.tradefed.config.IDeviceConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.metrics.proto.MetricMeasurement.Metric;
 import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.TestDescription;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
+import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
+import com.android.tradefed.targetprep.ITargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.AndroidJUnitTest;
 import com.android.tradefed.util.FileUtil;
@@ -61,7 +68,8 @@ import java.util.zip.ZipFile;
 
 /** Ensures that the appropriate media files exist on the device */
 @OptionClass(alias = "media-preparer")
-public class MediaPreparer extends BaseTargetPreparer implements IExternalDependency {
+public class MediaPreparer extends BaseTargetPreparer
+        implements IExternalDependency, IConfigurationReceiver {
 
     @Option(
         name = "local-media-path",
@@ -142,6 +150,9 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
      */
     private int mCurrentUser = -1;
 
+    /** The module level configuration to check the target preparers. */
+    private IConfiguration mModuleConfiguration;
+
     /*
      * The default name of local directory into which media files will be downloaded, if option
      * "local-media-path" is not provided. This directory will live inside the temp directory.
@@ -160,14 +171,6 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
     /* Key to retrieve resolution string in metrics upon MediaPreparerListener.testEnded() */
     private static final String RESOLUTION_STRING_KEY = "resolution";
 
-    /*
-     * In the case of MediaPreparer error, the default maximum resolution to push to the device.
-     * Pushing higher resolutions may lead to insufficient storage for installing test APKs.
-     * TODO(aaronholden): When the new detection of max resolution is proven stable, throw
-     * a TargetSetupError when detection results in error
-     */
-    protected static final Resolution DEFAULT_MAX_RESOLUTION = new Resolution(480, 360);
-
     protected static final Resolution[] RESOLUTIONS = {
             new Resolution(176, 144),
             new Resolution(480, 360),
@@ -184,6 +187,11 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
             dependencies.add(new NetworkDependency());
         }
         return dependencies;
+    }
+
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mModuleConfiguration = configuration;
     }
 
     /** Helper class for generating and retrieving width-height pairs */
@@ -533,7 +541,8 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
         if (mImagesOnly && mPushAll) {
             throw new TargetSetupError(
                     "'images-only' and 'push-all' cannot be set to true together.",
-                    device.getDeviceDescriptor());
+                    device.getDeviceDescriptor(),
+                    InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
         }
         if (mSkipMediaDownload) {
             CLog.i("Skipping media preparation");
@@ -567,7 +576,9 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
     }
 
     // Initialize maximum resolution of media files to copy
-    private void setMaxRes(TestInformation testInfo) throws DeviceNotAvailableException {
+    @VisibleForTesting
+    protected void setMaxRes(TestInformation testInfo)
+            throws DeviceNotAvailableException, TargetSetupError {
         ITestInvocationListener listener = new MediaPreparerListener();
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
@@ -580,33 +591,39 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
                 throw new FileNotFoundException();
             }
         } catch (FileNotFoundException e) {
-            mMaxRes = DEFAULT_MAX_RESOLUTION;
-            CLog.w(
-                    "Cound not find %s to determine maximum resolution, copying up to %s",
-                    APP_APK, DEFAULT_MAX_RESOLUTION.toString());
-            return;
+            throw new TargetSetupError(
+                    String.format("Could not find '%s'", APP_APK),
+                    InfraErrorIdentifier.CONFIGURED_ARTIFACT_NOT_FOUND);
         }
         if (device.getAppPackageInfo(APP_PKG_NAME) != null) {
             device.uninstallPackage(APP_PKG_NAME);
         }
         CLog.i("Instrumenting package %s:", APP_PKG_NAME);
+        // We usually discourage from referencing the content provider utility
+        // but in this case, the helper needs it installed.
+        new ContentProviderHandler(device).setUp();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
         instrTest.setPackageName(APP_PKG_NAME);
+        String moduleName = getDynamicModuleName();
+        if (moduleName != null) {
+            instrTest.addInstrumentationArg("module-name", moduleName);
+        }
         // AndroidJUnitTest requires a IConfiguration to work properly, add a stub to this
         // implementation to avoid an NPE.
         instrTest.setConfiguration(new Configuration("stub", "stub"));
         instrTest.run(testInfo, listener);
         if (mFailureStackTrace != null) {
-            mMaxRes = DEFAULT_MAX_RESOLUTION;
-            CLog.w("Retrieving maximum resolution failed with trace:\n%s", mFailureStackTrace);
-            CLog.w("Copying up to %s", DEFAULT_MAX_RESOLUTION.toString());
+            throw new TargetSetupError(
+                    String.format(
+                            "Retrieving maximum resolution failed with trace:\n%s",
+                            mFailureStackTrace),
+                    DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
         } else if (mMaxRes == null) {
-            mMaxRes = DEFAULT_MAX_RESOLUTION;
-            CLog.w(
-                    "Failed to pull resolution capabilities from device, copying up to %s",
-                    DEFAULT_MAX_RESOLUTION.toString());
+            throw new TargetSetupError(
+                    String.format("Failed to pull resolution capabilities from device"),
+                    DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
         }
     }
 
@@ -625,5 +642,33 @@ public class MediaPreparer extends BaseTargetPreparer implements IExternalDepend
         public void testFailed(TestDescription test, String trace) {
             mFailureStackTrace = trace;
         }
+    }
+
+    @VisibleForTesting
+    protected String getDynamicModuleName() throws TargetSetupError {
+        String moduleName = null;
+        boolean sameDevice = false;
+        for (IDeviceConfiguration deviceConfig : mModuleConfiguration.getDeviceConfig()) {
+            for (ITargetPreparer prep : deviceConfig.getTargetPreparers()) {
+                if (prep instanceof DynamicConfigPusher) {
+                    moduleName = ((DynamicConfigPusher) prep).createModuleName();
+                    if (sameDevice) {
+                        throw new TargetSetupError(
+                                "DynamicConfigPusher needs to be configured before MediaPreparer"
+                                        + " in your module configuration.",
+                                InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
+                    }
+                }
+                if (prep.equals(this)) {
+                    sameDevice = true;
+                    if (moduleName != null) {
+                        return moduleName;
+                    }
+                }
+            }
+            moduleName = null;
+            sameDevice = false;
+        }
+        return null;
     }
 }

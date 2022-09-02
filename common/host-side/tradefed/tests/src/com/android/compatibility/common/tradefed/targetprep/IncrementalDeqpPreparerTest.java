@@ -18,18 +18,18 @@ package com.android.compatibility.common.tradefed.targetprep;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
-import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
@@ -38,11 +38,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -56,37 +54,31 @@ import java.util.Set;
 public class IncrementalDeqpPreparerTest {
 
     private IncrementalDeqpPreparer mPreparer;
-    private TestInformation mTestInfo;
-    private IInvocationContext mMockContext;
-    private OptionSetter mOptionSetter;
     private ITestDevice mMockDevice;
-    private IBuildInfo mMockBuildInfo;
-    private CompatibilityBuildHelper mMockBuildHelper;
 
     @Before
     public void setUp() throws Exception {
         mPreparer = new IncrementalDeqpPreparer();
-        mOptionSetter = new OptionSetter(mPreparer);
-        mMockDevice = Mockito.mock(ITestDevice.class);
-        mMockBuildInfo = new BuildInfo();
-        IInvocationContext mMockContext = new InvocationContext();
-        mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
-        mMockContext.addAllocatedDevice("device", mMockDevice);
-        mTestInfo = TestInformation.newBuilder().setInvocationContext(mMockContext).build();
+        mMockDevice = mock(ITestDevice.class);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     public void testSkipPreparerWhenReportExists() throws Exception {
         File resultDir = FileUtil.createTempDir("result");
         try {
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
             File deviceInfoDir = new File(resultDir, "device-info-files");
             deviceInfoDir.mkdir();
             File report = new File(deviceInfoDir, IncrementalDeqpPreparer.REPORT_NAME);
             report.createNewFile();
-            mMockBuildHelper =
+            CompatibilityBuildHelper mMockBuildHelper =
                     new CompatibilityBuildHelper(mMockBuildInfo) {
                         @Override
-                        public File getResultDir() throws FileNotFoundException {
+                        public File getResultDir() {
                             return resultDir;
                         }
                     };
@@ -100,8 +92,7 @@ public class IncrementalDeqpPreparerTest {
 
     @Test
     public void testParseDump() throws IOException {
-        InputStream inputStream =
-                getClass().getResourceAsStream(String.format("/testdata/perf-dump.txt"));
+        InputStream inputStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
         String content = StreamUtil.getStringFromStream(inputStream);
         Set<String> dependency = mPreparer.parseDump(content);
         Set<String> expect = new HashSet<>();
@@ -156,7 +147,7 @@ public class IncrementalDeqpPreparerTest {
     }
 
     @Test
-    public void testCheckTestLogTestCraches() throws IOException {
+    public void testCheckTestLogTestCrashes() throws IOException {
         InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
         InputStream logStream = getClass().getResourceAsStream("/testdata/log_2.qpa");
         String testListContent = StreamUtil.getStringFromStream(testListStream);
@@ -177,6 +168,38 @@ public class IncrementalDeqpPreparerTest {
         assertEquals(mPreparer.getBinaryFileName("vk-64"), "deqp-binary64");
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void prepareDeqpResource_arm() throws Exception {
+        File deqpResource = FileUtil.createTempDir("prepareDeqpResource_arm");
+        File armDir = new File(deqpResource, "arm");
+        armDir.mkdir();
+        File arm64Dir = new File(deqpResource, "arm64");
+        arm64Dir.mkdir();
+        new File(armDir, "deqp-binary").createNewFile();
+        new File(arm64Dir, "deqp-binary64").createNewFile();
+
+        mPreparer.prepareDeqpResource(arm64Dir);
+
+        assertNotNull(FileUtil.findFile(arm64Dir, "deqp-binary"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void prepareDeqpResource_x86() throws Exception {
+        File deqpResource = FileUtil.createTempDir("prepareDeqpResource_x86");
+        File x86Dir = new File(deqpResource, "x86");
+        x86Dir.mkdir();
+        File x8664Dir = new File(deqpResource, "x86_64");
+        x8664Dir.mkdir();
+        new File(x86Dir, "deqp-binary").createNewFile();
+        new File(x8664Dir, "deqp-binary64").createNewFile();
+
+        mPreparer.prepareDeqpResource(x8664Dir);
+
+        assertNotNull(FileUtil.findFile(x8664Dir, "deqp-binary"));
+    }
+
     @Test
     public void getBuildFingerPrint() throws IOException, TargetSetupError {
         // base_build_target-files.zip is a stripped down version of the target-files.zip generated
@@ -189,7 +212,8 @@ public class IncrementalDeqpPreparerTest {
 
             assertEquals(
                     mPreparer.getBuildFingerPrint(zipFile, mMockDevice),
-                    "generic/aosp_cf_x86_64_phone/vsoc_x86_64:S/AOSP.MASTER/7363308:userdebug/test-keys");
+                    "generic/aosp_cf_x86_64_phone/vsoc_x86_64:S/AOSP"
+                            + ".MASTER/7363308:userdebug/test-keys");
         } finally {
             FileUtil.deleteFile(zipFile);
         }

@@ -19,9 +19,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
 import com.android.compatibility.common.util.DynamicConfigHandler;
-import com.android.compatibility.dependencies.ExternalDependency;
-import com.android.compatibility.dependencies.IExternalDependency;
-import com.android.compatibility.dependencies.connectivity.NetworkDependency;
+import com.android.tradefed.dependencies.ExternalDependency;
+import com.android.tradefed.dependencies.IExternalDependency;
+import com.android.tradefed.dependencies.connectivity.NetworkDependency;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
@@ -109,7 +109,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     private IInvocationContext mModuleContext = null;
 
-    void setModuleName(String moduleName) {
+    public void setModuleName(String moduleName) {
         mModuleName = moduleName;
     }
 
@@ -157,8 +157,10 @@ public class DynamicConfigPusher extends BaseTargetPreparer
         File hostFile = mergeConfigFiles(localConfigFile, apfeConfigInJson, mModuleName, device);
 
         if (TestTarget.DEVICE.equals(mTarget)) {
-            String deviceDest = String.format("%s%s.dynamic",
-                    DynamicConfig.CONFIG_FOLDER_ON_DEVICE, mModuleName);
+            String deviceDest =
+                    String.format(
+                            "%s%s.dynamic",
+                            DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
             if (!device.pushFile(hostFile, deviceDest)) {
                 throw new TargetSetupError(
                         String.format(
@@ -286,5 +288,10 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                     false,
                     InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
         }
+    }
+
+    public String createModuleName() {
+        // Device side utility already adds .dynamic extension
+        return String.format("%s", mModuleName);
     }
 }
