@@ -28,7 +28,6 @@ java_library_host {
     ],
 
     libs: [
-        "json-prebuilt",
         "tradefed",
     ],
 }
