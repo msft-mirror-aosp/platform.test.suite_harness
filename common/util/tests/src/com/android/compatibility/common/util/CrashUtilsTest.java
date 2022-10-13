@@ -16,6 +16,8 @@
 
 package com.android.compatibility.common.util;
 
+import com.android.compatibility.common.util.CrashUtils.Config.BacktraceFilterPattern;
+import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /** Unit tests for {@link CrashUtils}. */
@@ -53,41 +56,472 @@ public class CrashUtilsTest {
     @Test
     public void testGetAllCrashes() throws Exception {
         JSONArray expectedResults = new JSONArray();
-        expectedResults.put(createCrashJson(
-                11071, 11189, "AudioOut_D", "/system/bin/audioserver", "e9380000", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                12736, 12761, "Binder:12736_2", "/system/bin/audioserver", "0", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                26201, 26227, "Binder:26201_3", "/system/bin/audioserver", "0", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                26246, 26282, "Binder:26246_5", "/system/bin/audioserver", "0", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                245, 245, "installd", "/system/bin/installd", null, "SIGABRT",
-                "'utils.cpp:67] Check failed: is_valid_package_name(package_name) == 0 '"));
-        expectedResults.put(createCrashJson(
-                6371, 8072, "media.codec", "omx@1.0-service", "ed000000", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                8373, 8414, "loo", "com.android.bluetooth", null, "SIGABRT",
-                "'[FATAL:allocation_tracker.cc(143)] Check failed: map_entry != allocations.end()."));
-        expectedResults.put(createCrashJson(
-                8080, 11665, "generic", "/system/bin/mediaserver", null, "SIGABRT",
-                "'frameworks/av/media/libstagefright/MPEG4Extractor.cpp:6853 CHECK_EQ( (unsigned)ptr[0],1u) failed: 129 vs. 1'"));
-        expectedResults.put(createCrashJson(
-                11071, 11189, "synthetic_thread", "synthetic_process_0", "e9380000", "SIGSEGV", null));
-        expectedResults.put(createCrashJson(
-                12736, 12761, "synthetic_thread", "synthetic_process_1", "0", "SIGSEGV", null));
+        expectedResults.put(
+                createCrashJson(
+                        11071,
+                        11189,
+                        "AudioOut_D",
+                        "/system/bin/audioserver",
+                        "e9380000",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame(
+                                        "/system/lib/libaudioutils.so",
+                                        "memcpy_to_float_from_i16+5"),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        12736,
+                        12761,
+                        "Binder:12736_2",
+                        "/system/bin/audioserver",
+                        "0",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libc.so", "strlen+71"),
+                                stackFrame("/system/lib/libc.so", "__strlen_chk+4"),
+                                stackFrame(
+                                        "/system/lib/libutils.so", "_ZN7android7String8C2EPKc+12"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZNK7android18HwModuleCollection19getDeviceDescriptorEjPKcS2_b+458"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZN7android18AudioPolicyManager27setDeviceConnectionStateIntEj24"
+                                            + "audio_policy_dev_state_tPKcS3_+178"),
+                                stackFrame("/system/lib/libaudiopolicyservice.so", null),
+                                stackFrame(
+                                        "/system/lib/libmedia.so",
+                                        "_ZN7android20BnAudioPolicyService10onTransactEjRKNS_6ParcelEPS1_j+1256"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android7BBinder8transactEjRKNS_6ParcelEPS1_j+70"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14executeCommandEi+702"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState20getAndExecuteCommandEv+114"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14joinThreadPoolEb+46"),
+                                stackFrame("/system/lib/libbinder.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        26201,
+                        26227,
+                        "Binder:26201_3",
+                        "/system/bin/audioserver",
+                        "0",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libc.so", "strlen+71"),
+                                stackFrame("/system/lib/libc.so", "__strlen_chk+4"),
+                                stackFrame(
+                                        "/system/lib/libutils.so", "_ZN7android7String8C2EPKc+12"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZNK7android18HwModuleCollection19getDeviceDescriptorEjPKcS2_b+458"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZN7android18AudioPolicyManager27setDeviceConnectionStateIntEj24"
+                                            + "audio_policy_dev_state_tPKcS3_+178"),
+                                stackFrame("/system/lib/libaudiopolicyservice.so", null),
+                                stackFrame(
+                                        "/system/lib/libmedia.so",
+                                        "_ZN7android20BnAudioPolicyService10onTransactEjRKNS_6ParcelEPS1_j+1256"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android7BBinder8transactEjRKNS_6ParcelEPS1_j+70"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14executeCommandEi+702"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState20getAndExecuteCommandEv+114"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14joinThreadPoolEb+46"),
+                                stackFrame("/system/lib/libbinder.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        26246,
+                        26282,
+                        "Binder:26246_5",
+                        "/system/bin/audioserver",
+                        "0",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libc.so", "strlen+71"),
+                                stackFrame("/system/lib/libc.so", "__strlen_chk+4"),
+                                stackFrame(
+                                        "/system/lib/libutils.so", "_ZN7android7String8C2EPKc+12"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZNK7android18HwModuleCollection19getDeviceDescriptorEjPKcS2_b+458"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZN7android18AudioPolicyManager27setDeviceConnectionStateIntEj24"
+                                            + "audio_policy_dev_state_tPKcS3_+178"),
+                                stackFrame("/system/lib/libaudiopolicyservice.so", null),
+                                stackFrame(
+                                        "/system/lib/libmedia.so",
+                                        "_ZN7android20BnAudioPolicyService10onTransactEjRKNS_6ParcelEPS1_j+1256"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android7BBinder8transactEjRKNS_6ParcelEPS1_j+70"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14executeCommandEi+702"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState20getAndExecuteCommandEv+114"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14joinThreadPoolEb+46"),
+                                stackFrame("/system/lib/libbinder.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        245,
+                        245,
+                        "installd",
+                        "/system/bin/installd",
+                        null,
+                        "SIGABRT",
+                        "'utils.cpp:67] Check failed: is_valid_package_name(package_name) == 0 '",
+                        ImmutableList.of(
+                                stackFrame("/system/lib64/libc.so", "tgkill+8"),
+                                stackFrame("/system/lib64/libc.so", "pthread_kill+64"),
+                                stackFrame("/system/lib64/libc.so", "raise+24"),
+                                stackFrame("/system/lib64/libc.so", "abort+52"),
+                                stackFrame(
+                                        "/system/lib64/libbase.so",
+                                        "_ZN7android4base10LogMessageD1Ev+1084"),
+                                stackFrame("/system/bin/installd", null),
+                                stackFrame("/system/bin/installd", null),
+                                stackFrame("/system/bin/installd", null),
+                                stackFrame("/system/bin/installd", null),
+                                stackFrame("/system/lib64/libc.so", "__libc_init+88"),
+                                stackFrame("/system/bin/installd", null))));
+        expectedResults.put(
+                createCrashJson(
+                        6371,
+                        8072,
+                        "media.codec",
+                        "omx@1.0-service",
+                        "ed000000",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libstagefright_soft_hevcdec.so", null))));
+        expectedResults.put(
+                createCrashJson(
+                        8373,
+                        8414,
+                        "loo",
+                        "com.android.bluetooth",
+                        null,
+                        "SIGABRT",
+                        "'[FATAL:allocation_tracker.cc(143)] Check failed: map_entry !="
+                                + " allocations.end().",
+                        ImmutableList.of(
+                                stackFrame("/system/lib64/libc.so", "abort+120"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::debug::BreakDebugger()+20"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "logging::LogMessage::~LogMessage()+1068"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "allocation_tracker_notify_free(unsigned char, void*)+720"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "osi_free(void*)+20"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "l2c_fcr_cleanup(t_l2c_ccb*)+92"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "l2cu_release_ccb(t_l2c_ccb*)+176"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "l2c_csm_execute(t_l2c_ccb*, unsigned short, void*)+1852"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "L2CA_DisconnectRsp(unsigned short)+92"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "sdp_disconnect_ind(unsigned short, bool)+52"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "l2c_csm_execute(t_l2c_ccb*, unsigned short, void*)+3600"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "l2c_rcv_acl_data(BT_HDR*)+3980"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::debug::TaskAnnotator::RunTask(char const*, "
+                                                + "base::PendingTask const&)+188"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::MessageLoop::RunTask(base::PendingTask const&)+444"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::MessageLoop::DeferOrRunPendingTask(base::PendingTask)+52"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::MessageLoop::DoWork()+356"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so",
+                                        "base::MessagePumpDefault::Run(base::MessagePump::Delegate*)+220"),
+                                stackFrame(
+                                        "/system/lib64/libchrome.so", "base::RunLoop::Run()+136"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "btu_message_loop_run(void*)+248"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "work_queue_read_cb(void*)+92"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "run_reactor(reactor_t*, int)+320"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "reactor_start(reactor_t*)+84"),
+                                stackFrame(
+                                        "/system/lib64/hw/bluetooth.default.so",
+                                        "run_thread(void*)+184"),
+                                stackFrame("/system/lib64/libc.so", "__pthread_start(void*)+36"),
+                                stackFrame("/system/lib64/libc.so", "__start_thread+68"))));
+        expectedResults.put(
+                createCrashJson(
+                        8080,
+                        11665,
+                        "generic",
+                        "/system/bin/mediaserver",
+                        null,
+                        "SIGABRT",
+                        "'frameworks/av/media/libstagefright/MPEG4Extractor.cpp:6853 CHECK_EQ("
+                                + " (unsigned)ptr[0],1u) failed: 129 vs. 1'",
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libc.so", "tgkill+12"),
+                                stackFrame("/system/lib/libc.so", "pthread_kill+32"),
+                                stackFrame("/system/lib/libc.so", "raise+10"),
+                                stackFrame("/system/lib/libc.so", "__libc_android_abort+34"),
+                                stackFrame("/system/lib/libc.so", "abort+4"),
+                                stackFrame("/system/lib/libcutils.so", "__android_log_assert+86"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor25avcc_getCodecSpecificInfo"
+                                                + "ERNS_2spINS_7ABufferEEEPKcj+392"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor15checkConfigDataEjRKNS_2spINS_8MetaDataEEE+218"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor12checkSupportEjRKNS_2spINS_8MetaDataEEE+136"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+13060"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+12508"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+6174"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+6174"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+6174"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+6174"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor10parseChunkEPxi+6174"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor12readMetaDataEv+94"),
+                                stackFrame(
+                                        "/system/lib/libstagefright.so",
+                                        "_ZN7android14MPEG4Extractor11getMetaDataEv+10"),
+                                stackFrame(
+                                        "/system/lib/libmediaplayerservice.so",
+                                        "_ZN7android8NuPlayer13GenericSource18initFromDataSourceEv+386"),
+                                stackFrame(
+                                        "/system/lib/libmediaplayerservice.so",
+                                        "_ZN7android8NuPlayer13GenericSource14onPrepareAsyncEv+238"),
+                                stackFrame(
+                                        "/system/lib/libstagefright_foundation.so",
+                                        "_ZN7android8AHandler14deliverMessageERKNS_2spINS_8AMessageEEE+16"),
+                                stackFrame(
+                                        "/system/lib/libstagefright_foundation.so",
+                                        "_ZN7android8AMessage7deliverEv+54"),
+                                stackFrame(
+                                        "/system/lib/libstagefright_foundation.so",
+                                        "_ZN7android7ALooper4loopEv+224"),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+112"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+30"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        11071,
+                        11189,
+                        "synthetic_thread",
+                        "synthetic_process_0",
+                        "e9380000",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame(
+                                        "/system/lib/libaudioutils.so",
+                                        "memcpy_to_float_from_i16+5"),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame("/system/lib/libaudioflinger.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        12736,
+                        12761,
+                        "synthetic_thread",
+                        "synthetic_process_1",
+                        "0",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame("/system/lib/libc.so", "strlen+71"),
+                                stackFrame("/system/lib/libc.so", "__strlen_chk+4"),
+                                stackFrame(
+                                        "/system/lib/libutils.so", "_ZN7android7String8C2EPKc+12"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZNK7android18HwModuleCollection19getDeviceDescriptorEjPKcS2_b+458"),
+                                stackFrame(
+                                        "/system/lib/libaudiopolicymanagerdefault.so",
+                                        "_ZN7android18AudioPolicyManager27setDeviceConnectionStateIntEj24"
+                                            + "audio_policy_dev_state_tPKcS3_+178"),
+                                stackFrame("/system/lib/libaudiopolicyservice.so", null),
+                                stackFrame(
+                                        "/system/lib/libmedia.so",
+                                        "_ZN7android20BnAudioPolicyService10onTransactEjRKNS_6ParcelEPS1_j+1256"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android7BBinder8transactEjRKNS_6ParcelEPS1_j+70"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14executeCommandEi+702"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState20getAndExecuteCommandEv+114"),
+                                stackFrame(
+                                        "/system/lib/libbinder.so",
+                                        "_ZN7android14IPCThreadState14joinThreadPoolEb+46"),
+                                stackFrame("/system/lib/libbinder.so", null),
+                                stackFrame(
+                                        "/system/lib/libutils.so",
+                                        "_ZN7android6Thread11_threadLoopEPv+140"),
+                                stackFrame("/system/lib/libc.so", "_ZL15__pthread_startPv+22"),
+                                stackFrame("/system/lib/libc.so", "__start_thread+6"))));
+        expectedResults.put(
+                createCrashJson(
+                        8925,
+                        8925,
+                        "CVE-2021-0684",
+                        "/data/local/tmp/CVE-2021-0684",
+                        "7e772b8cfbe0",
+                        "SIGSEGV",
+                        null,
+                        ImmutableList.of(
+                                stackFrame(
+                                        "/system/lib64/libinputreader.so",
+                                        "android::TouchInputMapper::assignPointerIds("
+                                                + "android::TouchInputMapper::RawState const*, "
+                                                + "android::TouchInputMapper::RawState*)+37"),
+                                stackFrame(
+                                        "/system/lib64/libinputreader.so",
+                                        "android::TouchInputMapper::sync(long, long)+285"),
+                                stackFrame(
+                                        "/system/lib64/libinputreader.so",
+                                        "android::MultiTouchInputMapper::process(android::RawEvent"
+                                                + " const*)+14"),
+                                stackFrame("/data/local/tmp/CVE-2021-0684", null),
+                                stackFrame("/data/local/tmp/CVE-2021-0684", null),
+                                stackFrame(
+                                        "/apex/com.android.runtime/lib64/bionic/libc.so",
+                                        "__libc_init+86"))));
 
-        Assert.assertEquals(expectedResults.toString() + "\n" +  mCrashes.toString() + "\n", expectedResults.toString(), mCrashes.toString());
+        Assert.assertEquals(
+                expectedResults.toString() + "\n" + mCrashes.toString() + "\n",
+                expectedResults.toString(),
+                mCrashes.toString());
+    }
+
+    /** Helper method to shorten code for readability. */
+    private JSONObject stackFrame(String filename, String method) throws JSONException {
+        return new JSONObject().put(CrashUtils.FILENAME, filename).put(CrashUtils.METHOD, method);
     }
 
     public JSONObject createCrashJson(
-                int pid,
-                int tid,
-                String name,
-                String process,
-                String faultaddress,
-                String signal,
-                String abortMessage) {
+            int pid,
+            int tid,
+            String name,
+            String process,
+            String faultaddress,
+            String signal,
+            String abortMessage) {
+        return createCrashJson(
+                pid, tid, name, process, faultaddress, signal, abortMessage, ImmutableList.of());
+    }
+
+    public JSONObject createCrashJson(
+            int pid,
+            int tid,
+            String name,
+            String process,
+            String faultaddress,
+            String signal,
+            String abortMessage,
+            List<JSONObject> stacktrace) {
         JSONObject json = new JSONObject();
         try {
             json.put(CrashUtils.PID, pid);
@@ -97,6 +531,12 @@ public class CrashUtilsTest {
             json.put(CrashUtils.FAULT_ADDRESS, faultaddress);
             json.put(CrashUtils.SIGNAL, signal);
             json.put(CrashUtils.ABORT_MESSAGE, abortMessage);
+
+            JSONArray stacktraceJson = new JSONArray();
+            for (JSONObject stackframe : stacktrace) {
+                stacktraceJson.put(stackframe);
+            }
+            json.put(CrashUtils.BACKTRACE, stacktraceJson);
         } catch (JSONException e) {}
         return json;
     }
@@ -155,7 +595,8 @@ public class CrashUtilsTest {
     @Test
     public void testNullFaultAddress() throws Exception {
         JSONArray crashes = new JSONArray();
-        crashes.put(createCrashJson(8373, 8414, "loo", "com.android.bluetooth", null, "SIGSEGV", ""));
+        crashes.put(
+                createCrashJson(8373, 8414, "loo", "com.android.bluetooth", null, "SIGSEGV", ""));
         Assert.assertTrue(CrashUtils.securityCrashDetected(crashes, new CrashUtils.Config()
                 .checkMinAddress(true)
                 .setProcessPatterns(Pattern.compile("com\\.android\\.bluetooth"))));
@@ -215,5 +656,146 @@ public class CrashUtilsTest {
                 .appendSignals(CrashUtils.SIGABRT)
                 .setProcessPatterns(Pattern.compile("CVE-2015-6616-2"))));
 
+    }
+
+    @Test
+    public void testBacktraceFilterIncludeFilename() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libstagefright", null),
+                                        new BacktraceFilterPattern("libaudioflinger\\.so", null))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libstagefright", null))));
+    }
+
+    @Test
+    public void testBacktraceFilterExcludeFilename() throws Exception {
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libaudioutils", null))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libstagefright", null),
+                                        new BacktraceFilterPattern("libaudioflinger\\.so", null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern("libstagefright", null))));
+    }
+
+    @Test
+    public void testBacktraceFilterIncludeMethodName() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern(null, "memcpy_to_float"))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern(null, "strlen"),
+                                        new BacktraceFilterPattern(null, "memcpy_[^_]+_float"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(new BacktraceFilterPattern(null, "strlen"))));
+    }
+
+    @Test
+    public void testBacktraceFilterExcludeMethodName() throws Exception {
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern(null, "memcpy_to_float"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(
+                                        new BacktraceFilterPattern(null, "strlen"),
+                                        new BacktraceFilterPattern(null, "memcpy_[^_]+_float"))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceExcludes(new BacktraceFilterPattern(null, "strlen"))));
+    }
+
+    @Test
+    public void testBacktraceFilterCombinations() throws Exception {
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(new BacktraceFilterPattern(null, null))));
+        Assert.assertTrue(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", "memcpy"))));
+        Assert.assertFalse(
+                CrashUtils.securityCrashDetected(
+                        mCrashes,
+                        new CrashUtils.Config()
+                                .checkMinAddress(true)
+                                .setProcessPatterns(Pattern.compile("synthetic_process_0"))
+                                .setBacktraceIncludes(
+                                        new BacktraceFilterPattern("libaudioutils", "strlen"))));
     }
 }
