@@ -123,6 +123,11 @@ public class MediaPreparer extends BaseTargetPreparer
             " where media files are pushed to")
     private String mMediaFolderName = MEDIA_FOLDER_NAME;
 
+    @Option(name = "use-legacy-folder-structure",
+            description = "Use legacy folder structure to store big buck bunny clips. When this " +
+            "is set to false, name specified in media-folder-name will be used. Default: true")
+    private boolean mUseLegacyFolderStructure = true;
+
     /*
      * The pathnames of the device's directories that hold media files for the tests.
      * These depend on the device's mount point, which is retrieved in the MediaPreparer's run
@@ -527,8 +532,15 @@ public class MediaPreparer extends BaseTargetPreparer
     protected void setMountPoint(ITestDevice device) {
         String mountPoint = device.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE);
         mBaseDeviceModuleDir = String.format("%s/test/%s/", mountPoint, mMediaFolderName);
-        mBaseDeviceShortDir = String.format("%s/test/bbb_short/", mountPoint);
-        mBaseDeviceFullDir = String.format("%s/test/bbb_full/", mountPoint);
+        if (mUseLegacyFolderStructure) {
+            mBaseDeviceShortDir = String.format("%s/test/bbb_short/", mountPoint);
+            mBaseDeviceFullDir = String.format("%s/test/bbb_full/", mountPoint);
+        } else {
+            mBaseDeviceShortDir = String.format("%s/test/%s/bbb_short/", mountPoint,
+                    mMediaFolderName);
+            mBaseDeviceFullDir = String.format("%s/test/%s/bbb_full/", mountPoint,
+                    mMediaFolderName);
+        }
         mBaseDeviceImagesDir = String.format("%s/test/images/", mountPoint);
     }
 
