@@ -87,13 +87,26 @@ public class MediaPreparerTest {
     }
 
     @Test
-    public void testSetMountPoint() throws Exception {
+    public void testLegacySetMountPoint() throws Exception {
         when(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE)).thenReturn(
                 "/sdcard");
 
         mMediaPreparer.setMountPoint(mMockDevice);
         assertEquals(mMediaPreparer.mBaseDeviceShortDir, "/sdcard/test/bbb_short/");
         assertEquals(mMediaPreparer.mBaseDeviceFullDir, "/sdcard/test/bbb_full/");
+    }
+
+    @Test
+    public void testSetMountPoint() throws Exception {
+        String mediaFolderName = "unittest";
+        mOptionSetter.setOptionValue("media-folder-name", mediaFolderName);
+        mOptionSetter.setOptionValue("use-legacy-folder-structure", "false");
+        when(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE)).thenReturn("/sdcard");
+
+        mMediaPreparer.setMountPoint(mMockDevice);
+        String baseDir = "/sdcard/test/" + mediaFolderName;
+        assertEquals(mMediaPreparer.mBaseDeviceShortDir, baseDir + "/bbb_short/");
+        assertEquals(mMediaPreparer.mBaseDeviceFullDir, baseDir + "/bbb_full/");
     }
 
     @Test
