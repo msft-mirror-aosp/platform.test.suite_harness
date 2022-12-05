@@ -16,29 +16,19 @@
 package com.android.compatibility.common.tradefed.result.suite;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
-import com.android.tradefed.config.Option;
 import com.android.tradefed.invoker.IInvocationContext;
-import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.proto.FileProtoResultReporter;
-import com.android.tradefed.result.proto.ProtoResultParser;
 import com.android.tradefed.result.proto.TestRecordProto.TestRecord;
-import com.android.tradefed.util.FileUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 /** Proto reporter that will drop a {@link TestRecord} protobuf in the result directory. */
 public class CompatibilityProtoResultReporter extends FileProtoResultReporter {
 
     public static final String PROTO_FILE_NAME = "test-record.pb";
     public static final String PROTO_DIR = "proto";
-
-    @Option(
-            name = "skip-proto-compacting",
-            description = "Option to disable compacting the protos at the end")
-    private boolean mSkipProtoCompacting = false;
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -52,44 +42,17 @@ public class CompatibilityProtoResultReporter extends FileProtoResultReporter {
             TestRecord invocationStartRecord, IInvocationContext invocationContext) {
         if (mBuildHelper == null) {
             mBuildHelper = new CompatibilityBuildHelper(invocationContext.getBuildInfos().get(0));
-            mResultDir = getProtoResultDirectory();
+            mResultDir = getProtoResultDirectory(mBuildHelper);
             mBaseProtoFile = new File(mResultDir, PROTO_FILE_NAME);
             setFileOutput(mBaseProtoFile);
         }
         super.processStartInvocation(invocationStartRecord, invocationContext);
     }
 
-    @Override
-    public void processFinalProto(TestRecord invocationEndedProto) {
-        super.processFinalProto(invocationEndedProto);
-
-        if (!isPeriodicWriting()) {
-            return;
-        }
-        if (mSkipProtoCompacting) {
-            return;
-        }
-        // Compact all the protos
-        try {
-            compactAllProtos();
-        } catch (RuntimeException e) {
-            CLog.e("Failed to compact the protos");
-            CLog.e(e);
-            FileUtil.deleteFile(mBaseProtoFile);
-            return;
-        }
-        // Delete all the protos we compacted
-        int index = 0;
-        while (new File(mBaseProtoFile.getAbsolutePath() + index).exists()) {
-            FileUtil.deleteFile(new File(mBaseProtoFile.getAbsolutePath() + index));
-            index++;
-        }
-    }
-
-    private File getProtoResultDirectory() {
+    public static File getProtoResultDirectory(CompatibilityBuildHelper buildHelper) {
         File protoDir = null;
         try {
-            File resultDir = mBuildHelper.getResultDir();
+            File resultDir = buildHelper.getResultDir();
             if (resultDir != null) {
                 resultDir.mkdirs();
             }
@@ -104,20 +67,5 @@ public class CompatibilityProtoResultReporter extends FileProtoResultReporter {
         }
         CLog.d("Proto Results Directory: %s", protoDir.getAbsolutePath());
         return protoDir;
-    }
-
-    private void compactAllProtos() {
-        FileProtoResultReporter fprr = new FileProtoResultReporter();
-        fprr.setFileOutput(mBaseProtoFile);
-        ProtoResultParser parser = new ProtoResultParser(fprr, new InvocationContext(), true);
-        int index = 0;
-        while (new File(mBaseProtoFile.getAbsolutePath() + index).exists()) {
-            try {
-                parser.processFileProto(new File(mBaseProtoFile.getAbsolutePath() + index));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            index++;
-        }
     }
 }
