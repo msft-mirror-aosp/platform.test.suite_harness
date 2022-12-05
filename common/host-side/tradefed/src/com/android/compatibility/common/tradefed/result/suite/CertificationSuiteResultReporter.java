@@ -18,7 +18,6 @@ package com.android.compatibility.common.tradefed.result.suite;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DeviceInfo;
-import com.android.compatibility.common.util.ResultHandler;
 import com.android.compatibility.common.util.ResultUploader;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.cluster.SubprocessConfigBuilder;
@@ -617,9 +616,10 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
      */
     private File createFailureReport(File inputXml) {
         File failureReport = new File(inputXml.getParentFile(), FAILURE_REPORT_NAME);
-        try (InputStream xslStream = ResultHandler.class.getResourceAsStream(
-                String.format("/report/%s", FAILURE_XSL_FILE_NAME));
-             OutputStream outputStream = new FileOutputStream(failureReport)) {
+        try (InputStream xslStream =
+                        CertificationSuiteResultReporter.class.getResourceAsStream(
+                                String.format("/report/%s", FAILURE_XSL_FILE_NAME));
+                OutputStream outputStream = new FileOutputStream(failureReport)) {
 
             Transformer transformer = TransformerFactory.newInstance().newTransformer(
                     new StreamSource(xslStream));
