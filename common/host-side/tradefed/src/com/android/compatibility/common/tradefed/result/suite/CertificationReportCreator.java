@@ -17,12 +17,16 @@ package com.android.compatibility.common.tradefed.result.suite;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.ResultUploader;
+import com.android.tradefed.config.IConfiguration;
+import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.FileInputStreamSource;
 import com.android.tradefed.result.ILogSaver;
 import com.android.tradefed.result.ILogSaverListener;
+import com.android.tradefed.result.ITestInvocationListener;
 import com.android.tradefed.result.ITestSummaryListener;
 import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.result.LogFile;
@@ -48,7 +52,7 @@ import javax.xml.transform.stream.StreamSource;
 
 /** Package all the results into the zip and allow to upload it. */
 @OptionClass(alias = "result-reporter")
-public class CertificationReportCreator implements ILogSaverListener, ITestSummaryListener {
+public class CertificationReportCreator implements ILogSaverListener, ITestSummaryListener, IConfigurationReceiver {
 
     public static final String HTLM_REPORT_NAME = "test_result.html";
     public static final String REPORT_XSL_FILE_NAME = "compatibility_result.xsl";
@@ -75,6 +79,7 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
 
     /** Invocation level Log saver to receive when files are logged */
     private ILogSaver mLogSaver;
+    private IConfiguration mConfiguration;
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -96,6 +101,15 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
                 mReferenceUrl = summary.getSummary().getString();
             }
         }
+    }
+
+    @Override
+    public void setConfiguration(IConfiguration configuration) {
+        mConfiguration = configuration;
+    }
+
+    private IConfiguration getConfiguration() {
+        return mConfiguration;
     }
 
     @Override
@@ -197,8 +211,8 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
             fis = new FileInputStream(resultFile);
             logFile = mLogSaver.saveLogData("log-result", LogDataType.XML, fis);
             CLog.d("Result XML URL: %s", logFile.getUrl());
-            // logReportFiles(getConfiguration(), resultFile, resultFile.getName(),
-            // LogDataType.XML);
+            logReportFiles(getConfiguration(), resultFile, resultFile.getName(),
+                     LogDataType.XML);
         } catch (IOException ioe) {
             CLog.e("error saving XML with log saver");
             CLog.e(ioe);
@@ -212,8 +226,8 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 CLog.d("Result zip URL: %s", logFile.getUrl());
-                //     logReportFiles(getConfiguration(), zippedResults, "results",
-                // LogDataType.ZIP);
+                logReportFiles(getConfiguration(), zippedResults, "results",
+                        LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }
@@ -253,5 +267,35 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
             CLog.e(ignored);
         }
         return failureReport;
+    }
+
+    /** Re-log a result file to all reporters so they are aware of it. */
+    private void logReportFiles(
+            IConfiguration configuration, File resultFile, String dataName, LogDataType type) {
+        if (configuration == null) {
+            return;
+        }
+        ILogSaver saver = configuration.getLogSaver();
+        List<ITestInvocationListener> listeners = configuration.getTestInvocationListeners();
+        try (FileInputStreamSource source = new FileInputStreamSource(resultFile)) {
+            LogFile loggedFile = null;
+            try (InputStream stream = source.createInputStream()) {
+                loggedFile = saver.saveLogData(dataName, type, stream);
+            } catch (IOException e) {
+                CLog.e(e);
+            }
+            for (ITestInvocationListener listener : listeners) {
+                if (listener.equals(this)) {
+                    // Avoid logging against itself
+                    continue;
+                }
+                listener.testLog(dataName, type, source);
+                if (loggedFile != null) {
+                    if (listener instanceof ILogSaverListener) {
+                        ((ILogSaverListener) listener).logAssociation(dataName, loggedFile);
+                    }
+                }
+            }
+        }
     }
 }

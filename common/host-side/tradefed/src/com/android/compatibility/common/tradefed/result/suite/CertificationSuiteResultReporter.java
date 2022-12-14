@@ -24,6 +24,7 @@ import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
+import com.android.tradefed.invoker.ShardListener;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.ILogSaver;
 import com.android.tradefed.result.ITestInvocationListener;
@@ -378,6 +379,13 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
                 getConfiguration().getTestInvocationListeners()) {
             if (resultReporter instanceof CertificationReportCreator) {
                 ((CertificationReportCreator) resultReporter).setReportFile(reportFile);
+            }
+            if (resultReporter instanceof ShardListener) {
+                for (ITestInvocationListener subListener : ((ShardListener) resultReporter).getUnderlyingResultReporter()) {
+                    if (subListener instanceof CertificationReportCreator) {
+                        ((CertificationReportCreator) subListener).setReportFile(reportFile);
+                    }
+                }
             }
         }
     }
