@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.ddmlib.IDevice;
@@ -375,5 +377,15 @@ public class MediaPreparerTest {
         } catch (TargetSetupError expected) {
             // Expected
         }
+    }
+
+    @Test
+    public void testDownloadOnly() throws Exception {
+        mOptionSetter.setOptionValue("media-download-only", "true");
+        mOptionSetter.setOptionValue("local-media-path", "/fake/media/dir");
+        mMediaPreparer.setUp(mTestInfo);
+
+        verify(mMockDevice, never()).getMountPoint(Mockito.any());
+        verify(mMockDevice, never()).doesFileExist(Mockito.any());
     }
 }
