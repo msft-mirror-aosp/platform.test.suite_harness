@@ -90,13 +90,9 @@ public class MediaPreparer extends BaseTargetPreparer
             description = "Whether to use the original, simple MediaPreparer caching semantics")
     private boolean mSimpleCachingSemantics = false;
 
-    /** @deprecated do not use it. */
-    @Deprecated
     @Option(
-        name = "media-download-only",
-        description =
-                "Deprecated: Only download media files; do not run instrumentation or copy files"
-    )
+            name = "media-download-only",
+            description = "Only download media files; do not run instrumentation or copy files")
     private boolean mMediaDownloadOnly = false;
 
     @Option(name = "images-only", description = "Only push images files to the device")
@@ -561,14 +557,16 @@ public class MediaPreparer extends BaseTargetPreparer
             return; // skip this precondition
         }
 
-        setMountPoint(device);
-        if (!mImagesOnly && !mPushAll) {
-            setMaxRes(testInfo); // max resolution only applies to video files
-        }
-        if (mediaFilesExistOnDevice(device)) {
-            // if files already on device, do nothing
-            CLog.i("Media files found on the device");
-            return;
+        if (!mMediaDownloadOnly) {
+            setMountPoint(device);
+            if (!mImagesOnly && !mPushAll) {
+                setMaxRes(testInfo); // max resolution only applies to video files
+            }
+            if (mediaFilesExistOnDevice(device)) {
+                // if files already on device, do nothing
+                CLog.i("Media files found on the device");
+                return;
+            }
         }
 
         if (mLocalMediaPath == null) {
@@ -579,7 +577,9 @@ public class MediaPreparer extends BaseTargetPreparer
             updateLocalMediaPath(device, mediaFolder);
         }
         CLog.i("Media files located on host at: " + mLocalMediaPath);
-        copyMediaFiles(device);
+        if (!mMediaDownloadOnly) {
+            copyMediaFiles(device);
+        }
     }
 
     @VisibleForTesting
