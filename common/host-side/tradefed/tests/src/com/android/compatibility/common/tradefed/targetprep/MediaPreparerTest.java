@@ -137,7 +137,6 @@ public class MediaPreparerTest {
         mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
-        mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
             if (resolution.getWidth() > MediaPreparer.RESOLUTIONS[1].getWidth()) {
@@ -151,8 +150,6 @@ public class MediaPreparerTest {
             when(mMockDevice.doesFileExist(shortFile)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile)).thenReturn(true);
         }
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir))
-                .thenReturn(true);
         when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
                 .thenReturn(false);
 
@@ -164,7 +161,6 @@ public class MediaPreparerTest {
         mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
-        mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
             String shortFile = String.format("%s%s", mMediaPreparer.mBaseDeviceShortDir,
                     resolution.toString());
@@ -173,8 +169,6 @@ public class MediaPreparerTest {
             when(mMockDevice.doesFileExist(shortFile, 0)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile, 0)).thenReturn(true);
         }
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir, 0)).thenReturn(true);
-
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
 
@@ -211,28 +205,11 @@ public class MediaPreparerTest {
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/unittest/";
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
-        mMediaPreparer.mBaseDeviceImagesDir = "/sdcard/test/images";
         when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, 0)).thenReturn(true);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceImagesDir, 0)).thenReturn(false);
         when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, 0)).thenReturn(false);
         when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, 0)).thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
-    }
-
-    @Test
-    public void testWithBothPushAllAndImagesOnly() throws Exception {
-        mOptionSetter.setOptionValue("push-all", "true");
-        mOptionSetter.setOptionValue("images-only", "true");
-
-        when(mMockDevice.getDeviceDescriptor()).thenReturn(null);
-
-        try {
-            mMediaPreparer.setUp(mTestInfo);
-            fail("TargetSetupError expected");
-        } catch (TargetSetupError e) {
-            // Expected
-        }
     }
 
     /** Test that if we decide to run and files are on the device, we don't download again. */
@@ -258,7 +235,6 @@ public class MediaPreparerTest {
             when(mMockDevice.doesFileExist(shortFile)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile)).thenReturn(true);
         }
-        when(mMockDevice.doesFileExist("/sdcard/test/images/")).thenReturn(true);
 
         mMediaPreparer.setUp(mTestInfo);
     }
