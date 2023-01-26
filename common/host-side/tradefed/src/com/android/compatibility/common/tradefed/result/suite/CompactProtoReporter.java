@@ -17,6 +17,7 @@ package com.android.compatibility.common.tradefed.result.suite;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.config.Option;
+import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.invoker.tracing.CloseableTraceScope;
@@ -26,6 +27,7 @@ import com.android.tradefed.result.ITestSummaryListener;
 import com.android.tradefed.result.proto.FileProtoResultReporter;
 import com.android.tradefed.result.proto.ProtoResultParser;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.IDisableable;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,12 +37,17 @@ import java.io.IOException;
  * operation so it's executed last and can optionally fail and be inop (resulting in no
  * compression).
  */
-public class CompactProtoReporter implements ITestInvocationListener, ITestSummaryListener {
+@OptionClass(alias = "result-reporter")
+public class CompactProtoReporter
+        implements ITestInvocationListener, ITestSummaryListener, IDisableable {
 
     @Option(
             name = "skip-proto-compacting",
             description = "Option to disable compacting the protos at the end")
     private boolean mSkipProtoCompacting = false;
+
+    @Option(name = "disable", description = "Whether or not to disable this reporter.")
+    private boolean mDisable = false;
 
     private CompatibilityBuildHelper mBuildHelper;
 
@@ -99,5 +106,10 @@ public class CompactProtoReporter implements ITestInvocationListener, ITestSumma
             }
             index++;
         }
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return mDisable;
     }
 }
