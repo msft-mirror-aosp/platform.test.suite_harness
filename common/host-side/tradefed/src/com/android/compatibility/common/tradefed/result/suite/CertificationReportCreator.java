@@ -32,6 +32,7 @@ import com.android.tradefed.result.LogDataType;
 import com.android.tradefed.result.LogFile;
 import com.android.tradefed.result.TestSummary;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.IDisableable;
 import com.android.tradefed.util.StreamUtil;
 import com.android.tradefed.util.ZipUtil;
 
@@ -52,7 +53,8 @@ import javax.xml.transform.stream.StreamSource;
 
 /** Package all the results into the zip and allow to upload it. */
 @OptionClass(alias = "result-reporter")
-public class CertificationReportCreator implements ILogSaverListener, ITestSummaryListener, IConfigurationReceiver {
+public class CertificationReportCreator
+        implements ILogSaverListener, ITestSummaryListener, IConfigurationReceiver, IDisableable {
 
     public static final String HTLM_REPORT_NAME = "test_result.html";
     public static final String REPORT_XSL_FILE_NAME = "compatibility_result.xsl";
@@ -60,6 +62,9 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
     public static final String FAILURE_XSL_FILE_NAME = "compatibility_failures.xsl";
 
     public static final String INCLUDE_HTML_IN_ZIP = "html-in-zip";
+
+    @Option(name = "disable", description = "Whether or not to disable this reporter.")
+    private boolean mDisable = false;
 
     @Option(
             name = INCLUDE_HTML_IN_ZIP,
@@ -297,5 +302,10 @@ public class CertificationReportCreator implements ILogSaverListener, ITestSumma
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return mDisable;
     }
 }
