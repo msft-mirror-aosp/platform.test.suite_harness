@@ -27,4 +27,8 @@
         <option name="periodic-proto-writing" value="true" />
     </result_reporter>
     <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter" />
+    <!-- Compact the protos to save space -->
+    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CompactProtoReporter" />
+    <!-- Create the zip report last always -->
+    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationReportCreator" />
 </configuration>
