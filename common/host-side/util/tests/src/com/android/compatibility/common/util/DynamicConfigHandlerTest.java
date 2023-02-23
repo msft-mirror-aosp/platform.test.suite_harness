@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,28 +95,37 @@ public class DynamicConfigHandlerTest extends TestCase {
 
     public void testDynamicConfigHandler() throws Exception {
         String module = "test1";
+        Map<String, String> replacementMap = new HashMap<>();
+        replacementMap.put("override-config", "OverrideConfig");
         File localConfigFile = createFileFromStr(LOCAL_CONFIG, module);
         File mergedFile = null;
         try {
-            mergedFile = DynamicConfigHandler
-                    .getMergedDynamicConfigFile(localConfigFile, OVERRIDE_JSON, module);
+            mergedFile =
+                    DynamicConfigHandler.getMergedDynamicConfigFile(
+                            localConfigFile, OVERRIDE_JSON, module, replacementMap);
 
             Map<String, List<String>> configMap = DynamicConfig.createConfigMap(mergedFile);
 
-            assertEquals("override-config-val-1", configMap.get("override-config-1").get(0));
-            assertTrue(configMap.get("override-config-list-1")
-                    .contains("override-config-list-val-1-1"));
-            assertTrue(configMap.get("override-config-list-1")
-                    .contains("override-config-list-val-1-2"));
+            assertEquals("OverrideConfig-val-1", configMap.get("override-config-1").get(0));
+            assertTrue(
+                    configMap
+                            .get("override-config-list-1")
+                            .contains("OverrideConfig-list-val-1-1"));
+            assertTrue(
+                    configMap
+                            .get("override-config-list-1")
+                            .contains("OverrideConfig-list-val-1-2"));
             assertTrue(configMap.get("override-config-list-3").size() == 0);
 
             assertEquals("test config 1", configMap.get("test-config-1").get(0));
             assertTrue(configMap.get("config-list").contains("config2"));
 
-            assertEquals("override-config-val-2", configMap.get("override-config-2").get(0));
+            assertEquals("OverrideConfig-val-2", configMap.get("override-config-2").get(0));
             assertEquals(1, configMap.get("override-config-list-2").size());
-            assertTrue(configMap.get("override-config-list-2")
-                    .contains("override-config-list-val-2-1"));
+            assertTrue(
+                    configMap
+                            .get("override-config-list-2")
+                            .contains("OverrideConfig-list-val-2-1"));
         } finally {
             FileUtil.deleteFile(localConfigFile);
             FileUtil.recursiveDelete(mergedFile);
