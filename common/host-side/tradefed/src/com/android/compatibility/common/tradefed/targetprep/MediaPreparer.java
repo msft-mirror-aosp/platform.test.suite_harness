@@ -90,17 +90,10 @@ public class MediaPreparer extends BaseTargetPreparer
             description = "Whether to use the original, simple MediaPreparer caching semantics")
     private boolean mSimpleCachingSemantics = false;
 
-    /** @deprecated do not use it. */
-    @Deprecated
     @Option(
-        name = "media-download-only",
-        description =
-                "Deprecated: Only download media files; do not run instrumentation or copy files"
-    )
+            name = "media-download-only",
+            description = "Only download media files; do not run instrumentation or copy files")
     private boolean mMediaDownloadOnly = false;
-
-    @Option(name = "images-only", description = "Only push images files to the device")
-    private boolean mImagesOnly = false;
 
     @Option(
         name = "push-all",
@@ -138,7 +131,6 @@ public class MediaPreparer extends BaseTargetPreparer
     protected String mBaseDeviceModuleDir;
     protected String mBaseDeviceShortDir;
     protected String mBaseDeviceFullDir;
-    protected String mBaseDeviceImagesDir;
 
     /*
      * Variables set by the MediaPreparerListener during retrieval of maximum media file
@@ -252,20 +244,19 @@ public class MediaPreparer extends BaseTargetPreparer
             throws DeviceNotAvailableException {
         if (mPushAll) {
             return device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser);
-        } else if (!mImagesOnly) {
-            for (Resolution resolution : RESOLUTIONS) {
-                if (resolution.width > mMaxRes.width) {
-                    break; // no need to check for resolutions greater than this
-                }
-                String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
-                String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
-                        || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
-                    return false;
-                }
+        }
+        for (Resolution resolution : RESOLUTIONS) {
+            if (resolution.width > mMaxRes.width) {
+                break; // no need to check for resolutions greater than this
+            }
+            String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
+            String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
+            if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                    || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
+                return false;
             }
         }
-        return device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser);
+        return true;
     }
 
     protected static final String TOC_NAME = "contents.toc";
@@ -469,7 +460,6 @@ public class MediaPreparer extends BaseTargetPreparer
      * - are not already present on the device
      * - contain video files of a resolution less than or equal to the device's
      *       max video playback resolution
-     * - contain image files
      *
      * This method is exposed for unit testing.
      */
@@ -478,10 +468,7 @@ public class MediaPreparer extends BaseTargetPreparer
             copyAll(device);
             return;
         }
-        if (!mImagesOnly) {
-            copyVideoFiles(device);
-        }
-        copyImagesFiles(device);
+        copyVideoFiles(device);
     }
 
     // copy video files of a resolution <= the device's maximum video playback resolution
@@ -512,14 +499,6 @@ public class MediaPreparer extends BaseTargetPreparer
         }
     }
 
-    // copy image files to the device
-    protected void copyImagesFiles(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceImagesDir, mCurrentUser)) {
-            CLog.i("Copying images files to device");
-            device.pushDir(new File(mLocalMediaPath, "images"), mBaseDeviceImagesDir);
-        }
-    }
-
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
         if (!device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser)) {
@@ -541,7 +520,6 @@ public class MediaPreparer extends BaseTargetPreparer
             mBaseDeviceFullDir = String.format("%s/test/%s/bbb_full/", mountPoint,
                     mMediaFolderName);
         }
-        mBaseDeviceImagesDir = String.format("%s/test/images/", mountPoint);
     }
 
     @Override
@@ -550,25 +528,21 @@ public class MediaPreparer extends BaseTargetPreparer
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
         mCurrentUser = device.getCurrentUser();
-        if (mImagesOnly && mPushAll) {
-            throw new TargetSetupError(
-                    "'images-only' and 'push-all' cannot be set to true together.",
-                    device.getDeviceDescriptor(),
-                    InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
-        }
         if (mSkipMediaDownload) {
             CLog.i("Skipping media preparation");
             return; // skip this precondition
         }
 
-        setMountPoint(device);
-        if (!mImagesOnly && !mPushAll) {
-            setMaxRes(testInfo); // max resolution only applies to video files
-        }
-        if (mediaFilesExistOnDevice(device)) {
-            // if files already on device, do nothing
-            CLog.i("Media files found on the device");
-            return;
+        if (!mMediaDownloadOnly) {
+            setMountPoint(device);
+            if (!mPushAll) {
+                setMaxRes(testInfo); // max resolution only applies to video files
+            }
+            if (mediaFilesExistOnDevice(device)) {
+                // if files already on device, do nothing
+                CLog.i("Media files found on the device");
+                return;
+            }
         }
 
         if (mLocalMediaPath == null) {
@@ -579,7 +553,9 @@ public class MediaPreparer extends BaseTargetPreparer
             updateLocalMediaPath(device, mediaFolder);
         }
         CLog.i("Media files located on host at: " + mLocalMediaPath);
-        copyMediaFiles(device);
+        if (!mMediaDownloadOnly) {
+            copyMediaFiles(device);
+        }
     }
 
     @VisibleForTesting
