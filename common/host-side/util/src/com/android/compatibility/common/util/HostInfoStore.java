@@ -258,6 +258,7 @@ public class HostInfoStore extends InfoStore {
     /**
      * Adds some bytes to the InfoStore
      */
+    @Override
     public void addBytesResult(String name, byte[] bytes) throws IOException {
         checkName(name);
         mJsonWriter.name(name);
