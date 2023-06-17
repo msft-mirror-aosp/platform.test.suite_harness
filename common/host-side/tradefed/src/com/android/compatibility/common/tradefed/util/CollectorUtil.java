@@ -77,9 +77,11 @@ public class CollectorUtil {
      */
     public static void reformatRepeatedStreams(File resultDir) {
         try {
-            File[] reportLogs = resultDir.listFiles();
-            for (File reportLog : reportLogs) {
-                writeFile(reportLog, reformatJsonString(readFile(reportLog)));
+            if (resultDir.listFiles() != null) {
+                File[] reportLogs = resultDir.listFiles();
+                for (File reportLog : reportLogs) {
+                    writeFile(reportLog, reformatJsonString(readFile(reportLog)));
+                }
             }
         } catch (IOException e) {
             CLog.e("Caught exception during reformatting.");
