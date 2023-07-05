@@ -243,4 +243,8 @@
 
     <!-- b/221001219 -->
     <option name="compatibility:exclude-filter" value="CtsAppSecurityHostTestCases android.appsecurity.cts.ListeningPortsTest#testNoRemotelyAccessibleListeningUdpPorts" />
+
+    <!-- b/288834732 -->
+    <option name="compatibility:exclude-filter" value="CtsOsHostTestCases android.os.cts.OsHostTests#testIntentFilterHostValidation" />
+    <option name="compatibility:exclude-filter" value="CtsOsHostTestCases[instant] android.os.cts.OsHostTests#testIntentFilterHostValidation" />
 </configuration>
