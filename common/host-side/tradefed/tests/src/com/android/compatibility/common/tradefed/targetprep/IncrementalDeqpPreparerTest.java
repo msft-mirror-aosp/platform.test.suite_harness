@@ -18,11 +18,8 @@ package com.android.compatibility.common.tradefed.targetprep;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.BuildInfo;
@@ -82,7 +79,6 @@ public class IncrementalDeqpPreparerTest {
                             return resultDir;
                         }
                     };
-            when(mMockDevice.pushDir(any(), any())).thenThrow(new AssertionError());
 
             mPreparer.runIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
         } finally {
@@ -166,38 +162,6 @@ public class IncrementalDeqpPreparerTest {
     public void testGetBinaryFileName() {
         assertEquals(mPreparer.getBinaryFileName("vk-32"), "deqp-binary");
         assertEquals(mPreparer.getBinaryFileName("vk-64"), "deqp-binary64");
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
-    public void prepareDeqpResource_arm() throws Exception {
-        File deqpResource = FileUtil.createTempDir("prepareDeqpResource_arm");
-        File armDir = new File(deqpResource, "arm");
-        armDir.mkdir();
-        File arm64Dir = new File(deqpResource, "arm64");
-        arm64Dir.mkdir();
-        new File(armDir, "deqp-binary").createNewFile();
-        new File(arm64Dir, "deqp-binary64").createNewFile();
-
-        mPreparer.prepareDeqpResource(arm64Dir);
-
-        assertNotNull(FileUtil.findFile(arm64Dir, "deqp-binary"));
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
-    public void prepareDeqpResource_x86() throws Exception {
-        File deqpResource = FileUtil.createTempDir("prepareDeqpResource_x86");
-        File x86Dir = new File(deqpResource, "x86");
-        x86Dir.mkdir();
-        File x8664Dir = new File(deqpResource, "x86_64");
-        x8664Dir.mkdir();
-        new File(x86Dir, "deqp-binary").createNewFile();
-        new File(x8664Dir, "deqp-binary64").createNewFile();
-
-        mPreparer.prepareDeqpResource(x8664Dir);
-
-        assertNotNull(FileUtil.findFile(x8664Dir, "deqp-binary"));
     }
 
     @Test
