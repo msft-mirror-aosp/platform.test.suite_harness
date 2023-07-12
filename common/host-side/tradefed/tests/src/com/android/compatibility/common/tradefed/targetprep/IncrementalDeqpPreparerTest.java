@@ -102,7 +102,7 @@ public class IncrementalDeqpPreparerTest {
     }
 
     @Test
-    public void testGetTargetFileHash() throws IOException {
+    public void testGetTargetFileHash() throws IOException, TargetSetupError {
         Set<String> fileSet =
                 new HashSet<>(
                         Arrays.asList(
