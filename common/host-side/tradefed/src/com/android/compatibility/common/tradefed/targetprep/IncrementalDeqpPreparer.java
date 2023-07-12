@@ -80,6 +80,21 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + "dependencies. Optional for incremental dEQP.")
     private File mExtraDependency = null;
 
+    @Option(
+            name = "fallback-strategy",
+            description =
+                    "The fallback strategy to apply if the incremental dEQP qualification testing "
+                            + "for the builds fails.")
+    private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
+
+    private enum FallbackStrategy {
+        // Continues to run full dEQP tests no matter an exception is thrown or not.
+        RUN_FULL_DEQP,
+        // Aborts if an exception is thrown in the preparer. Otherwise, runs full dEQP tests due to
+        // dependency modifications.
+        ABORT_IF_ANY_EXCEPTION;
+    }
+
     private static final String MODULE_NAME = "CtsDeqpTestCases";
     private static final String DEVICE_DEQP_DIR = "/data/local/tmp";
     private static final String[] TEST_LIST =
@@ -114,11 +129,19 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
-        ITestDevice device = testInfo.getDevice();
-        CompatibilityBuildHelper buildHelper =
-                new CompatibilityBuildHelper(testInfo.getBuildInfo());
-        IInvocationContext context = testInfo.getContext();
-        runIncrementalDeqp(context, device, buildHelper);
+        try {
+            ITestDevice device = testInfo.getDevice();
+            CompatibilityBuildHelper buildHelper =
+                    new CompatibilityBuildHelper(testInfo.getBuildInfo());
+            IInvocationContext context = testInfo.getContext();
+            runIncrementalDeqp(context, device, buildHelper);
+        } catch (Exception e) {
+            if (mFallbackStrategy == FallbackStrategy.ABORT_IF_ANY_EXCEPTION) {
+                // Rethrows the exception to abort the task.
+                throw e;
+            }
+            // Ignores the exception and continues to run full dEQP tests.
+        }
     }
 
     /**
@@ -349,13 +372,22 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     /** Gets the hash value of the specified file's content from the target file. */
     protected Map<String, String> getTargetFileHash(Set<String> fileNames, File targetFile)
-            throws IOException {
+            throws IOException, TargetSetupError {
         ZipFile zipFile = new ZipFile(targetFile);
 
         Map<String, String> hashMap = new HashMap<>();
         for (String file : fileNames) {
             // Convert top directory's name to upper case.
             String[] arr = file.split("/", 3);
+            if (arr.length < 3) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Fail to generate zip file entry for dependency: %s. A"
+                                        + " validdependency should be a file path located at a sub"
+                                        + " directory.",
+                                file),
+                        TestErrorIdentifier.TEST_ABORTED);
+            }
             String formattedName = arr[1].toUpperCase() + "/" + arr[2];
 
             ZipEntry entry = zipFile.getEntry(formattedName);
