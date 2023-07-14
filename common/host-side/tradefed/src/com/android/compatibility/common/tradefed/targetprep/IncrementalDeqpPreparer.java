@@ -115,7 +115,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             "BASE_AND_CURRENT_BUILD_DIFFERENT_HASH";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
-            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf)");
+            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0)");
 
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
     public static final String REPORT_NAME = "IncrementalCtsDeviceInfo.deviceinfo.json";
