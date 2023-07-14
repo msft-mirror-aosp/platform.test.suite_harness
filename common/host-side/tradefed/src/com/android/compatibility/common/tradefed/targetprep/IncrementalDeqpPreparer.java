@@ -54,12 +54,6 @@ import java.util.zip.ZipFile;
 public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     @Option(
-            name = "deqp-resource",
-            description =
-                    "Absolute file path to the dEQP binary resource folder of lib 64 version.")
-    private File mDeqpResource = null;
-
-    @Option(
             name = "base-build",
             description =
                     "Absolute file path to a target file of the base build. Required for "
@@ -309,18 +303,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             throws DeviceNotAvailableException, TargetSetupError {
         Set<String> result = new HashSet<>();
 
-        try {
-            prepareDeqpResource(mDeqpResource);
-        } catch (IOException e) {
-            throw new TargetSetupError(
-                    "Fail to prepare dEQP resources.",
-                    device.getDeviceDescriptor(),
-                    TestErrorIdentifier.TEST_ABORTED);
-        }
-
-        // Push test resources to the device.
-        device.pushDir(mDeqpResource, DEVICE_DEQP_DIR);
-
         for (String testName : TEST_LIST) {
             String perfFile = DEVICE_DEQP_DIR + "/" + testName + ".data";
             String binaryFile = DEVICE_DEQP_DIR + "/" + getBinaryFileName(testName);
@@ -486,30 +468,5 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     TestErrorIdentifier.TEST_ABORTED);
         }
         return fingerprint;
-    }
-
-    /**
-     * Copies the dEQP binary file of lib 32 version into the given resource directory, which is a
-     * lib 64 directory by default.
-     */
-    void prepareDeqpResource(File deqpResource) throws IOException {
-        for (File anotherDir :
-                deqpResource
-                        .getParentFile()
-                        .listFiles(
-                                file ->
-                                        file.isDirectory()
-                                                && (file.getName().equals("arm")
-                                                        || file.getName().equals("x86")))) {
-            for (File binaryFile :
-                    anotherDir.listFiles(file -> file.getName().equals(DEQP_BINARY_FILE_NAME_32))) {
-                File newBinaryFile = new File(deqpResource, DEQP_BINARY_FILE_NAME_32);
-                FileUtil.copyFile(binaryFile, newBinaryFile);
-                // rwxr-xr-x
-                FileUtil.chmod(newBinaryFile, "755");
-                break;
-            }
-            break;
-        }
     }
 }
