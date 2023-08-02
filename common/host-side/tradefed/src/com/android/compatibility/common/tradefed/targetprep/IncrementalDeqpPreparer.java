@@ -105,7 +105,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE = "base_build_hash";
     private static final String DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE = "current_build_hash";
     private static final String NULL_BUILD_HASH = "0";
-    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary";
+    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary32";
 
     private static final String DEPENDENCY_DETAIL_MISSING_IN_CURRENT = "MISSING_IN_CURRENT_BUILD";
     private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE = "MISSING_IN_BASE_BUILD";
