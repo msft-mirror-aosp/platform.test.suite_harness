@@ -160,7 +160,7 @@ public class IncrementalDeqpPreparerTest {
 
     @Test
     public void testGetBinaryFileName() {
-        assertEquals(mPreparer.getBinaryFileName("vk-32"), "deqp-binary");
+        assertEquals(mPreparer.getBinaryFileName("vk-32"), "deqp-binary32");
         assertEquals(mPreparer.getBinaryFileName("vk-64"), "deqp-binary64");
     }
 
