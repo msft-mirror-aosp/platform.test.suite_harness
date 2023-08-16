@@ -115,7 +115,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             "BASE_AND_CURRENT_BUILD_DIFFERENT_HASH";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
-            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0)");
+            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0|^/mali csf)");
 
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
     public static final String REPORT_NAME = "IncrementalCtsDeviceInfo.deviceinfo.json";
@@ -365,7 +365,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 throw new TargetSetupError(
                         String.format(
                                 "Fail to generate zip file entry for dependency: %s. A"
-                                        + " validdependency should be a file path located at a sub"
+                                        + " valid dependency should be a file path located at a sub"
                                         + " directory.",
                                 file),
                         TestErrorIdentifier.TEST_ABORTED);
