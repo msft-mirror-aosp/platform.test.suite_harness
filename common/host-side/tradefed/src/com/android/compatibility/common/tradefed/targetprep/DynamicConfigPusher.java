@@ -77,6 +77,11 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     private String mConfigUrl = "https://androidpartner.googleapis.com/v1/dynamicconfig/" +
             "suites/{suite-name}/modules/{module}/version/{version}?key={api-key}";
 
+    @Option(
+            name = "has-server-side-config",
+            description = "Whether there exists a service side dynamic config.")
+    private boolean mHasServerSideConfig = true;
+
     @Option(name="config-filename", description = "The module name for module-level " +
             "configurations, or the suite name for suite-level configurations")
     private String mModuleName = null;
@@ -281,6 +286,9 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     @VisibleForTesting
     String resolveUrl(String suiteName) throws TargetSetupError {
+        if (!mHasServerSideConfig) {
+            return null;
+        }
         try {
             String configUrl =
                     UrlReplacement.getDynamicConfigServerUrl() == null
