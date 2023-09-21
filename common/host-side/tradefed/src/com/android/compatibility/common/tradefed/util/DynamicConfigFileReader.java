@@ -26,6 +26,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility to read the data from a dynamic config file.
@@ -104,5 +105,35 @@ public class DynamicConfigFileReader {
                     message, InfraErrorIdentifier.CONFIGURED_ARTIFACT_NOT_FOUND);
         }
         return getValuesFromConfig(dynamicConfig, key);
+    }
+
+    /**
+     * Returns the multiple values of a key from the build info and modules targeted.
+     *
+     * @param info the {@link IBuildInfo} of the run.
+     * @param suiteNames list of suite names we need the dynamic file from.
+     * @param key the key inside the file which values we want to return
+     * @return the values associated to the key in the dynamic config associated with the module.
+     */
+    public static List<String> getValuesFromConfig(IBuildInfo info, List<String> suiteNames,
+            String key)
+            throws XmlPullParserException, IOException {
+        CompatibilityBuildHelper helper = new CompatibilityBuildHelper(info);
+        Map<String, File> dynamicConfigFiles = helper.getDynamicConfigFiles();
+        CLog.i("config files: %s", dynamicConfigFiles);
+        for (String suiteName : suiteNames) {
+            File dynamicConfig = dynamicConfigFiles.get(suiteName);
+            if (dynamicConfig != null) {
+                return getValuesFromConfig(dynamicConfig, key);
+            }
+        }
+        String message =
+                String.format(
+                        "Dynamic config files %s, not found in the map of configured dynamic"
+                                + " configs: %s",
+                        suiteNames, dynamicConfigFiles);
+        CLog.w(message);
+        throw new HarnessRuntimeException(
+                message, InfraErrorIdentifier.CONFIGURED_ARTIFACT_NOT_FOUND);
     }
 }
