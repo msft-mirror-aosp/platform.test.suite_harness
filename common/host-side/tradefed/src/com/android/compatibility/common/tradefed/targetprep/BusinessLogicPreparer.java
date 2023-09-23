@@ -185,7 +185,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             mModuleVersion = "null";
         }
         String requestParams = buildRequestParams(device, buildInfo);
-        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
+        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteNames().get(0));
         String businessLogicString = null;
         // use cached business logic string if options are set accordingly and cache is valid,
         // otherwise proceed with remote download.
@@ -296,30 +296,24 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
     }
 
     /**
-     * Return the the first element of test-suite-tag from configuration if it's not empty,
+     * Return list of test-suite-tag from configuration if it's not empty,
      * otherwise, return the name from test-suite-info.properties.
      */
     @VisibleForTesting
-    String getSuiteName() {
-        String suiteName = null;
-        if (mModuleContext == null) {
-            suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
-        } else {
+    List<String> getSuiteNames() {
+        if (mModuleContext != null) {
             List<String> testSuiteTags = mModuleContext.getConfigurationDescriptor().
                     getSuiteTags();
             if (!testSuiteTags.isEmpty()) {
-                if (testSuiteTags.size() >= 2) {
-                    CLog.i("More than 2 test-suite-tag are defined. test-suite-tag: " +
+                CLog.i("Adding %s from test suite tags to get value from dynamic config",
                         testSuiteTags);
-                }
-                suiteName = testSuiteTags.get(0).toLowerCase();
-                CLog.i("Using %s from test suite tags to get value from dynamic config", suiteName);
-            } else {
-                suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
-                CLog.i("Using %s from TestSuiteInfo to get value from dynamic config", suiteName);
+                return testSuiteTags;
             }
         }
-        return suiteName;
+        String suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
+        CLog.i("Using %s from TestSuiteInfo to get value from dynamic config",
+                suiteName);
+        return Collections.singletonList(suiteName);
     }
 
     /* Get device properties list, with element format "<property_name>:<property_value>" */
@@ -334,7 +328,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
 
         try {
             List<String> propertyNames = DynamicConfigFileReader.getValuesFromConfig(buildInfo,
-                    getSuiteName(), DYNAMIC_CONFIG_PROPERTIES_KEY);
+                    getSuiteNames(), DYNAMIC_CONFIG_PROPERTIES_KEY);
             for (String name : propertyNames) {
                 // Use String.valueOf in case property is undefined for the device ("null")
                 String value = String.valueOf(device.getProperty(name));
@@ -351,7 +345,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             throws DeviceNotAvailableException {
         try {
             List<String> dynamicConfigFeatures = DynamicConfigFileReader.getValuesFromConfig(
-                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_FEATURES_KEY);
+                    buildInfo, getSuiteNames(), DYNAMIC_CONFIG_FEATURES_KEY);
             Set<String> deviceFeatures = FeatureUtil.getAllFeatures(device);
             dynamicConfigFeatures.retainAll(deviceFeatures);
             return dynamicConfigFeatures;
@@ -366,7 +360,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             throws DeviceNotAvailableException {
         try {
             List<String> dynamicConfigPackages = DynamicConfigFileReader.getValuesFromConfig(
-                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_PACKAGES_KEY);
+                    buildInfo, getSuiteNames(), DYNAMIC_CONFIG_PACKAGES_KEY);
             Set<String> devicePackages = device.getInstalledPackageNames();
             dynamicConfigPackages.retainAll(devicePackages);
             return dynamicConfigPackages;
@@ -388,7 +382,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
         List<String> requiredDeviceInfo = null;
         try {
             requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
-                buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
+                buildInfo, getSuiteNames(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
         } catch (XmlPullParserException | IOException e) {
             CLog.e("Failed to pull business logic Extended DeviceInfo from dynamic config. "
                 + "Error: %s", e);
