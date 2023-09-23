@@ -39,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -134,8 +135,8 @@ public class BusinessLogicPreparerTest {
         mMockBuildInfo = new BuildInfo();
         mPreparer = new BusinessLogicPreparer() {
             @Override
-            String getSuiteName() {
-                return "cts";
+            List<String> getSuiteNames() {
+                return Collections.singletonList("cts");
             }
         };
 
