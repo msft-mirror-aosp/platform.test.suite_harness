@@ -67,6 +67,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.Set;
 
 /**
@@ -139,6 +141,16 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
 
     @Option(name = "version", description = "The module configuration version to retrieve.")
     private String mModuleVersion = null;
+
+    @Option(
+            name = "suite-version-extraction-regex",
+            description =
+                    "A regex string with a named capture group \"version\". Used to compare"
+                            + " versions on the BL server. To exclude a platform version name"
+                            + " prefix for example, use \".+?_sts(?<version>.+)\""
+                            + "('12.1_sts-r1' -> '-r1'). Note that <version> can be represented"
+                            + " in xml with &lt;version&gt;.")
+    private String mSuiteVersionExtractionRegex = "(?<version>.+)";
 
     private String mDeviceFilePushed;
     private String mHostFilePushed;
@@ -267,10 +279,9 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
     /** Helper to populate the business logic service request with info about the device. */
     @VisibleForTesting
     String buildRequestParams(ITestDevice device, IBuildInfo buildInfo)
-            throws DeviceNotAvailableException {
-        CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
+            throws DeviceNotAvailableException, TargetSetupError {
         MultiMap<String, String> paramMap = new MultiMap<>();
-        String suiteVersion = buildHelper.getSuiteVersion();
+        String suiteVersion = getSuiteVersionExtracted(buildInfo);
         if (suiteVersion == null) {
             suiteVersion = "null";
         }
@@ -293,6 +304,41 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
         String paramString = helper.buildParameters(paramMap);
         CLog.d("Built param string: \"%s\"", paramString);
         return paramString;
+    }
+
+    /**
+     * Extract the version string we should use to compare versions on the BL server. Control what's
+     * extracted with the suite-version-extraction-regex option. This defaults to no changes to the
+     * original build. Suites that prepend the platform version name may use this to remove it.
+     */
+    @VisibleForTesting
+    String getSuiteVersionExtracted(IBuildInfo buildInfo) throws TargetSetupError {
+        CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
+        String suiteVersion = buildHelper.getSuiteVersion();
+        if (suiteVersion == null) {
+            return null;
+        }
+        Matcher m = Pattern.compile(mSuiteVersionExtractionRegex).matcher(suiteVersion);
+        if (m.matches()) {
+            try {
+                String extracted = m.group("version");
+                CLog.d("original version: %s, extracted version: %s", suiteVersion, extracted);
+                return extracted;
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Could not match the extraction regex (%s) against the suite"
+                                        + " version (%s)",
+                                mSuiteVersionExtractionRegex, suiteVersion),
+                        e,
+                        InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
+            }
+        }
+        throw new TargetSetupError(
+                String.format(
+                        "Could not match the extraction regex (%s) against the suite version (%s)",
+                        mSuiteVersionExtractionRegex, suiteVersion),
+                InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
     }
 
     /**
