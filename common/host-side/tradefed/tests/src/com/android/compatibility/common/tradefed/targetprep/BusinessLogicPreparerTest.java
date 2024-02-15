@@ -17,14 +17,17 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.OptionCopier;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 
 import org.junit.After;
@@ -37,14 +40,16 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * Unit test for {@link BusinessLogicPreparer}.
@@ -127,17 +132,37 @@ public class BusinessLogicPreparerTest {
     private String serviceUrl = "https://androidpartner.googleapis.com/v1/dynamicconfig/" +
             "suites/{suite-name}/modules/{module}/version/{version}?key=123";
 
+    private static final String[] SUITE_VERSIONS_STS = {
+        "9_sts-r1",
+        "10_sts-r1",
+        "R_sts-r1",
+        "11_sts-r1",
+        "S_sts-r1",
+        "12_sts-r1",
+        "Sv2_sts-r1",
+        "12.1_sts-r1",
+        "Tiramisu_sts-r1",
+    };
+    private static final String[] SUITE_VERSIONS_GTS = {
+        "9.0_r1", "9.0_r2", "9.1_r1", "9.1_r2", "10_r1", "10_r2", "10_r3", "10_r4", "11_r1",
+        "11_r2", "11_r3",
+    };
+    private static final List<String> SUITE_VERSIONS_ALL =
+            Stream.concat(Arrays.stream(SUITE_VERSIONS_STS), Arrays.stream(SUITE_VERSIONS_GTS))
+                    .collect(Collectors.toList());
+
     @Before
     public void setUp() throws Exception {
         mTmpDir = FileUtil.createTempDir("business-logic-unit-tests");
         mMockDevice = Mockito.mock(ITestDevice.class);
         mMockBuildInfo = new BuildInfo();
-        mPreparer = new BusinessLogicPreparer() {
-            @Override
-            String getSuiteName() {
-                return "cts";
-            }
-        };
+        mPreparer =
+                new BusinessLogicPreparer() {
+                    @Override
+                    List<String> getSuiteNames() {
+                        return Collections.singletonList("cts");
+                    }
+                };
 
         OptionSetter setter = new OptionSetter(mPreparer);
         setter.setOptionValue("business-logic-url", serviceUrl);
@@ -148,6 +173,51 @@ public class BusinessLogicPreparerTest {
     @After
     public void tearDown() throws Exception {
         FileUtil.recursiveDelete(mTmpDir);
+    }
+
+    @Test
+    public void testGetSuiteVersionExtractedDefaultNoChange() throws Exception {
+        // default case doesn't change original
+        for (String version : SUITE_VERSIONS_ALL) {
+            IBuildInfo buildInfo = new BuildInfo();
+            buildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, version);
+            assertEquals(
+                    version,
+                    buildInfo.getBuildAttributes().get(CompatibilityBuildHelper.SUITE_VERSION));
+            assertEquals(version, mPreparer.getSuiteVersionExtracted(buildInfo));
+        }
+    }
+
+    @Test
+    public void testGetSuiteVersionExtractedRemovePlatformPrefix() throws Exception {
+        final BusinessLogicPreparer modifiedPreparer = new BusinessLogicPreparer();
+        OptionCopier.copyOptions(mPreparer, modifiedPreparer);
+        OptionSetter setter = new OptionSetter(modifiedPreparer);
+        // apbs compares version but also prepends the suite version.
+        // extract '-r1' from '*_sts-r1' so that it becomes 'sts-r1' when comparing in BL.
+        setter.setOptionValue("suite-version-extraction-regex", ".+?_sts(?<version>.+)");
+        for (String version : SUITE_VERSIONS_STS) {
+            IBuildInfo buildInfo = new BuildInfo();
+            buildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, version);
+            assertEquals("-r1", modifiedPreparer.getSuiteVersionExtracted(buildInfo));
+        }
+    }
+
+    @Test
+    public void testGetSuiteVersionExtractedNonMatchingRegex() throws Exception {
+        final BusinessLogicPreparer modifiedPreparer = new BusinessLogicPreparer();
+        OptionCopier.copyOptions(mPreparer, modifiedPreparer);
+        OptionSetter setter = new OptionSetter(modifiedPreparer);
+        setter.setOptionValue("suite-version-extraction-regex", "not-matching-regex");
+        for (String version : SUITE_VERSIONS_ALL) {
+            IBuildInfo buildInfo = new BuildInfo();
+            buildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, version);
+            assertThrows(
+                    TargetSetupError.class,
+                    () -> {
+                        modifiedPreparer.getSuiteVersionExtracted(buildInfo);
+                    });
+        }
     }
 
     @Test
@@ -209,14 +279,28 @@ public class BusinessLogicPreparerTest {
         when(mMockDevice.getInstalledPackageNames()).thenReturn(mPackages);
         when(mMockDevice.getTotalMemory()).thenReturn(MEMORY_SIZE);
 
-        ArrayList<String> expectFeatures = new ArrayList<String>(
-            Arrays.asList(FEATURE_WATCH, FEATURE_LEANBACK));
-        ArrayList<String> expectProperties = new ArrayList<String>(
-            Arrays.asList("search_client_id", "client_id", RO_BRAND, RO_FIRST_API_LEVEL,
-                RO_MANIFACTURER, RO_MODEL, RO_NAME));
-        ArrayList<String> expectPropertyValues = new ArrayList<String>(
-            Arrays.asList("ms-android-google", "android-google", "BRAND_NAME", "26", "MANUFACTURER_NAME",
-                "fake_model", "fake_name"));
+        ArrayList<String> expectFeatures =
+                new ArrayList<String>(Arrays.asList(FEATURE_WATCH, FEATURE_LEANBACK));
+        ArrayList<String> expectProperties =
+                new ArrayList<String>(
+                        Arrays.asList(
+                                "search_client_id",
+                                "client_id",
+                                RO_BRAND,
+                                RO_FIRST_API_LEVEL,
+                                RO_MANIFACTURER,
+                                RO_MODEL,
+                                RO_NAME));
+        ArrayList<String> expectPropertyValues =
+                new ArrayList<String>(
+                        Arrays.asList(
+                                "ms-android-google",
+                                "android-google",
+                                "BRAND_NAME",
+                                "26",
+                                "MANUFACTURER_NAME",
+                                "fake_model",
+                                "fake_name"));
         ArrayList<String> expectPackages = new ArrayList<String>(pkgNameList);
         ArrayList<String> expectDeviceInfos = new ArrayList<String>(
             Arrays.asList("MemoryDeviceInfo%3Atotal_memory%3A1902936064",

@@ -248,13 +248,9 @@ public class DynamicConfigPusherTest {
                         return super.mergeConfigFiles(
                                 localConfigFile, apfeConfigInJson, moduleName, device);
                     }
-
-                    @Override
-                    String resolveUrl(String suiteName) throws TargetSetupError {
-                        return null;
-                    }
                 };
         OptionSetter setter = new OptionSetter(mPreparer);
+        setter.setOptionValue("has-server-side-config", "false");
         setter.setOptionValue("config-filename", "moduleName");
         setter.setOptionValue("extract-from-resource", "true");
         // Look up the file under that name instead of the config-filename
