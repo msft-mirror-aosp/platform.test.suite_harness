@@ -16,10 +16,10 @@
 package com.android.compatibility.common.tradefed.result.suite;
 
 import com.android.compatibility.common.util.ChecksumReporter.ChecksumValidationException;
-import com.android.ddmlib.testrunner.TestResult.TestStatus;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
+import com.android.tradefed.result.TestStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.BloomFilter;
