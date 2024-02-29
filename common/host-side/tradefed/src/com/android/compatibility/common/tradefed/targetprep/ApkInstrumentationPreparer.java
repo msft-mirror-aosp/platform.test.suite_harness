@@ -17,7 +17,6 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
-import com.android.ddmlib.testrunner.TestResult.TestStatus;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
@@ -31,6 +30,7 @@ import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
+import com.android.tradefed.result.TestStatus;
 import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
@@ -161,7 +161,7 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
         TestRunResult result = listener.getCurrentRunResults();
 
         for (Entry<TestDescription, TestResult> results : result.getTestResults().entrySet()) {
-            if (TestStatus.FAILURE.equals(results.getValue().getStatus())) {
+            if (TestStatus.FAILURE.equals(results.getValue().getResultStatus())) {
                 if (mThrowError) {
                     CLog.e(
                             "Target preparation step %s failed.\n%s",
