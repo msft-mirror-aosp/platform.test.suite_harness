@@ -84,6 +84,7 @@ public class CertificationReportCreator
 
     /** Invocation level Log saver to receive when files are logged */
     private ILogSaver mLogSaver;
+
     private IConfiguration mConfiguration;
 
     private CompatibilityBuildHelper mBuildHelper;
@@ -216,8 +217,7 @@ public class CertificationReportCreator
             fis = new FileInputStream(resultFile);
             logFile = mLogSaver.saveLogData("log-result", LogDataType.XML, fis);
             CLog.d("Result XML URL: %s", logFile.getUrl());
-            logReportFiles(getConfiguration(), resultFile, resultFile.getName(),
-                     LogDataType.XML);
+            logReportFiles(getConfiguration(), resultFile, resultFile.getName(), LogDataType.XML);
         } catch (IOException ioe) {
             CLog.e("error saving XML with log saver");
             CLog.e(ioe);
@@ -231,8 +231,7 @@ public class CertificationReportCreator
                 zipResultStream = new FileInputStream(zippedResults);
                 logFile = mLogSaver.saveLogData("results", LogDataType.ZIP, zipResultStream);
                 CLog.d("Result zip URL: %s", logFile.getUrl());
-                logReportFiles(getConfiguration(), zippedResults, "results",
-                        LogDataType.ZIP);
+                logReportFiles(getConfiguration(), zippedResults, "results", LogDataType.ZIP);
             } finally {
                 StreamUtil.close(zipResultStream);
             }
@@ -248,6 +247,8 @@ public class CertificationReportCreator
                 OutputStream outputStream = new FileOutputStream(report)) {
             Transformer transformer =
                     TransformerFactory.newInstance().newTransformer(new StreamSource(xslStream));
+            transformer.setParameter("reportDir", inputXml.getParentFile().toString());
+            transformer.setParameter("reportName", HTLM_REPORT_NAME);
             transformer.transform(new StreamSource(inputXml), new StreamResult(outputStream));
         } catch (IOException | TransformerException ignored) {
             CLog.e(ignored);
