@@ -54,12 +54,6 @@ import java.util.zip.ZipFile;
 public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     @Option(
-            name = "deqp-resource",
-            description =
-                    "Absolute file path to the dEQP binary resource folder of lib 64 version.")
-    private File mDeqpResource = null;
-
-    @Option(
             name = "base-build",
             description =
                     "Absolute file path to a target file of the base build. Required for "
@@ -80,6 +74,21 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + "dependencies. Optional for incremental dEQP.")
     private File mExtraDependency = null;
 
+    @Option(
+            name = "fallback-strategy",
+            description =
+                    "The fallback strategy to apply if the incremental dEQP qualification testing "
+                            + "for the builds fails.")
+    private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
+
+    private enum FallbackStrategy {
+        // Continues to run full dEQP tests no matter an exception is thrown or not.
+        RUN_FULL_DEQP,
+        // Aborts if an exception is thrown in the preparer. Otherwise, runs full dEQP tests due to
+        // dependency modifications.
+        ABORT_IF_ANY_EXCEPTION;
+    }
+
     private static final String MODULE_NAME = "CtsDeqpTestCases";
     private static final String DEVICE_DEQP_DIR = "/data/local/tmp";
     private static final String[] TEST_LIST =
@@ -96,7 +105,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE = "base_build_hash";
     private static final String DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE = "current_build_hash";
     private static final String NULL_BUILD_HASH = "0";
-    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary";
+    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary32";
 
     private static final String DEPENDENCY_DETAIL_MISSING_IN_CURRENT = "MISSING_IN_CURRENT_BUILD";
     private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE = "MISSING_IN_BASE_BUILD";
@@ -106,7 +115,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             "BASE_AND_CURRENT_BUILD_DIFFERENT_HASH";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
-            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf)");
+            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0|^/mali csf)");
 
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
     public static final String REPORT_NAME = "IncrementalCtsDeviceInfo.deviceinfo.json";
@@ -114,11 +123,19 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
-        ITestDevice device = testInfo.getDevice();
-        CompatibilityBuildHelper buildHelper =
-                new CompatibilityBuildHelper(testInfo.getBuildInfo());
-        IInvocationContext context = testInfo.getContext();
-        runIncrementalDeqp(context, device, buildHelper);
+        try {
+            ITestDevice device = testInfo.getDevice();
+            CompatibilityBuildHelper buildHelper =
+                    new CompatibilityBuildHelper(testInfo.getBuildInfo());
+            IInvocationContext context = testInfo.getContext();
+            runIncrementalDeqp(context, device, buildHelper);
+        } catch (Exception e) {
+            if (mFallbackStrategy == FallbackStrategy.ABORT_IF_ANY_EXCEPTION) {
+                // Rethrows the exception to abort the task.
+                throw e;
+            }
+            // Ignores the exception and continues to run full dEQP tests.
+        }
     }
 
     /**
@@ -286,18 +303,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             throws DeviceNotAvailableException, TargetSetupError {
         Set<String> result = new HashSet<>();
 
-        try {
-            prepareDeqpResource(mDeqpResource);
-        } catch (IOException e) {
-            throw new TargetSetupError(
-                    "Fail to prepare dEQP resources.",
-                    device.getDeviceDescriptor(),
-                    TestErrorIdentifier.TEST_ABORTED);
-        }
-
-        // Push test resources to the device.
-        device.pushDir(mDeqpResource, DEVICE_DEQP_DIR);
-
         for (String testName : TEST_LIST) {
             String perfFile = DEVICE_DEQP_DIR + "/" + testName + ".data";
             String binaryFile = DEVICE_DEQP_DIR + "/" + getBinaryFileName(testName);
@@ -349,13 +354,22 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     /** Gets the hash value of the specified file's content from the target file. */
     protected Map<String, String> getTargetFileHash(Set<String> fileNames, File targetFile)
-            throws IOException {
+            throws IOException, TargetSetupError {
         ZipFile zipFile = new ZipFile(targetFile);
 
         Map<String, String> hashMap = new HashMap<>();
         for (String file : fileNames) {
             // Convert top directory's name to upper case.
             String[] arr = file.split("/", 3);
+            if (arr.length < 3) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Fail to generate zip file entry for dependency: %s. A"
+                                        + " valid dependency should be a file path located at a sub"
+                                        + " directory.",
+                                file),
+                        TestErrorIdentifier.TEST_ABORTED);
+            }
             String formattedName = arr[1].toUpperCase() + "/" + arr[2];
 
             ZipEntry entry = zipFile.getEntry(formattedName);
@@ -454,30 +468,5 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     TestErrorIdentifier.TEST_ABORTED);
         }
         return fingerprint;
-    }
-
-    /**
-     * Copies the dEQP binary file of lib 32 version into the given resource directory, which is a
-     * lib 64 directory by default.
-     */
-    void prepareDeqpResource(File deqpResource) throws IOException {
-        for (File anotherDir :
-                deqpResource
-                        .getParentFile()
-                        .listFiles(
-                                file ->
-                                        file.isDirectory()
-                                                && (file.getName().equals("arm")
-                                                        || file.getName().equals("x86")))) {
-            for (File binaryFile :
-                    anotherDir.listFiles(file -> file.getName().equals(DEQP_BINARY_FILE_NAME_32))) {
-                File newBinaryFile = new File(deqpResource, DEQP_BINARY_FILE_NAME_32);
-                FileUtil.copyFile(binaryFile, newBinaryFile);
-                // rwxr-xr-x
-                FileUtil.chmod(newBinaryFile, "755");
-                break;
-            }
-            break;
-        }
     }
 }
