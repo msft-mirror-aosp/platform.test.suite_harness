@@ -15,6 +15,8 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
+import static com.android.tradefed.targetprep.UserHelper.getRunTestsAsUser;
+
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
@@ -174,11 +176,12 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                     String.format(
                             "%s%s.dynamic",
                             DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
-            if (!device.pushFile(hostFile, deviceDest)) {
+            int userId = getRunTestsAsUser(testInfo);
+            if (!device.pushFile(hostFile, deviceDest, userId)) {
                 throw new TargetSetupError(
                         String.format(
-                                "Failed to push local '%s' to remote '%s'",
-                                hostFile.getAbsolutePath(), deviceDest),
+                                "Failed to push local '%s' to remote '%s for user %d'",
+                                hostFile.getAbsolutePath(), deviceDest, userId),
                         device.getDeviceDescriptor(),
                         DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
