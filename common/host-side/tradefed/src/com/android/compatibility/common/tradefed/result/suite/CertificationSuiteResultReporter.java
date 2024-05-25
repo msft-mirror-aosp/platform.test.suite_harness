@@ -88,7 +88,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     public static final String LATEST_LINK_NAME = "latest";
     public static final String SUMMARY_FILE = "invocation_summary.txt";
 
-    public static final String BUILD_FINGERPRINT = "build_fingerprint";
+    public static final String BUILD_FINGERPRINT = "cts:build_fingerprint";
 
     @Option(name = "result-server", description = "Server to publish test results.")
     @Deprecated
