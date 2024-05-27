@@ -220,11 +220,18 @@ public class CertificationChecksumHelper {
         // Line endings for stacktraces are somewhat unpredictable and there is no need to
         // actually read the result they are all removed for consistency.
         stacktrace = stacktrace.replaceAll("\\r?\\n|\\r", "");
-        sb.append(buildFingerprint).append(SEPARATOR)
-                .append(module.getName()).append(SEPARATOR)
-                .append(testResult.getKey().toString()).append(SEPARATOR)
-                .append(testResult.getValue().getStatus()).append(SEPARATOR)
-                .append(stacktrace).append(SEPARATOR);
+        String testResultStatus =
+                TestStatus.convertToCompatibilityString(testResult.getValue().getResultStatus());
+        sb.append(buildFingerprint)
+                .append(SEPARATOR)
+                .append(module.getName())
+                .append(SEPARATOR)
+                .append(testResult.getKey().toString())
+                .append(SEPARATOR)
+                .append(testResultStatus)
+                .append(SEPARATOR)
+                .append(stacktrace)
+                .append(SEPARATOR);
         return sb.toString();
     }
 
