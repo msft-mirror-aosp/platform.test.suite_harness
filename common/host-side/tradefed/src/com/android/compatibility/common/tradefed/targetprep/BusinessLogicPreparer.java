@@ -27,6 +27,8 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -274,6 +276,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
                     device.getDeviceDescriptor(),
                     DeviceErrorIdentifier.FAIL_PUSH_FILE);
         }
+        checkAndInstallContentProvider(device);
     }
 
     /** Helper to populate the business logic service request with info about the device. */
@@ -360,6 +363,25 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
         CLog.i("Using %s from TestSuiteInfo to get value from dynamic config",
                 suiteName);
         return Collections.singletonList(suiteName);
+    }
+
+    /**
+     * Check and install tradefed content provider.
+     *
+     * <p>Do nothing if the content provider is already installed, otherwise install it and
+     * initialize a {@code ContentProviderHandler} for the current user.
+     *
+     * <p>BusinessLogicTestCase relies on the tradefed content provider to read the BL config file
+     * successfully from the device side.
+     */
+    @VisibleForTesting
+    static void checkAndInstallContentProvider(ITestDevice device)
+            throws DeviceNotAvailableException {
+        if (!device.isPackageInstalled(ContentProviderHandler.PACKAGE_NAME)) {
+            if (device instanceof NativeDevice) {
+                var unused = ((NativeDevice) device).getContentProvider(device.getCurrentUser());
+            }
+        }
     }
 
     /* Get device properties list, with element format "<property_name>:<property_value>" */
