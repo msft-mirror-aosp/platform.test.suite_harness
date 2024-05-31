@@ -19,6 +19,9 @@ package com.android.compatibility.common.tradefed.targetprep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
@@ -27,6 +30,7 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.OptionCopier;
 import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 
@@ -248,6 +252,27 @@ public class BusinessLogicPreparerTest {
         // Setup BuildInfo attributes.
         mMockBuildInfo.addBuildAttribute(CompatibilityBuildHelper.SUITE_VERSION, "v1");
         testBuildRequestString(14, attributes);
+    }
+
+    @Test
+    public void checkAndInstallContentProvider_installed_doesNothing() throws Exception {
+        when(mMockDevice.isPackageInstalled(anyString())).thenReturn(true);
+
+        BusinessLogicPreparer.checkAndInstallContentProvider(mMockDevice);
+
+        verify(mMockDevice).isPackageInstalled(eq("android.tradefed.contentprovider"));
+    }
+
+    @Test
+    public void checkAndInstallContentProvider_notInstalled_getContentProvider() throws Exception {
+        int userId = 100;
+        NativeDevice mockDevice = Mockito.mock(NativeDevice.class);
+        when(mockDevice.isPackageInstalled(anyString())).thenReturn(false);
+        when(mockDevice.getCurrentUser()).thenReturn(userId);
+
+        BusinessLogicPreparer.checkAndInstallContentProvider(mockDevice);
+
+        verify(mockDevice).getContentProvider(eq(userId));
     }
 
     private void testBuildRequestString(int expectedParams, Map<String, String> attributes) throws Exception {
