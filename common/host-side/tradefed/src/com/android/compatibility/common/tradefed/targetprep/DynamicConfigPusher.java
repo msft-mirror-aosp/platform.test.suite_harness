@@ -30,6 +30,8 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -186,6 +188,12 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                         DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
             mDeviceFilePushed = deviceDest;
+            if (!device.isPackageInstalled(ContentProviderHandler.PACKAGE_NAME)) {
+                if (device instanceof NativeDevice) {
+                    var unused =
+                            ((NativeDevice) device).getContentProvider(device.getCurrentUser());
+                }
+            }
         }
         // add host file to build
         buildHelper.addDynamicConfigFile(mModuleName, hostFile);
