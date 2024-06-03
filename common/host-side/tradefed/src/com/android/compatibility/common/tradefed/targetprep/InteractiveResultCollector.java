@@ -21,14 +21,18 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.TargetSetupError;
+import com.android.tradefed.testtype.IInvocationContextReceiver;
+import com.android.tradefed.testtype.suite.ModuleDefinition;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +44,8 @@ import java.util.List;
  * enabled).
  */
 @OptionClass(alias = "interactive-result-collector")
-public class InteractiveResultCollector extends BaseTargetPreparer {
+public class InteractiveResultCollector extends BaseTargetPreparer
+        implements IInvocationContextReceiver {
 
     @Option(
             name = "host-path",
@@ -50,17 +55,27 @@ public class InteractiveResultCollector extends BaseTargetPreparer {
     private String hostPath = "screenshots";
 
     @Option(
+            name = "create-module-dir",
+            description =
+                    "Whether creating a sub-directory under the host-path to distinguish "
+                            + "files of different modules.")
+    private boolean createModuleDir = false;
+
+    @Option(
             name = "device-cleanup",
             description =
-                    "Whether all files in the device folers should be cleaned up before test. "
-                            + "Note that the preparer does not verify that files/directories have"
+                    "Whether all files in the device folders should be cleaned up during setup. "
+                            + "Note that the preparer does not verify that files/directories have "
                             + "been deleted successfully.")
-    private boolean mCleanup = true;
+    private boolean deviceCleanup = true;
 
     @Option(
             name = "device-paths",
             description = "The list of paths to the files stored on the device.")
     private List<String> devicePaths = new ArrayList<>();
+
+    // Paired with create-module-dir option to create the sub-directory with the module name.
+    private String mModuleName = null;
 
     @Override
     public void setUp(TestInformation testInfo)
@@ -72,7 +87,7 @@ public class InteractiveResultCollector extends BaseTargetPreparer {
                     mDevice.getDeviceDescriptor(),
                     InfraErrorIdentifier.UNDETERMINED);
         }
-        if (mCleanup && !devicePaths.isEmpty()) {
+        if (deviceCleanup && !devicePaths.isEmpty()) {
             for (String devicePath : devicePaths) {
                 if (!devicePath.isEmpty()) {
                     CLog.d("Start clean up path: %s", devicePath);
@@ -85,23 +100,20 @@ public class InteractiveResultCollector extends BaseTargetPreparer {
     @Override
     public void tearDown(TestInformation testInfo, Throwable e) throws DeviceNotAvailableException {
         if (e != null && (e instanceof DeviceNotAvailableException)) {
-            CLog.e("Invocation finished with DeviceNotAvailable, skip collecting results.");
+            CLog.e("Module finished with DeviceNotAvailable, skip collecting results.");
             return;
         }
 
         File hostResultDir = null;
         if (!devicePaths.isEmpty()) {
             try {
-                hostResultDir =
-                        new File(
-                                new CompatibilityBuildHelper(testInfo.getBuildInfo())
-                                        .getResultDir(),
-                                hostPath);
+                hostResultDir = getHostResultDir(testInfo);
                 if (!hostResultDir.exists()) {
-                    hostResultDir.mkdir();
+                    hostResultDir.mkdirs();
                 }
             } catch (FileNotFoundException exception) {
                 CLog.e(exception);
+                return;
             }
         }
         if (hostResultDir == null) {
@@ -120,5 +132,21 @@ public class InteractiveResultCollector extends BaseTargetPreparer {
                 }
             }
         }
+    }
+
+    @Override
+    public void setInvocationContext(IInvocationContext invocationContext) {
+        if (createModuleDir
+                && invocationContext.getAttributes().get(ModuleDefinition.MODULE_NAME) != null) {
+            mModuleName =
+                    invocationContext.getAttributes().get(ModuleDefinition.MODULE_NAME).get(0);
+        }
+    }
+
+    private File getHostResultDir(TestInformation testInfo) throws FileNotFoundException {
+        File resultDir = new CompatibilityBuildHelper(testInfo.getBuildInfo()).getResultDir();
+        return mModuleName == null
+                ? Paths.get(resultDir.getAbsolutePath(), hostPath).toFile()
+                : Paths.get(resultDir.getAbsolutePath(), hostPath, mModuleName).toFile();
     }
 }

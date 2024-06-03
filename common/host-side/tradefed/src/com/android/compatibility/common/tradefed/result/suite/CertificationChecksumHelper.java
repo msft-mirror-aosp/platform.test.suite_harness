@@ -21,7 +21,6 @@ import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.result.TestStatus;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 
@@ -32,15 +31,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -68,50 +64,17 @@ public class CertificationChecksumHelper {
     /**
      * Create new instance of {@link CertificationChecksumHelper}
      *
-     * @param testCount the number of test results that will be stored
+     * @param totalCount the total number of module and test results that will be stored
      * @param fpp the false positive percentage for result lookup misses
      * @param version
      * @param buildFingerprint
      */
-    public CertificationChecksumHelper(int testCount, double fpp, short version,
-            String buildFingerprint) {
-        mResultChecksum = BloomFilter.create(Funnels.unencodedCharsFunnel(),
-                testCount, fpp);
+    public CertificationChecksumHelper(
+            int totalCount, double fpp, short version, String buildFingerprint) {
+        mResultChecksum = BloomFilter.create(Funnels.unencodedCharsFunnel(), totalCount, fpp);
         mFileChecksum = new HashMap<>();
         mVersion = version;
         mBuildFingerprint = buildFingerprint;
-    }
-
-    /**
-     * Deserialize checksum from file
-     *
-     * @param directory the parent directory containing the checksum file
-     * @throws ChecksumValidationException
-     */
-    public CertificationChecksumHelper(File directory, String buildFingerprint)
-            throws ChecksumValidationException {
-        mBuildFingerprint = buildFingerprint;
-        File file = new File(directory, NAME);
-        try (FileInputStream fileStream = new FileInputStream(file);
-                InputStream outputStream = new BufferedInputStream(fileStream);
-                ObjectInput objectInput = new ObjectInputStream(outputStream)) {
-            short magicNumber = objectInput.readShort();
-            switch (magicNumber) {
-                case SERIALIZED_FORMAT_CODE:
-                    mVersion = objectInput.readShort();
-                    mResultChecksum = (BloomFilter<CharSequence>) objectInput.readObject();
-                    mFileChecksum = (HashMap<String, byte[]>) objectInput.readObject();
-                    break;
-                default:
-                    throw new ChecksumValidationException("Unknown format of serialized data.");
-            }
-        } catch (Exception e) {
-            throw new ChecksumValidationException("Unable to load checksum from file", e);
-        }
-        if (mVersion > CURRENT_VERSION) {
-            throw new ChecksumValidationException(
-                    "File contains a newer version of ChecksumReporter");
-        }
     }
 
     /**
@@ -123,7 +86,9 @@ public class CertificationChecksumHelper {
     public static boolean tryCreateChecksum(File dir, Collection<TestRunResult> results,
             String buildFingerprint) {
         try {
-            int totalCount = countTestResults(results);
+            // The total number of module result signatures, module summary signatures and test
+            // result signatures.
+            int totalCount = results.size() * 2 + countTestResults(results);
             CertificationChecksumHelper checksumReporter =
                     new CertificationChecksumHelper(totalCount, DEFAULT_FPP, CURRENT_VERSION,
                             buildFingerprint);
@@ -180,17 +145,6 @@ public class CertificationChecksumHelper {
         }
     }
 
-    /**
-     * Use that method to test that a test result entry can be matched by the checksum.
-     */
-    @VisibleForTesting
-    boolean containsTestResult(
-            Entry<TestDescription, TestResult> testResult, TestRunResult moduleResult,
-            String buildFingerprint) {
-        String signature = generateTestResultSignature(testResult, moduleResult, buildFingerprint);
-        return mResultChecksum.mightContain(signature);
-    }
-
     private static String generateModuleResultSignature(TestRunResult module,
             String buildFingerprint) {
         StringBuilder sb = new StringBuilder();
@@ -220,11 +174,18 @@ public class CertificationChecksumHelper {
         // Line endings for stacktraces are somewhat unpredictable and there is no need to
         // actually read the result they are all removed for consistency.
         stacktrace = stacktrace.replaceAll("\\r?\\n|\\r", "");
-        sb.append(buildFingerprint).append(SEPARATOR)
-                .append(module.getName()).append(SEPARATOR)
-                .append(testResult.getKey().toString()).append(SEPARATOR)
-                .append(testResult.getValue().getStatus()).append(SEPARATOR)
-                .append(stacktrace).append(SEPARATOR);
+        String testResultStatus =
+                TestStatus.convertToCompatibilityString(testResult.getValue().getResultStatus());
+        sb.append(buildFingerprint)
+                .append(SEPARATOR)
+                .append(module.getName())
+                .append(SEPARATOR)
+                .append(testResult.getKey().toString())
+                .append(SEPARATOR)
+                .append(testResultStatus)
+                .append(SEPARATOR)
+                .append(stacktrace)
+                .append(SEPARATOR);
         return sb.toString();
     }
 
@@ -264,23 +225,6 @@ public class CertificationChecksumHelper {
         }
         String key = path + SEPARATOR + file.getName();
         mFileChecksum.put(key, crc);
-    }
-
-    /**
-     * Use that method to validate that a file entry can be checked by the checksum.
-     */
-    @VisibleForTesting
-    boolean containsFile(File file, String path) {
-        String key = path + SEPARATOR + file.getName();
-        if (mFileChecksum.containsKey(key)) {
-            try {
-                byte[] crc = calculateFileChecksum(file);
-                return Arrays.equals(mFileChecksum.get(key), crc);
-            } catch (ChecksumValidationException e) {
-                return false;
-            }
-        }
-        return false;
     }
 
     private static byte[] calculateFileChecksum(File file) throws ChecksumValidationException {
