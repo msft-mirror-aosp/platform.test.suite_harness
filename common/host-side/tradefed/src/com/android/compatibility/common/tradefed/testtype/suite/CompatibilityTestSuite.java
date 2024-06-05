@@ -21,12 +21,10 @@ import com.android.compatibility.common.tradefed.testtype.SubPlan;
 import com.android.compatibility.common.tradefed.testtype.retry.RetryFactoryTest;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.config.ConfigurationException;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.Option.Importance;
 import com.android.tradefed.config.OptionClass;
-import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.testtype.suite.BaseTestSuite;
@@ -68,13 +66,7 @@ public final class CompatibilityTestSuite extends BaseTestSuite {
      * Ctor that sets some default for Compatibility runs.
      */
     public CompatibilityTestSuite() {
-        try {
-            OptionSetter setter = new OptionSetter(this);
-            setter.setOptionValue("skip-loading-config-jar", "true");
-        } catch (ConfigurationException e) {
-            // Should not happen
-            throw new RuntimeException(e);
-        }
+        setSkipjarLoading(true);
     }
 
     @Override
