@@ -15,6 +15,8 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
+import static com.android.tradefed.targetprep.UserHelper.RUN_TESTS_AS_USER_KEY;
+
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
@@ -80,13 +82,22 @@ public class SettingsPreparer extends PreconditionPreparer {
                     "\"expected-values\" must be set", device.getDeviceDescriptor());
         }
 
+        String testUser = testInfo.properties().get(RUN_TESTS_AS_USER_KEY);
+        String userArg = " ";
+        if (testUser != null && !testUser.isEmpty() && mSettingType != SettingType.GLOBAL) {
+            userArg = String.format(" --user %s ", testUser);
+        }
+
         String shellCmdGet =
                 !mExpectedSettingValues.isEmpty()
-                        ? String.format("settings get %s %s", mSettingType, mSettingName)
+                        ? String.format("settings get %s%s%s", mSettingType, userArg, mSettingName)
                         : "";
-        String shellCmdPut = (mSetValue != null) ?
-                String.format("settings put %s %s %s", mSettingType, mSettingName, mSetValue) : "";
-
+        String shellCmdPut =
+                (mSetValue != null)
+                        ? String.format(
+                                "settings put %s%s%s %s",
+                                mSettingType, userArg, mSettingName, mSetValue)
+                        : "";
 
         /* Case 1: Both expected-values and set-value are given */
         if (mSetValue != null && !mExpectedSettingValues.isEmpty()) {
@@ -94,7 +105,8 @@ public class SettingsPreparer extends PreconditionPreparer {
             if (!mExpectedSettingValues.contains(mSetValue)) {
                 throw new TargetSetupError(
                         String.format(
-                                "set-value for %s is %s, but value not found in expected-values: %s",
+                                "set-value for %s is %s, but value not found in expected-values:"
+                                        + " %s",
                                 mSettingName, mSetValue, mExpectedSettingValues.toString()),
                         device.getDeviceDescriptor(),
                         DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);

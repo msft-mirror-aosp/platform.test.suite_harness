@@ -27,6 +27,8 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -67,6 +69,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.Set;
 
 /**
@@ -140,6 +144,16 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
     @Option(name = "version", description = "The module configuration version to retrieve.")
     private String mModuleVersion = null;
 
+    @Option(
+            name = "suite-version-extraction-regex",
+            description =
+                    "A regex string with a named capture group \"version\". Used to compare"
+                            + " versions on the BL server. To exclude a platform version name"
+                            + " prefix for example, use \".+?_sts(?<version>.+)\""
+                            + "('12.1_sts-r1' -> '-r1'). Note that <version> can be represented"
+                            + " in xml with &lt;version&gt;.")
+    private String mSuiteVersionExtractionRegex = "(?<version>.+)";
+
     private String mDeviceFilePushed;
     private String mHostFilePushed;
     private IAbi mAbi = null;
@@ -185,7 +199,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             mModuleVersion = "null";
         }
         String requestParams = buildRequestParams(device, buildInfo);
-        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteName());
+        String baseUrl = mUrl.replace(SUITE_PLACEHOLDER, getSuiteNames().get(0));
         String businessLogicString = null;
         // use cached business logic string if options are set accordingly and cache is valid,
         // otherwise proceed with remote download.
@@ -262,15 +276,15 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
                     device.getDeviceDescriptor(),
                     DeviceErrorIdentifier.FAIL_PUSH_FILE);
         }
+        checkAndInstallContentProvider(device);
     }
 
     /** Helper to populate the business logic service request with info about the device. */
     @VisibleForTesting
     String buildRequestParams(ITestDevice device, IBuildInfo buildInfo)
-            throws DeviceNotAvailableException {
-        CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
+            throws DeviceNotAvailableException, TargetSetupError {
         MultiMap<String, String> paramMap = new MultiMap<>();
-        String suiteVersion = buildHelper.getSuiteVersion();
+        String suiteVersion = getSuiteVersionExtracted(buildInfo);
         if (suiteVersion == null) {
             suiteVersion = "null";
         }
@@ -296,30 +310,78 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
     }
 
     /**
-     * Return the the first element of test-suite-tag from configuration if it's not empty,
+     * Extract the version string we should use to compare versions on the BL server. Control what's
+     * extracted with the suite-version-extraction-regex option. This defaults to no changes to the
+     * original build. Suites that prepend the platform version name may use this to remove it.
+     */
+    @VisibleForTesting
+    String getSuiteVersionExtracted(IBuildInfo buildInfo) throws TargetSetupError {
+        CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
+        String suiteVersion = buildHelper.getSuiteVersion();
+        if (suiteVersion == null) {
+            return null;
+        }
+        Matcher m = Pattern.compile(mSuiteVersionExtractionRegex).matcher(suiteVersion);
+        if (m.matches()) {
+            try {
+                String extracted = m.group("version");
+                CLog.d("original version: %s, extracted version: %s", suiteVersion, extracted);
+                return extracted;
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Could not match the extraction regex (%s) against the suite"
+                                        + " version (%s)",
+                                mSuiteVersionExtractionRegex, suiteVersion),
+                        e,
+                        InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
+            }
+        }
+        throw new TargetSetupError(
+                String.format(
+                        "Could not match the extraction regex (%s) against the suite version (%s)",
+                        mSuiteVersionExtractionRegex, suiteVersion),
+                InfraErrorIdentifier.OPTION_CONFIGURATION_ERROR);
+    }
+
+    /**
+     * Return list of test-suite-tag from configuration if it's not empty,
      * otherwise, return the name from test-suite-info.properties.
      */
     @VisibleForTesting
-    String getSuiteName() {
-        String suiteName = null;
-        if (mModuleContext == null) {
-            suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
-        } else {
+    List<String> getSuiteNames() {
+        if (mModuleContext != null) {
             List<String> testSuiteTags = mModuleContext.getConfigurationDescriptor().
                     getSuiteTags();
             if (!testSuiteTags.isEmpty()) {
-                if (testSuiteTags.size() >= 2) {
-                    CLog.i("More than 2 test-suite-tag are defined. test-suite-tag: " +
+                CLog.i("Adding %s from test suite tags to get value from dynamic config",
                         testSuiteTags);
-                }
-                suiteName = testSuiteTags.get(0).toLowerCase();
-                CLog.i("Using %s from test suite tags to get value from dynamic config", suiteName);
-            } else {
-                suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
-                CLog.i("Using %s from TestSuiteInfo to get value from dynamic config", suiteName);
+                return testSuiteTags;
             }
         }
-        return suiteName;
+        String suiteName = TestSuiteInfo.getInstance().getName().toLowerCase();
+        CLog.i("Using %s from TestSuiteInfo to get value from dynamic config",
+                suiteName);
+        return Collections.singletonList(suiteName);
+    }
+
+    /**
+     * Check and install tradefed content provider.
+     *
+     * <p>Do nothing if the content provider is already installed, otherwise install it and
+     * initialize a {@code ContentProviderHandler} for the current user.
+     *
+     * <p>BusinessLogicTestCase relies on the tradefed content provider to read the BL config file
+     * successfully from the device side.
+     */
+    @VisibleForTesting
+    static void checkAndInstallContentProvider(ITestDevice device)
+            throws DeviceNotAvailableException {
+        if (!device.isPackageInstalled(ContentProviderHandler.PACKAGE_NAME)) {
+            if (device instanceof NativeDevice) {
+                var unused = ((NativeDevice) device).getContentProvider(device.getCurrentUser());
+            }
+        }
     }
 
     /* Get device properties list, with element format "<property_name>:<property_value>" */
@@ -334,7 +396,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
 
         try {
             List<String> propertyNames = DynamicConfigFileReader.getValuesFromConfig(buildInfo,
-                    getSuiteName(), DYNAMIC_CONFIG_PROPERTIES_KEY);
+                    getSuiteNames(), DYNAMIC_CONFIG_PROPERTIES_KEY);
             for (String name : propertyNames) {
                 // Use String.valueOf in case property is undefined for the device ("null")
                 String value = String.valueOf(device.getProperty(name));
@@ -351,7 +413,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             throws DeviceNotAvailableException {
         try {
             List<String> dynamicConfigFeatures = DynamicConfigFileReader.getValuesFromConfig(
-                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_FEATURES_KEY);
+                    buildInfo, getSuiteNames(), DYNAMIC_CONFIG_FEATURES_KEY);
             Set<String> deviceFeatures = FeatureUtil.getAllFeatures(device);
             dynamicConfigFeatures.retainAll(deviceFeatures);
             return dynamicConfigFeatures;
@@ -366,7 +428,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
             throws DeviceNotAvailableException {
         try {
             List<String> dynamicConfigPackages = DynamicConfigFileReader.getValuesFromConfig(
-                    buildInfo, getSuiteName(), DYNAMIC_CONFIG_PACKAGES_KEY);
+                    buildInfo, getSuiteNames(), DYNAMIC_CONFIG_PACKAGES_KEY);
             Set<String> devicePackages = device.getInstalledPackageNames();
             dynamicConfigPackages.retainAll(devicePackages);
             return dynamicConfigPackages;
@@ -388,7 +450,7 @@ public class BusinessLogicPreparer extends BaseTargetPreparer
         List<String> requiredDeviceInfo = null;
         try {
             requiredDeviceInfo = DynamicConfigFileReader.getValuesFromConfig(
-                buildInfo, getSuiteName(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
+                buildInfo, getSuiteNames(), DYNAMIC_CONFIG_EXTENDED_DEVICE_INFO_KEY);
         } catch (XmlPullParserException | IOException e) {
             CLog.e("Failed to pull business logic Extended DeviceInfo from dynamic config. "
                 + "Error: %s", e);
