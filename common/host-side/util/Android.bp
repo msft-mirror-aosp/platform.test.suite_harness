@@ -22,13 +22,15 @@ java_library_host {
 
     srcs: ["src/**/*.java"],
 
+    // b/267831518: Pin tradefed and dependencies to Java 11.
+    java_version: "11",
+
     static_libs: [
         "compatibility-common-util-hostsidelib",
         "json",
     ],
 
     libs: [
-        "json-prebuilt",
         "tradefed",
     ],
 }
