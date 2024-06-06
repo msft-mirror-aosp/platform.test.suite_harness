@@ -42,14 +42,39 @@ public class DynamicConfigHandler {
     private static final String NS = null; //xml constant representing null namespace
     private static final String ENCODING = "UTF-8";
 
-    public static File getMergedDynamicConfigFile(File localConfigFile, String apbsConfigJson,
-            String moduleName) throws IOException, XmlPullParserException, JSONException {
+    public static File getMergedDynamicConfigFile(
+            File localConfigFile,
+            String apbsConfigJson,
+            String moduleName,
+            Map<String, String> valueReplacementMap)
+            throws IOException, XmlPullParserException, JSONException {
+        Map<String, List<String>> dynamicConfig = new HashMap<>();
 
         Map<String, List<String>> localConfig = DynamicConfig.createConfigMap(localConfigFile);
         Map<String, List<String>> apbsConfig = parseJsonToConfigMap(apbsConfigJson);
         localConfig.putAll(apbsConfig);
-        setRemoteConfigRetrieved(localConfig, apbsConfigJson != null);
-        return storeMergedConfigFile(localConfig, moduleName);
+
+        localConfig.forEach(
+                (k, v) -> {
+                    dynamicConfig.put(k, updateValues(v, valueReplacementMap));
+                });
+
+        setRemoteConfigRetrieved(dynamicConfig, apbsConfigJson != null);
+        return storeMergedConfigFile(dynamicConfig, moduleName);
+    }
+
+    private static List<String> updateValues(
+            List<String> values, Map<String, String> valueReplacementMap) {
+        List<String> updatedValues = new ArrayList<>();
+        values.forEach(
+                v -> {
+                    String updatedValue = v;
+                    for (Map.Entry<String, String> entry : valueReplacementMap.entrySet()) {
+                        updatedValue = updatedValue.replace(entry.getKey(), entry.getValue());
+                    }
+                    updatedValues.add(updatedValue);
+                });
+        return updatedValues;
     }
 
     private static void setRemoteConfigRetrieved(Map<String, List<String>> config,

@@ -21,6 +21,7 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
 
@@ -70,7 +71,8 @@ public class PropertyCheck extends PreconditionPreparer {
                                 "Property \"%s\" not found or not set on device", mPropertyName);
                 // Handle missing property with either exception or warning
                 if (mThrowError) {
-                    throw new TargetSetupError(msg, device.getDeviceDescriptor());
+                    throw new TargetSetupError(msg, device.getDeviceDescriptor(),
+                        DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
                 } else {
                     CLog.w(msg);
                 }
@@ -90,7 +92,8 @@ public class PropertyCheck extends PreconditionPreparer {
                     mExpectedPropertyValue, propertyValue, mPropertyName);
             // Handle unexpected property value with either exception or warning
             if(mThrowError) {
-                throw new TargetSetupError(msg, device.getDeviceDescriptor());
+                throw new TargetSetupError(msg, device.getDeviceDescriptor(),
+                    DeviceErrorIdentifier.DEVICE_UNEXPECTED_RESPONSE);
             } else {
                 CLog.w(msg);
             }
