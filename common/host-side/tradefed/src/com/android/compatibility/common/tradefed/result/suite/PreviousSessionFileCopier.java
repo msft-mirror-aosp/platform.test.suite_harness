@@ -18,7 +18,6 @@ package com.android.compatibility.common.tradefed.result.suite;
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.ChecksumReporter;
-import com.android.compatibility.common.util.ResultHandler;
 import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -41,9 +40,9 @@ public class PreviousSessionFileCopier implements ITestInvocationListener {
             Arrays.asList(
                     ChecksumReporter.NAME,
                     ChecksumReporter.PREV_NAME,
-                    ResultHandler.FAILURE_REPORT_NAME,
-                    CertificationSuiteResultReporter.HTLM_REPORT_NAME,
-                    CertificationSuiteResultReporter.FAILURE_REPORT_NAME,
+                    CertificationReportCreator.FAILURE_REPORT_NAME,
+                    CertificationReportCreator.HTLM_REPORT_NAME,
+                    CertificationReportCreator.FAILURE_REPORT_NAME,
                     CertificationSuiteResultReporter.SUMMARY_FILE,
                     CertificationChecksumHelper.NAME,
                     "diffs",

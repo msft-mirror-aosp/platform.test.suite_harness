@@ -169,8 +169,6 @@ public class CertificationSuiteResultReporterTest {
         assertTrue(content.contains("suite_name=\"VTS\""));
         assertTrue(content.contains("suite_variant=\"CTS_ON_GSI\""));
         assertTrue(content.contains("suite_version=\"version\""));
-        // Ensure html is created
-        assertTrue(new File(mBuildHelper.getResultDir(), "test_result.html").exists());
     }
 
     /**

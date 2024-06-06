@@ -251,7 +251,8 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         // This is specific to Compatibility checking and does not work for multi-device.
         List<ITargetPreparer> preparers = config.getTargetPreparers();
         List<ITargetPreparer> newList = new ArrayList<>();
-        // Add the fingerprint checker first to ensure we check it before rerunning the config.
+        // Add the fingerprint checker last to support preparers that need to flash or launch
+        // the device
         BuildFingerPrintPreparer fingerprintChecker = new BuildFingerPrintPreparer();
         fingerprintChecker.setExpectedFingerprint(mExpectedFingerprint);
         fingerprintChecker.setExpectedVendorFingerprint(mExpectedVendorFingerprint);
@@ -259,8 +260,8 @@ public final class PreviousResultLoader implements ITestSuiteResultLoader {
         if (!Strings.isNullOrEmpty(mUnalteredFingerprint)) {
             fingerprintChecker.setUnalteredFingerprint(mUnalteredFingerprint);
         }
-        newList.add(fingerprintChecker);
         newList.addAll(preparers);
+        newList.add(fingerprintChecker);
         config.setTargetPreparers(newList);
 
         // Add the file copier last to copy from previous sesssion
