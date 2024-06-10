@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_android_testing_experiences",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -23,16 +24,16 @@ java_test_host {
     // Restrict visibility to only those targets that need to access it.
     visibility: ["//visibility:private"],
 
-//    test_options: {
-//        unit_test: true,
-//    },
+    //    test_options: {
+    //        unit_test: true,
+    //    },
 
     srcs: ["src/**/*.java"],
 
     static_libs: [
         "objenesis-host",
         "mockito-host",
-	"compatibility-host-util",
+        "compatibility-host-util",
         "junit",
         "json-prebuilt",
         "tradefed",

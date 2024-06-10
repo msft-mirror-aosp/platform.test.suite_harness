@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 
 /** Host-side specific utilities for backup and restore tests. */
 public class BackupHostSideUtils {
-    private static final int USER_SYSTEM = 0;
     // This is Settings.Secure.USER_SETUP_COMPLETE
     private static final String USER_SETUP_COMPLETE = "user_setup_complete";
 
@@ -49,14 +48,23 @@ public class BackupHostSideUtils {
 
     public static void checkSetupComplete(ITestDevice device)
             throws TargetSetupError, DeviceNotAvailableException {
-        if (!isSetupCompleteSettingForSystemUser(device))
+        if (!isSetupCompleteSettingForDefaultBackupUser(device))
             throw new TargetSetupError(
-                    "Backup tests cannot be run:Setup not completed for system user",
+                    "Backup tests cannot be run:Setup not completed for main user",
                     device.getDeviceDescriptor());
     }
 
-    private static boolean isSetupCompleteSettingForSystemUser(ITestDevice device)
+    private static boolean isSetupCompleteSettingForDefaultBackupUser(ITestDevice device)
             throws DeviceNotAvailableException {
-        return device.getSetting(USER_SYSTEM, "secure", USER_SETUP_COMPLETE).equals("1");
+        return device.getSetting(
+                        getDefaultBackupUserId(device),
+                        /*namespace=*/ "secure",
+                        /*key=*/ USER_SETUP_COMPLETE)
+                .equals("1");
+    }
+
+    public static int getDefaultBackupUserId(ITestDevice device)
+            throws DeviceNotAvailableException {
+        return device.getMainUserId() == null ? 0 : device.getMainUserId();
     }
 }
