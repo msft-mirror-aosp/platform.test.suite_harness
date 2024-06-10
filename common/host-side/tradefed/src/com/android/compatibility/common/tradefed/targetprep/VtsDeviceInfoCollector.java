@@ -92,6 +92,8 @@ public class VtsDeviceInfoCollector implements ITargetPreparer {
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
+        // Ensure device is available before collecting
+        device.waitForDeviceAvailable();
         for (Entry<String, String> entry : BUILD_KEYS.entrySet()) {
             String propertyValue = device.getProperty(entry.getValue());
             if ((propertyValue == null || propertyValue.length() == 0)
