@@ -15,6 +15,7 @@
 -->
 <configuration description="Common config for Compatibility suites">
     <option name="dynamic-sharding" value="true" />
+    <option name="report-passed-tests" value="false" />
     <device_recovery class="com.android.tradefed.device.WaitDeviceRecovery" />
     <build_provider class="com.android.compatibility.common.tradefed.build.CompatibilityBuildProvider" />
     <test class="com.android.compatibility.common.tradefed.testtype.suite.CompatibilityTestSuite" />
@@ -26,9 +27,9 @@
     <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CompatibilityProtoResultReporter">
         <option name="periodic-proto-writing" value="true" />
     </result_reporter>
-    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter" />
     <!-- Compact the protos to save space -->
     <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CompactProtoReporter" />
+    <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationSuiteResultReporter" />
     <!-- Create the zip report last always -->
     <result_reporter class="com.android.compatibility.common.tradefed.result.suite.CertificationReportCreator" />
 </configuration>
