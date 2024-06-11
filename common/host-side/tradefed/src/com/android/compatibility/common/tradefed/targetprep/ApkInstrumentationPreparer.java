@@ -17,7 +17,6 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
-import com.android.ddmlib.testrunner.TestResult.TestStatus;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.IConfigurationReceiver;
 import com.android.tradefed.config.Option;
@@ -26,10 +25,12 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
+import com.android.tradefed.observatory.IDiscoverDependencies;
 import com.android.tradefed.result.CollectingTestListener;
 import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
+import com.android.tradefed.result.TestStatus;
 import com.android.tradefed.result.error.DeviceErrorIdentifier;
 import com.android.tradefed.result.error.InfraErrorIdentifier;
 import com.android.tradefed.targetprep.BuildError;
@@ -45,7 +46,7 @@ import java.util.Set;
 /** Target preparer that instruments an APK. */
 @OptionClass(alias = "apk-instrumentation-preparer")
 public class ApkInstrumentationPreparer extends PreconditionPreparer
-        implements IConfigurationReceiver {
+        implements IConfigurationReceiver, IDiscoverDependencies {
 
     @Option(name = "apk", description = "Name of the apk to instrument", mandatory = true)
     protected String mApkFileName = null;
@@ -120,6 +121,13 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
         }
     }
 
+    @Override
+    public Set<String> reportDependencies() {
+        Set<String> deps = new HashSet<>();
+        deps.add(mApkFileName);
+        return deps;
+    }
+
     private boolean instrument(TestInformation testInfo)
             throws DeviceNotAvailableException, FileNotFoundException {
         CompatibilityBuildHelper buildHelper =
@@ -153,7 +161,7 @@ public class ApkInstrumentationPreparer extends PreconditionPreparer
         TestRunResult result = listener.getCurrentRunResults();
 
         for (Entry<TestDescription, TestResult> results : result.getTestResults().entrySet()) {
-            if (TestStatus.FAILURE.equals(results.getValue().getStatus())) {
+            if (TestStatus.FAILURE.equals(results.getValue().getResultStatus())) {
                 if (mThrowError) {
                     CLog.e(
                             "Target preparation step %s failed.\n%s",
