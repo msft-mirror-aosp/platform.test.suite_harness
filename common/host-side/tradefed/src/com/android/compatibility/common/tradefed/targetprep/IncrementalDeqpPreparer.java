@@ -17,7 +17,6 @@
 package com.android.compatibility.common.tradefed.targetprep;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
-import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.util.DeviceInfo;
 import com.android.compatibility.common.util.HostInfoStore;
 import com.android.tradefed.build.IBuildInfo;
@@ -27,11 +26,11 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
+import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.result.error.TestErrorIdentifier;
 import com.android.tradefed.targetprep.BaseTargetPreparer;
 import com.android.tradefed.targetprep.BuildError;
 import com.android.tradefed.targetprep.TargetSetupError;
-import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
 
@@ -55,11 +54,6 @@ import java.util.zip.ZipFile;
 public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     @Option(
-            name = "deqp-resource",
-            description = "Absolute file path to the dEQP binary resource folder.")
-    private File mDeqpResource = null;
-
-    @Option(
             name = "base-build",
             description =
                     "Absolute file path to a target file of the base build. Required for "
@@ -80,6 +74,21 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + "dependencies. Optional for incremental dEQP.")
     private File mExtraDependency = null;
 
+    @Option(
+            name = "fallback-strategy",
+            description =
+                    "The fallback strategy to apply if the incremental dEQP qualification testing "
+                            + "for the builds fails.")
+    private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
+
+    private enum FallbackStrategy {
+        // Continues to run full dEQP tests no matter an exception is thrown or not.
+        RUN_FULL_DEQP,
+        // Aborts if an exception is thrown in the preparer. Otherwise, runs full dEQP tests due to
+        // dependency modifications.
+        ABORT_IF_ANY_EXCEPTION;
+    }
+
     private static final String MODULE_NAME = "CtsDeqpTestCases";
     private static final String DEVICE_DEQP_DIR = "/data/local/tmp";
     private static final String[] TEST_LIST =
@@ -96,6 +105,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE = "base_build_hash";
     private static final String DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE = "current_build_hash";
     private static final String NULL_BUILD_HASH = "0";
+    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary32";
 
     private static final String DEPENDENCY_DETAIL_MISSING_IN_CURRENT = "MISSING_IN_CURRENT_BUILD";
     private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE = "MISSING_IN_BASE_BUILD";
@@ -105,7 +115,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             "BASE_AND_CURRENT_BUILD_DIFFERENT_HASH";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
-            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf)");
+            Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0|^/mali csf)");
 
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
     public static final String REPORT_NAME = "IncrementalCtsDeviceInfo.deviceinfo.json";
@@ -113,27 +123,34 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
-        ITestDevice device = testInfo.getDevice();
-        CompatibilityBuildHelper buildHelper =
-                new CompatibilityBuildHelper(testInfo.getBuildInfo());
-        IInvocationContext context = testInfo.getContext();
-        runIncrementalDeqp(context, device, buildHelper);
+        try {
+            ITestDevice device = testInfo.getDevice();
+            CompatibilityBuildHelper buildHelper =
+                    new CompatibilityBuildHelper(testInfo.getBuildInfo());
+            IInvocationContext context = testInfo.getContext();
+            runIncrementalDeqp(context, device, buildHelper);
+        } catch (Exception e) {
+            if (mFallbackStrategy == FallbackStrategy.ABORT_IF_ANY_EXCEPTION) {
+                // Rethrows the exception to abort the task.
+                throw e;
+            }
+            // Ignores the exception and continues to run full dEQP tests.
+        }
     }
 
     /**
      * Runs a check to determine if the current build has changed dEQP dependencies or not. Will
-     * signal to dEQP test runner whether majority of dEQP cases can be skipped, and also generate
-     * an incremental cts report with more details.
+     * signal to dEQP test runner whether the majority of dEQP cases can be skipped, and also
+     * generate an incremental cts report with more details.
      *
      * <p>Synchronize this method so that multiple shards won't run it multiple times.
      */
-    @VisibleForTesting
     protected void runIncrementalDeqp(
             IInvocationContext context, ITestDevice device, CompatibilityBuildHelper buildHelper)
             throws TargetSetupError, DeviceNotAvailableException {
         // Make sure synchronization is on the class not the object.
         synchronized (IncrementalDeqpPreparer.class) {
-            File jsonFile = null;
+            File jsonFile;
             try {
                 File deviceInfoDir =
                         new File(buildHelper.getResultDir(), DeviceInfo.RESULT_DIR_NAME);
@@ -144,7 +161,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 }
             } catch (FileNotFoundException e) {
                 throw new TargetSetupError(
-                        String.format("Fail to read invocation result directory."),
+                        "Fail to read invocation result directory.",
                         device.getDeviceDescriptor(),
                         TestErrorIdentifier.TEST_ABORTED);
             }
@@ -243,18 +260,18 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 store.endArray();
             } catch (IOException e) {
                 throw new TargetSetupError(
-                        String.format("Failed to compare the builds"),
+                        "Failed to compare the builds",
                         e,
                         device.getDeviceDescriptor(),
                         TestErrorIdentifier.TEST_ABORTED);
             } catch (Exception e) {
                 throw new TargetSetupError(
-                        String.format("Failed to write incremental dEQP report"),
+                        "Failed to write incremental dEQP report",
                         e,
                         device.getDeviceDescriptor(),
                         TestErrorIdentifier.TEST_ABORTED);
             } finally {
-                if (jsonFile != null && jsonFile.exists() && jsonFile.length() == 0) {
+                if (jsonFile.exists() && jsonFile.length() == 0) {
                     FileUtil.deleteFile(jsonFile);
                 }
             }
@@ -273,7 +290,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             }
         } catch (IOException e) {
             throw new TargetSetupError(
-                    String.format("Failed to parse extra dependencies file."),
+                    "Failed to parse extra dependencies file.",
                     e,
                     device.getDeviceDescriptor(),
                     TestErrorIdentifier.TEST_ABORTED);
@@ -285,8 +302,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private Set<String> getDeqpDependencies(ITestDevice device)
             throws DeviceNotAvailableException, TargetSetupError {
         Set<String> result = new HashSet<>();
-        // Push test resources to the device.
-        device.pushDir(mDeqpResource, DEVICE_DEQP_DIR);
 
         for (String testName : TEST_LIST) {
             String perfFile = DEVICE_DEQP_DIR + "/" + testName + ".data";
@@ -338,15 +353,23 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Gets the hash value of the specified file's content from the target file. */
-    @VisibleForTesting
     protected Map<String, String> getTargetFileHash(Set<String> fileNames, File targetFile)
-            throws IOException {
+            throws IOException, TargetSetupError {
         ZipFile zipFile = new ZipFile(targetFile);
 
         Map<String, String> hashMap = new HashMap<>();
         for (String file : fileNames) {
             // Convert top directory's name to upper case.
             String[] arr = file.split("/", 3);
+            if (arr.length < 3) {
+                throw new TargetSetupError(
+                        String.format(
+                                "Fail to generate zip file entry for dependency: %s. A"
+                                        + " valid dependency should be a file path located at a sub"
+                                        + " directory.",
+                                file),
+                        TestErrorIdentifier.TEST_ABORTED);
+            }
             String formattedName = arr[1].toUpperCase() + "/" + arr[2];
 
             ZipEntry entry = zipFile.getEntry(formattedName);
@@ -364,7 +387,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Parses the dump file and gets list of dependencies. */
-    @VisibleForTesting
     protected Set<String> parseDump(String dumpContent) {
         boolean binaryExecuted = false;
         boolean correctMmap = false;
@@ -383,7 +405,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     correctMmap = line.startsWith("record mmap") && !line.contains("misc 1");
                 }
 
-                // We have reached the fiename for a valid perf event, add to the dependency map if
+                // We have reached the filename for a valid perf event, add to the dependency map if
                 // it isn't in the exclusion pattern
                 if (line.contains("filename") && correctMmap) {
                     String dependency = line.substring(line.indexOf("filename") + 9).trim();
@@ -397,7 +419,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Checks the test log to see if all tests are executed. */
-    @VisibleForTesting
     protected boolean checkTestLog(String testListContent, String logContent) {
         int testCount = testListContent.split("\n").length;
 
@@ -411,7 +432,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Gets dEQP binary's test list file based on test name */
-    @VisibleForTesting
     protected String getTestFileName(String testName) {
         if (testName.startsWith("vk")) {
             return "vk-incremental-deqp.txt";
@@ -421,20 +441,18 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Gets dEQP binary's name based on the test name. */
-    @VisibleForTesting
     protected String getBinaryFileName(String testName) {
         if (testName.endsWith("32")) {
-            return "deqp-binary";
+            return DEQP_BINARY_FILE_NAME_32;
         } else {
             return "deqp-binary64";
         }
     }
 
     /** Gets the build fingerprint from target files. */
-    @VisibleForTesting
     protected String getBuildFingerPrint(File targetFile, ITestDevice device)
             throws TargetSetupError {
-        String fingerprint = "";
+        String fingerprint;
         try {
             ZipFile zipFile = new ZipFile(targetFile);
             ZipEntry entry = zipFile.getEntry("SYSTEM/build.prop");
