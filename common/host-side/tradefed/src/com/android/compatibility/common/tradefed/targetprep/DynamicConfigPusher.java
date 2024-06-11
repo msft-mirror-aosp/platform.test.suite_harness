@@ -15,6 +15,8 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
+import static com.android.tradefed.targetprep.UserHelper.getRunTestsAsUser;
+
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
@@ -28,6 +30,8 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -76,6 +80,11 @@ public class DynamicConfigPusher extends BaseTargetPreparer
             "will override the default config location defined in CompatibilityBuildProvider.")
     private String mConfigUrl = "https://androidpartner.googleapis.com/v1/dynamicconfig/" +
             "suites/{suite-name}/modules/{module}/version/{version}?key={api-key}";
+
+    @Option(
+            name = "has-server-side-config",
+            description = "Whether there exists a service side dynamic config.")
+    private boolean mHasServerSideConfig = true;
 
     @Option(name="config-filename", description = "The module name for module-level " +
             "configurations, or the suite name for suite-level configurations")
@@ -169,15 +178,22 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                     String.format(
                             "%s%s.dynamic",
                             DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
-            if (!device.pushFile(hostFile, deviceDest)) {
+            int userId = getRunTestsAsUser(testInfo);
+            if (!device.pushFile(hostFile, deviceDest, userId)) {
                 throw new TargetSetupError(
                         String.format(
-                                "Failed to push local '%s' to remote '%s'",
-                                hostFile.getAbsolutePath(), deviceDest),
+                                "Failed to push local '%s' to remote '%s for user %d'",
+                                hostFile.getAbsolutePath(), deviceDest, userId),
                         device.getDeviceDescriptor(),
                         DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
             mDeviceFilePushed = deviceDest;
+            if (!device.isPackageInstalled(ContentProviderHandler.PACKAGE_NAME)) {
+                if (device instanceof NativeDevice) {
+                    var unused =
+                            ((NativeDevice) device).getContentProvider(device.getCurrentUser());
+                }
+            }
         }
         // add host file to build
         buildHelper.addDynamicConfigFile(mModuleName, hostFile);
@@ -281,6 +297,9 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     @VisibleForTesting
     String resolveUrl(String suiteName) throws TargetSetupError {
+        if (!mHasServerSideConfig) {
+            return null;
+        }
         try {
             String configUrl =
                     UrlReplacement.getDynamicConfigServerUrl() == null
