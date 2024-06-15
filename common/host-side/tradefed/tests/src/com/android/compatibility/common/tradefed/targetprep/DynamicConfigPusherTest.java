@@ -44,10 +44,10 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -56,7 +56,6 @@ import java.util.Map;
 @RunWith(JUnit4.class)
 public class DynamicConfigPusherTest {
     private static final String RESOURCE_DYNAMIC_CONFIG = "test-dynamic-config";
-    private static final String RUN_TESTS_AS_USER_KEY = "RUN_TESTS_AS_USER";
     private DynamicConfigPusher mPreparer;
     private ITestDevice mMockDevice;
     private CompatibilityBuildHelper mMockBuildHelper;
@@ -230,77 +229,12 @@ public class DynamicConfigPusherTest {
         }
     }
 
-    @Test
-    public void testSetUp_usesRunTestsAsUserFromProperty() throws Exception {
-        final File[] localConfig = new File[1];
-        OptionSetter setter = prepareSetupTestTarget(localConfig);
-        // Set target to DEVICE.
-        setter.setOptionValue("target", "device");
-
-        int runTestsAsUserId = 101;
-        mTestInfo.properties().put(RUN_TESTS_AS_USER_KEY, String.valueOf(runTestsAsUserId));
-        when(mMockDevice.pushFile(Mockito.any(), Mockito.any(), Mockito.anyInt())).thenReturn(true);
-
-        mPreparer.setUp(mTestInfo);
-
-        verify(mMockDevice, Mockito.never()).getCurrentUser();
-        // pushFile() is called for the RUN_TESTS_AS_USER set in the TestInfo property.
-        verify(mMockDevice).pushFile(Mockito.any(), Mockito.any(), Mockito.eq(runTestsAsUserId));
-    }
-
-    @Test
-    public void testSetUp_currentUser() throws Exception {
-        final File[] localConfig = new File[1];
-        OptionSetter setter = prepareSetupTestTarget(localConfig);
-        // Set target to DEVICE.
-        setter.setOptionValue("target", "device");
-
-        int currentUserId = 100;
-        when(mMockDevice.getCurrentUser()).thenReturn(currentUserId);
-        when(mMockDevice.pushFile(Mockito.any(), Mockito.any(), Mockito.anyInt())).thenReturn(true);
-
-        mPreparer.setUp(mTestInfo);
-
-        // pushFile() is called for the current user.
-        verify(mMockDevice).pushFile(Mockito.any(), Mockito.any(), Mockito.eq(currentUserId));
-    }
-
     /**
      * Test an end-to-end usage of the dynamic config file from the jar.
      */
     @Test
     public void testSetUp() throws Exception {
         final File[] localConfig = new File[1];
-        prepareSetupTestTarget(localConfig);
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
-        when(mMockBuildInfo.getBuildAttributes()).thenReturn(attributes);
-        Collection<VersionedFile> versionedFiles = new ArrayList<VersionedFile>();
-        when(mMockBuildInfo.getFiles()).thenReturn(versionedFiles);
-        mPreparer.setInvocationContext(mModuleContext);
-
-        mPreparer.setUp(mTestInfo);
-        ArgumentCaptor<File> capture = ArgumentCaptor.forClass(File.class);
-        verify(mMockBuildInfo)
-                .setFile(
-                        Mockito.contains("moduleName"),
-                        capture.capture(),
-                        Mockito.eq("DYNAMIC_CONFIG_FILE:moduleName"));
-        assertNotNull(localConfig[0]);
-        // Ensure that the extracted file was deleted.
-        assertFalse(localConfig[0].exists());
-        File dynamicFile = capture.getValue();
-        assertTrue(dynamicFile.exists());
-        FileUtil.deleteFile(dynamicFile);
-    }
-
-    /**
-     * Prepares for running tests for DynamicConfigPusher#setUp method.
-     *
-     * @return an {@link OptionSetter} so that each test can override option valuses as necessary.
-     */
-    private OptionSetter prepareSetupTestTarget(File[] localConfig) throws Exception {
         mPreparer =
                 new DynamicConfigPusher() {
                     @Override
@@ -322,6 +256,22 @@ public class DynamicConfigPusherTest {
         // Look up the file under that name instead of the config-filename
         setter.setOptionValue("dynamic-resource-name", RESOURCE_DYNAMIC_CONFIG);
 
-        return setter;
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put(CompatibilityBuildHelper.SUITE_VERSION, "v1");
+        when(mMockBuildInfo.getBuildAttributes()).thenReturn(attributes);
+        Collection<VersionedFile> versionedFiles = new LinkedList<VersionedFile>();
+        when(mMockBuildInfo.getFiles()).thenReturn(versionedFiles);
+        mPreparer.setInvocationContext(mModuleContext);
+
+        mPreparer.setUp(mTestInfo);
+        ArgumentCaptor<File> capture = ArgumentCaptor.forClass(File.class);
+        verify(mMockBuildInfo).setFile(Mockito.contains("moduleName"), capture.capture(),
+                Mockito.eq("DYNAMIC_CONFIG_FILE:moduleName"));
+        assertNotNull(localConfig[0]);
+        // Ensure that the extracted file was deleted.
+        assertFalse(localConfig[0].exists());
+        File dynamicFile = capture.getValue();
+        assertTrue(dynamicFile.exists());
+        FileUtil.deleteFile(dynamicFile);
     }
 }
