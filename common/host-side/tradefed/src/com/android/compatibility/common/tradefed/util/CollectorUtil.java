@@ -18,8 +18,6 @@ package com.android.compatibility.common.tradefed.util;
 
 import com.android.compatibility.common.tradefed.targetprep.DeviceInfoCollector;
 import com.android.compatibility.common.tradefed.targetprep.ReportLogCollector;
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.util.FileUtil;
 
@@ -31,9 +29,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Utility class for {@link ReportLogCollector} and {@link DeviceInfoCollector}.
@@ -43,47 +46,24 @@ public class CollectorUtil {
     private CollectorUtil() {
     }
 
-    private static final String ADB_LS_PATTERN = "([^\\s]+)\\s*";
     private static final String TEST_METRICS_PATTERN = "\\\"([a-z0-9_]*)\\\":(\\{[^{}]*\\})";
 
     /**
-     * Copy files from device to host.
-     * @param device The device reference.
-     * @param src The source directory on the device.
-     * @param dest The destination directory.
-     */
-    public static void pullFromDevice(ITestDevice device, String src, String dest) {
-        try {
-            if (device.doesFileExist(src)) {
-                String listCommand = String.format("ls %s", src);
-                String fileList = device.executeShellCommand(listCommand);
-                Pattern p = Pattern.compile(ADB_LS_PATTERN);
-                Matcher m = p.matcher(fileList);
-                while (m.find()) {
-                    String fileName = m.group(1);
-                    String srcPath = String.format("%s%s", src, fileName);
-                    File destFile = new File(String.format("%s/%s", dest, fileName));
-                    device.pullFile(srcPath, destFile);
-                }
-            }
-        } catch (DeviceNotAvailableException e) {
-            CLog.e("Caught exception during pull.");
-            CLog.e(e);
-        }
-    }
-
-    /**
-     * Copy files from host and delete from source.
+     * Copy/Merge files from host and delete from source.
+     *
      * @param src The source directory.
      * @param dest The destination directory.
      */
     public static void pullFromHost(File src, File dest) {
         try {
             if (src.listFiles() != null) {
-                FileUtil.recursiveCopy(src, dest);
+                for (File srcReportLog : src.listFiles()) {
+                    File destReportLog = new File(dest, srcReportLog.getName());
+                    merge(srcReportLog, destReportLog);
+                }
             }
             FileUtil.recursiveDelete(src);
-        } catch (IOException e) {
+        } catch (JSONException | IOException e) {
             CLog.e("Caught exception during pull.");
             CLog.e(e);
         }
@@ -97,9 +77,11 @@ public class CollectorUtil {
      */
     public static void reformatRepeatedStreams(File resultDir) {
         try {
-            File[] reportLogs = resultDir.listFiles();
-            for (File reportLog : reportLogs) {
-                writeFile(reportLog, reformatJsonString(readFile(reportLog)));
+            if (resultDir.listFiles() != null) {
+                File[] reportLogs = resultDir.listFiles();
+                for (File reportLog : reportLogs) {
+                    writeFile(reportLog, reformatJsonString(readFile(reportLog)));
+                }
             }
         } catch (IOException e) {
             CLog.e("Caught exception during reformatting.");
@@ -183,5 +165,39 @@ public class CollectorUtil {
         }
         newJsonBuilder.append("}");
         return newJsonBuilder.toString();
+    }
+
+    /**
+     * A helper method that merges a json-file's contents to a local file
+     *
+     * @param origFile the original file to be copied
+     * @param destFile the destination file
+     * @throws JSONException if either file is an invalid json
+     * @throws IOException if failed to copy file
+     */
+    public static void merge(File origFile, File destFile) throws JSONException, IOException {
+        JSONObject mergedJson = new JSONObject(readFile(origFile));
+
+        // in a sharded run, the reportlog file may exist on both devices, so they need to be merged
+        if (destFile.exists()) {
+            JSONObject destFileJson = new JSONObject(readFile(destFile));
+
+            Iterator<String> streams = destFileJson.keys();
+            while (streams.hasNext()) {
+                String stream = streams.next();
+                JSONArray testResults = destFileJson.getJSONArray(stream);
+
+                if (mergedJson.has(stream)) {
+                    for (int i = 0; i < testResults.length(); i++) {
+                        JSONObject testResult = testResults.getJSONObject(i);
+                        mergedJson.accumulate(stream, testResult);
+                    }
+                } else {
+                    mergedJson.put(stream, testResults);
+                }
+            }
+        }
+
+        FileUtil.writeToFile(mergedJson.toString(), destFile);
     }
 }
