@@ -19,13 +19,15 @@ package {
 java_library_host {
     name: "compatibility-tradefed",
     srcs: ["src/**/*.java"],
+    // b/267831518: Pin tradefed and dependencies to Java 11.
+    java_version: "11",
     java_resource_dirs: ["res"],
     defaults: ["tradefed_errorprone_defaults"],
-    static_libs: [
-        "xts-external-dependencies"
-    ],
     libs: [
         "tradefed",
         "compatibility-host-util",
+    ],
+    static_libs: [
+        "tradefed-external-dependencies"
     ],
 }
