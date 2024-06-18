@@ -15,8 +15,6 @@
  */
 package com.android.compatibility.common.tradefed.targetprep;
 
-import static com.android.tradefed.targetprep.UserHelper.getRunTestsAsUser;
-
 import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.tradefed.util.DynamicConfigFileReader;
@@ -144,8 +142,10 @@ public class MediaPreparer extends BaseTargetPreparer
     protected Resolution mMaxRes = null;
     protected String mFailureStackTrace = null;
 
-    /* User id that the test is running as. */
-    private int mUserId = -1;
+    /*
+     * Track the user being prepared through setUp to avoid re-querying it.
+     */
+    private int mCurrentUser = -1;
 
     /** The module level configuration to check the target preparers. */
     private IConfiguration mModuleConfiguration;
@@ -243,7 +243,7 @@ public class MediaPreparer extends BaseTargetPreparer
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
         if (mPushAll) {
-            return device.doesFileExist(mBaseDeviceModuleDir, mUserId);
+            return device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser);
         }
         for (Resolution resolution : RESOLUTIONS) {
             if (resolution.width > mMaxRes.width) {
@@ -251,8 +251,8 @@ public class MediaPreparer extends BaseTargetPreparer
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath, mUserId)
-                    || !device.doesFileExist(deviceFullFilePath, mUserId)) {
+            if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                    || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                 return false;
             }
         }
@@ -480,20 +480,20 @@ public class MediaPreparer extends BaseTargetPreparer
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath, mUserId)
-                    || !device.doesFileExist(deviceFullFilePath, mUserId)) {
+            if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)
+                    || !device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
                 CLog.i("Copying files of resolution %s to device", resolution.toString());
                 String localShortDirName = "bbb_short/" + resolution.toString();
                 String localFullDirName = "bbb_full/" + resolution.toString();
                 File localShortDir = new File(mLocalMediaPath, localShortDirName);
                 File localFullDir = new File(mLocalMediaPath, localFullDirName);
                 // push short directory of given resolution, if not present on device
-                if (!device.doesFileExist(deviceShortFilePath, mUserId)) {
-                    device.pushDir(localShortDir, deviceShortFilePath, mUserId);
+                if (!device.doesFileExist(deviceShortFilePath, mCurrentUser)) {
+                    device.pushDir(localShortDir, deviceShortFilePath);
                 }
                 // push full directory of given resolution, if not present on device
-                if (!device.doesFileExist(deviceFullFilePath, mUserId)) {
-                    device.pushDir(localFullDir, deviceFullFilePath, mUserId);
+                if (!device.doesFileExist(deviceFullFilePath, mCurrentUser)) {
+                    device.pushDir(localFullDir, deviceFullFilePath);
                 }
             }
         }
@@ -501,9 +501,9 @@ public class MediaPreparer extends BaseTargetPreparer
 
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceModuleDir, mUserId)) {
+        if (!device.doesFileExist(mBaseDeviceModuleDir, mCurrentUser)) {
             CLog.i("Copying files to device");
-            device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir, mUserId);
+            device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir);
         }
     }
 
@@ -527,7 +527,7 @@ public class MediaPreparer extends BaseTargetPreparer
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
-        mUserId = getRunTestsAsUser(testInfo);
+        mCurrentUser = device.getCurrentUser();
         if (mSkipMediaDownload) {
             CLog.i("Skipping media preparation");
             return; // skip this precondition
@@ -560,7 +560,7 @@ public class MediaPreparer extends BaseTargetPreparer
 
     @VisibleForTesting
     protected void setUserId(int testUser) {
-        mUserId = testUser;
+        mCurrentUser = testUser;
     }
 
     // Initialize maximum resolution of media files to copy
@@ -589,7 +589,7 @@ public class MediaPreparer extends BaseTargetPreparer
         CLog.i("Instrumenting package %s:", APP_PKG_NAME);
         // We usually discourage from referencing the content provider utility
         // but in this case, the helper needs it installed.
-        new ContentProviderHandler(device, mUserId).setUp();
+        new ContentProviderHandler(device).setUp();
         AndroidJUnitTest instrTest = new AndroidJUnitTest();
         instrTest.setDevice(device);
         instrTest.setInstallFile(apkFile);
