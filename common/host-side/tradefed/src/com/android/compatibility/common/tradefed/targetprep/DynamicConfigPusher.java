@@ -19,6 +19,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DynamicConfig;
 import com.android.compatibility.common.util.DynamicConfigHandler;
+import com.android.compatibility.common.util.UrlReplacement;
 import com.android.tradefed.dependencies.ExternalDependency;
 import com.android.tradefed.dependencies.IExternalDependency;
 import com.android.tradefed.dependencies.connectivity.NetworkDependency;
@@ -27,6 +28,8 @@ import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.device.NativeDevice;
+import com.android.tradefed.device.contentprovider.ContentProviderHandler;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -76,6 +79,11 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     private String mConfigUrl = "https://androidpartner.googleapis.com/v1/dynamicconfig/" +
             "suites/{suite-name}/modules/{module}/version/{version}?key={api-key}";
 
+    @Option(
+            name = "has-server-side-config",
+            description = "Whether there exists a service side dynamic config.")
+    private boolean mHasServerSideConfig = true;
+
     @Option(name="config-filename", description = "The module name for module-level " +
             "configurations, or the suite name for suite-level configurations")
     private String mModuleName = null;
@@ -89,27 +97,33 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     private String mVersion;
 
     // Options for getting the dynamic file from resources.
-    @Option(name = "extract-from-resource",
-            description = "Whether to look for the local dynamic config inside the jar resources "
-                + "or on the local disk.")
+    @Option(
+            name = "extract-from-resource",
+            description =
+                    "Whether to look for the local dynamic config inside the jar resources "
+                            + "or on the local disk.")
     private boolean mExtractFromResource = false;
 
-    @Option(name = "dynamic-resource-name",
-            description = "When using --extract-from-resource, this option allow to specify the "
-                + "resource name, instead of the module name for the lookup. File will still be "
-                + "logged under the module name.")
+    @Option(
+            name = "dynamic-resource-name",
+            description =
+                    "When using --extract-from-resource, this option allow to specify the resource"
+                            + " name, instead of the module name for the lookup. File will still be"
+                            + " logged under the module name.")
     private String mResourceFileName = null;
 
-    @Option(name = "dynamic-config-name",
-            description = "The dynamic config name for module-level configurations, or the "
-                + "suite name for suite-level configurations.")
+    @Option(
+            name = "dynamic-config-name",
+            description =
+                    "The dynamic config name for module-level configurations, or the "
+                            + "suite name for suite-level configurations.")
     private String mDynamicConfigName = null;
 
     private String mDeviceFilePushed;
 
     private IInvocationContext mModuleContext = null;
 
-    void setModuleName(String moduleName) {
+    public void setModuleName(String moduleName) {
         mModuleName = moduleName;
     }
 
@@ -131,6 +145,7 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
+        UrlReplacement.init();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
         ITestDevice device = testInfo.getDevice();
         CompatibilityBuildHelper buildHelper = new CompatibilityBuildHelper(buildInfo);
@@ -157,8 +172,10 @@ public class DynamicConfigPusher extends BaseTargetPreparer
         File hostFile = mergeConfigFiles(localConfigFile, apfeConfigInJson, mModuleName, device);
 
         if (TestTarget.DEVICE.equals(mTarget)) {
-            String deviceDest = String.format("%s%s.dynamic",
-                    DynamicConfig.CONFIG_FOLDER_ON_DEVICE, mModuleName);
+            String deviceDest =
+                    String.format(
+                            "%s%s.dynamic",
+                            DynamicConfig.CONFIG_FOLDER_ON_DEVICE, createModuleName());
             if (!device.pushFile(hostFile, deviceDest)) {
                 throw new TargetSetupError(
                         String.format(
@@ -168,6 +185,12 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                         DeviceErrorIdentifier.FAIL_PUSH_FILE);
             }
             mDeviceFilePushed = deviceDest;
+            if (!device.isPackageInstalled(ContentProviderHandler.PACKAGE_NAME)) {
+                if (device instanceof NativeDevice) {
+                    var unused =
+                            ((NativeDevice) device).getContentProvider(device.getCurrentUser());
+                }
+            }
         }
         // add host file to build
         buildHelper.addDynamicConfigFile(mModuleName, hostFile);
@@ -247,16 +270,21 @@ public class DynamicConfigPusher extends BaseTargetPreparer
     }
 
     @VisibleForTesting
-    File mergeConfigFiles(File localConfigFile, String apfeConfigInJson, String moduleName,
-            ITestDevice device) throws TargetSetupError {
+    File mergeConfigFiles(
+            File localConfigFile, String apfeConfigInJson, String moduleName, ITestDevice device)
+            throws TargetSetupError {
         File hostFile = null;
         try {
-            hostFile = DynamicConfigHandler.getMergedDynamicConfigFile(
-                    localConfigFile, apfeConfigInJson, moduleName);
+            hostFile =
+                    DynamicConfigHandler.getMergedDynamicConfigFile(
+                            localConfigFile,
+                            apfeConfigInJson,
+                            moduleName,
+                            UrlReplacement.getUrlReplacementMap());
             return hostFile;
         } catch (IOException | XmlPullParserException | JSONException e) {
-            throw new TargetSetupError("Cannot get merged dynamic config file", e,
-                    device.getDeviceDescriptor());
+            throw new TargetSetupError(
+                    "Cannot get merged dynamic config file", e, device.getDeviceDescriptor());
         } finally {
             if (mExtractFromResource) {
                 FileUtil.deleteFile(localConfigFile);
@@ -266,9 +294,16 @@ public class DynamicConfigPusher extends BaseTargetPreparer
 
     @VisibleForTesting
     String resolveUrl(String suiteName) throws TargetSetupError {
+        if (!mHasServerSideConfig) {
+            return null;
+        }
         try {
+            String configUrl =
+                    UrlReplacement.getDynamicConfigServerUrl() == null
+                            ? mConfigUrl
+                            : UrlReplacement.getDynamicConfigServerUrl();
             String requestUrl =
-                    mConfigUrl
+                    configUrl
                             .replace("{suite-name}", suiteName)
                             .replace("{module}", mModuleName)
                             .replace("{version}", mVersion)
@@ -286,5 +321,10 @@ public class DynamicConfigPusher extends BaseTargetPreparer
                     false,
                     InfraErrorIdentifier.ANDROID_PARTNER_SERVER_ERROR);
         }
+    }
+
+    public String createModuleName() {
+        // Device side utility already adds .dynamic extension
+        return String.format("%s", mModuleName);
     }
 }
