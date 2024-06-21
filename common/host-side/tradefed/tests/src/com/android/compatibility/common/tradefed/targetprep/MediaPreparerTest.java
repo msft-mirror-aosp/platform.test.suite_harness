@@ -52,6 +52,9 @@ import java.util.List;
 @RunWith(JUnit4.class)
 public class MediaPreparerTest {
 
+    private static final String RUN_TESTS_AS_USER_KEY = "RUN_TESTS_AS_USER";
+    private static final int TEST_USER_ID = 99;
+
     private MediaPreparer mMediaPreparer;
     private DeviceBuildInfo mMockBuildInfo;
     private ITestDevice mMockDevice;
@@ -70,7 +73,7 @@ public class MediaPreparerTest {
                         super.setMaxRes(testInfo);
                     }
                 };
-        mMediaPreparer.setUserId(0);
+        mMediaPreparer.setUserId(TEST_USER_ID);
         mMockDevice = Mockito.mock(ITestDevice.class);
         mMockBuildInfo = new DeviceBuildInfo("0", "");
         mTestsDir = FileUtil.createTempDir("media-unit-tests");
@@ -147,10 +150,10 @@ public class MediaPreparerTest {
                     resolution.toString());
             String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
                     resolution.toString());
-            when(mMockDevice.doesFileExist(shortFile)).thenReturn(true);
-            when(mMockDevice.doesFileExist(fullFile)).thenReturn(true);
+            when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
+            when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir))
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
                 .thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
@@ -166,8 +169,8 @@ public class MediaPreparerTest {
                     resolution.toString());
             String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
                     resolution.toString());
-            when(mMockDevice.doesFileExist(shortFile, 0)).thenReturn(true);
-            when(mMockDevice.doesFileExist(fullFile, 0)).thenReturn(true);
+            when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
+            when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
@@ -176,7 +179,8 @@ public class MediaPreparerTest {
     public void testMediaFilesExistOnDeviceTrueWithPushAll() throws Exception {
         mOptionSetter.setOptionValue("push-all", "true");
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, 0)).thenReturn(true);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+                .thenReturn(true);
 
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
@@ -186,9 +190,42 @@ public class MediaPreparerTest {
         mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         String firstFileChecked = "/sdcard/test/bbb_short/176x144";
-        when(mMockDevice.doesFileExist(firstFileChecked)).thenReturn(false);
+        when(mMockDevice.doesFileExist(firstFileChecked, TEST_USER_ID)).thenReturn(false);
 
         assertFalse(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+    }
+
+    @Test
+    public void testMediaFilesExistOnDevice_differentUserId() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+                .thenReturn(true);
+
+        assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+
+        // The file exists for TEST_USER_ID, but not for other users.
+        mMediaPreparer.setUserId(TEST_USER_ID + 1);
+        assertFalse(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+    }
+
+    @Test
+    public void testSetUp_setsUserIdFromProperty() throws Exception {
+        mOptionSetter.setOptionValue("skip-media-download", "true");
+        mOptionSetter.setOptionValue("push-all", "true");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
+        int newTestUserId = TEST_USER_ID + 1;
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, newTestUserId))
+                .thenReturn(true);
+
+        // The file exists for newTestUserId, not for TEST_USER_ID.
+        assertFalse(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+
+        mTestInfo.properties().put(RUN_TESTS_AS_USER_KEY, String.valueOf(newTestUserId));
+        // userId is set to newTestUser by setUp().
+        mMediaPreparer.setUp(mTestInfo);
+
+        assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
     }
 
     @Test
@@ -205,9 +242,12 @@ public class MediaPreparerTest {
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/unittest/";
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, 0)).thenReturn(true);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, 0)).thenReturn(false);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, 0)).thenReturn(false);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+                .thenReturn(true);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, TEST_USER_ID))
+                .thenReturn(false);
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, TEST_USER_ID))
+                .thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
     }
@@ -232,8 +272,8 @@ public class MediaPreparerTest {
                             "%s%s", mMediaPreparer.mBaseDeviceShortDir, resolution.toString());
             String fullFile =
                     String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir, resolution.toString());
-            when(mMockDevice.doesFileExist(shortFile)).thenReturn(true);
-            when(mMockDevice.doesFileExist(fullFile)).thenReturn(true);
+            when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
+            when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
 
         mMediaPreparer.setUp(mTestInfo);
@@ -247,11 +287,9 @@ public class MediaPreparerTest {
 
         when(mMockDevice.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE))
                 .thenReturn("/sdcard");
-        when(mMockDevice.doesFileExist(Mockito.any()))
-                .thenReturn(false);
+        when(mMockDevice.doesFileExist(Mockito.any(), Mockito.anyInt())).thenReturn(false);
         when(mMockDevice.getDeviceDescriptor()).thenReturn(null);
-        when(mMockDevice.pushDir(Mockito.any(), Mockito.any()))
-                .thenReturn(true);
+        when(mMockDevice.pushDir(Mockito.any(), Mockito.any(), Mockito.anyInt())).thenReturn(true);
         when(mMockDevice.executeShellCommand(Mockito.any()))
                 .thenReturn("");
     }
@@ -362,6 +400,7 @@ public class MediaPreparerTest {
         mMediaPreparer.setUp(mTestInfo);
 
         verify(mMockDevice, never()).getMountPoint(Mockito.any());
-        verify(mMockDevice, never()).doesFileExist(Mockito.any());
+        verify(mMockDevice, never()).doesFileExist(Mockito.any(), Mockito.anyInt());
     }
 }
+
