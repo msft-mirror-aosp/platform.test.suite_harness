@@ -20,6 +20,7 @@ import com.android.tradefed.result.TestDescription;
 import com.android.tradefed.result.TestResult;
 import com.android.tradefed.result.TestRunResult;
 import com.android.tradefed.result.TestStatus;
+import com.android.tradefed.result.suite.XmlSuiteResultFormatter;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -171,6 +172,13 @@ public class CertificationChecksumHelper {
         String stacktrace = testResult.getValue().getStackTrace();
 
         stacktrace = stacktrace == null ? "" : stacktrace.trim();
+        // Truncates and sanitizes the full stack trace to get consistent with {@link
+        // XmlSuiteResultFormatter}.
+        stacktrace =
+                XmlSuiteResultFormatter.truncateStackTrace(
+                        stacktrace, testResult.getKey().getTestName());
+        stacktrace = XmlSuiteResultFormatter.sanitizeXmlContent(stacktrace);
+
         // Line endings for stacktraces are somewhat unpredictable and there is no need to
         // actually read the result they are all removed for consistency.
         stacktrace = stacktrace.replaceAll("\\r?\\n|\\r", "");
