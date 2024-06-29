@@ -70,6 +70,9 @@ public class CertificationChecksumHelperTest {
         results.add(run1);
         TestRunResult run2 = createFakeResults("run2", 3);
         results.add(run2);
+        TestRunResult run3 =
+                createFakeResultWithAssumptionFailure("run3", "expected:<-25.0> but was:<15.0>");
+        results.add(run3);
         boolean res = CertificationChecksumHelper.tryCreateChecksum(
                 mWorkingDir, results, FINGERPRINT);
         assertTrue(res);
@@ -112,6 +115,13 @@ public class CertificationChecksumHelperTest {
         assertTrue(
                 resultChecksum.mightContain(
                         "thisismyfingerprint/run2/com.class.path#testMethod2/pass//"));
+        // Check run3
+        assertTrue(resultChecksum.mightContain("thisismyfingerprint/run3/true/0"));
+        assertTrue(resultChecksum.mightContain("thisismyfingerprint/run3/0"));
+        assertTrue(
+                resultChecksum.mightContain(
+                        "thisismyfingerprint/run3/com.class.path#testMethod/ASSUMPTION_FAILURE/expected:&lt;-25.0&gt;"
+                            + " but was:&lt;15.0&gt;/"));
     }
 
     private TestRunResult createFakeResults(String runName, int testCount) {
@@ -122,6 +132,16 @@ public class CertificationChecksumHelperTest {
             results.testStarted(test);
             results.testEnded(test, new HashMap<String, Metric>());
         }
+        results.testRunEnded(500L, new HashMap<String, Metric>());
+        return results;
+    }
+
+    private TestRunResult createFakeResultWithAssumptionFailure(String runName, String trackTrace) {
+        TestRunResult results = new TestRunResult();
+        results.testRunStarted(runName, 1);
+        TestDescription test = new TestDescription("com.class.path", "testMethod");
+        results.testStarted(test);
+        results.testAssumptionFailure(test, trackTrace);
         results.testRunEnded(500L, new HashMap<String, Metric>());
         return results;
     }
