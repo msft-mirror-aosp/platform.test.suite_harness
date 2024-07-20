@@ -93,7 +93,7 @@ public class InteractiveResultCollector extends BaseTargetPreparer
             for (String devicePath : devicePaths) {
                 if (!devicePath.isEmpty()) {
                     CLog.d("Start clean up path: %s", devicePath);
-                    mDevice.executeAdbCommand("shell", "rm", "-rf", devicePath);
+                    mDevice.deleteFile(devicePath);
                 }
             }
         }
