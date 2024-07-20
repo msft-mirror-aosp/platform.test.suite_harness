@@ -59,7 +59,7 @@ public class InteractiveResultCollector extends BaseTargetPreparer
             description =
                     "Whether creating a sub-directory under the host-path to distinguish "
                             + "files of different modules.")
-    private boolean createModuleDir = false;
+    private boolean createModuleDir = true;
 
     @Option(
             name = "device-cleanup",
@@ -76,6 +76,8 @@ public class InteractiveResultCollector extends BaseTargetPreparer
 
     // Paired with create-module-dir option to create the sub-directory with the module name.
     private String mModuleName = null;
+    // Paired with create-module-dir option to create the sub-directory with the module abi.
+    private String mModuleAbi = null;
 
     @Override
     public void setUp(TestInformation testInfo)
@@ -91,7 +93,7 @@ public class InteractiveResultCollector extends BaseTargetPreparer
             for (String devicePath : devicePaths) {
                 if (!devicePath.isEmpty()) {
                     CLog.d("Start clean up path: %s", devicePath);
-                    mDevice.executeAdbCommand("shell", "rm", "-rf", devicePath);
+                    mDevice.deleteFile(devicePath);
                 }
             }
         }
@@ -136,10 +138,19 @@ public class InteractiveResultCollector extends BaseTargetPreparer
 
     @Override
     public void setInvocationContext(IInvocationContext invocationContext) {
-        if (createModuleDir
-                && invocationContext.getAttributes().get(ModuleDefinition.MODULE_NAME) != null) {
-            mModuleName =
-                    invocationContext.getAttributes().get(ModuleDefinition.MODULE_NAME).get(0);
+        if (createModuleDir) {
+            List<String> moduleNames =
+                    invocationContext.getAttributes().get(ModuleDefinition.MODULE_NAME);
+            if (moduleNames != null && !moduleNames.isEmpty()) {
+                mModuleName = moduleNames.get(0);
+            }
+            List<String> moduleAbis =
+                    invocationContext.getAttributes().get(ModuleDefinition.MODULE_ABI);
+            if (moduleAbis != null && !moduleAbis.isEmpty()) {
+                mModuleAbi = moduleAbis.get(0);
+            }
+        } else {
+            CLog.d("Skip initializing the module name and abi as create-module-dir is false.");
         }
     }
 
@@ -147,6 +158,12 @@ public class InteractiveResultCollector extends BaseTargetPreparer
         File resultDir = new CompatibilityBuildHelper(testInfo.getBuildInfo()).getResultDir();
         return mModuleName == null
                 ? Paths.get(resultDir.getAbsolutePath(), hostPath).toFile()
-                : Paths.get(resultDir.getAbsolutePath(), hostPath, mModuleName).toFile();
+                : getHostResultDir(resultDir.getAbsolutePath());
+    }
+
+    private File getHostResultDir(String resultDir) {
+        String subDirName =
+                mModuleAbi == null ? mModuleName : String.format("%s__%s", mModuleName, mModuleAbi);
+        return Paths.get(resultDir, hostPath, subDirName).toFile();
     }
 }
