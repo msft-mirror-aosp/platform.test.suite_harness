@@ -62,17 +62,6 @@ public final class InteractiveResultCollectorTest {
     }
 
     @Test
-    public void setUp_deviceCleanup_emptyDevicePaths_doNothing() throws Exception {
-        ITestDevice testDevice = mock(ITestDevice.class);
-        initTestInfo(new DeviceBuildInfo("0", ""), testDevice);
-
-        mCollector.setUp(mTestInfo);
-
-        verify(testDevice, never())
-                .executeAdbCommand(anyString(), anyString(), anyString(), anyString());
-    }
-
-    @Test
     public void setUp_deviceClenup_emptyDevicePathSkipped() throws Exception {
         ITestDevice testDevice = mock(ITestDevice.class);
         initTestInfo(new DeviceBuildInfo("0", ""), testDevice);
@@ -83,8 +72,8 @@ public final class InteractiveResultCollectorTest {
         mCollector.setUp(mTestInfo);
 
         // Only one execution for DEVICE_PATH.
-        verify(testDevice).executeAdbCommand(anyString(), anyString(), anyString(), anyString());
-        verify(testDevice).executeAdbCommand("shell", "rm", "-rf", DEVICE_PATH);
+        verify(testDevice, never()).deleteFile("");
+        verify(testDevice).deleteFile(DEVICE_PATH);
     }
 
     @Test
