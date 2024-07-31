@@ -92,7 +92,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String MODULE_NAME = "CtsDeqpTestCases";
     private static final String DEVICE_DEQP_DIR = "/data/local/tmp";
     private static final String[] TEST_LIST =
-            new String[] {"vk-32", "vk-64", "gles3-32", "gles3-64"};
+            new String[] {"vk-incremental-deqp", "gles3-incremental-deqp"};
+    private static final String[] DEQP_BINARY_LIST =
+            new String[] {"deqp-binary32", "deqp-binary64"};
+    private static final String DEQP_CASE_LIST_FILE_EXTENSION = ".txt";
+    private static final String PERF_FILE_EXTENSION = ".data";
+    private static final String LOG_FILE_EXTENSION = ".qpa";
     private static final String BASE_BUILD_FINGERPRINT_ATTRIBUTE = "base_build_fingerprint";
     private static final String CURRENT_BUILD_FINGERPRINT_ATTRIBUTE = "current_build_fingerprint";
     private static final String MODULE_ATTRIBUTE = "module";
@@ -105,7 +110,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE = "base_build_hash";
     private static final String DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE = "current_build_hash";
     private static final String NULL_BUILD_HASH = "0";
-    private static final String DEQP_BINARY_FILE_NAME_32 = "deqp-binary32";
 
     private static final String DEPENDENCY_DETAIL_MISSING_IN_CURRENT = "MISSING_IN_CURRENT_BUILD";
     private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE = "MISSING_IN_BASE_BUILD";
@@ -304,49 +308,52 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         Set<String> result = new HashSet<>();
 
         for (String testName : TEST_LIST) {
-            String perfFile = DEVICE_DEQP_DIR + "/" + testName + ".data";
-            String binaryFile = DEVICE_DEQP_DIR + "/" + getBinaryFileName(testName);
-            String testFile = DEVICE_DEQP_DIR + "/" + getTestFileName(testName);
-            String logFile = DEVICE_DEQP_DIR + "/" + testName + ".qpa";
+            for (String binaryName : DEQP_BINARY_LIST) {
+                String fileNamePrefix = testName + "-" + binaryName;
+                String perfFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + PERF_FILE_EXTENSION;
+                String binaryFile = DEVICE_DEQP_DIR + "/" + binaryName;
+                String testFile = DEVICE_DEQP_DIR + "/" + testName + DEQP_CASE_LIST_FILE_EXTENSION;
+                String logFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + LOG_FILE_EXTENSION;
 
-            String command =
-                    String.format(
-                            "cd %s && simpleperf record -o %s %s --deqp-caselist-file=%s "
-                                    + "--deqp-log-images=disable --deqp-log-shader-sources=disable "
-                                    + "--deqp-log-filename=%s --deqp-surface-type=fbo "
-                                    + "--deqp-surface-width=2048 --deqp-surface-height=2048",
-                            DEVICE_DEQP_DIR, perfFile, binaryFile, testFile, logFile);
-            device.executeShellCommand(command);
+                String command =
+                        String.format(
+                                "cd %s && simpleperf record -o %s %s --deqp-caselist-file=%s"
+                                    + " --deqp-log-images=disable --deqp-log-shader-sources=disable"
+                                    + " --deqp-log-filename=%s --deqp-surface-type=fbo"
+                                    + " --deqp-surface-width=2048 --deqp-surface-height=2048",
+                                DEVICE_DEQP_DIR, perfFile, binaryFile, testFile, logFile);
+                device.executeShellCommand(command);
 
-            // Check the test log.
-            String testFileContent = device.pullFileContents(testFile);
-            if (testFileContent == null || testFileContent.isEmpty()) {
-                throw new TargetSetupError(
-                        String.format("Fail to read test file: %s", testFile),
-                        device.getDeviceDescriptor(),
-                        TestErrorIdentifier.TEST_ABORTED);
+                // Check the test log.
+                String testFileContent = device.pullFileContents(testFile);
+                if (testFileContent == null || testFileContent.isEmpty()) {
+                    throw new TargetSetupError(
+                            String.format("Fail to read test file: %s", testFile),
+                            device.getDeviceDescriptor(),
+                            TestErrorIdentifier.TEST_ABORTED);
+                }
+                String logContent = device.pullFileContents(logFile);
+                if (logContent == null || logContent.isEmpty()) {
+                    throw new TargetSetupError(
+                            String.format("Fail to read simpleperf log file: %s", logFile),
+                            device.getDeviceDescriptor(),
+                            TestErrorIdentifier.TEST_ABORTED);
+                }
+
+                if (!checkTestLog(testFileContent, logContent)) {
+                    throw new TargetSetupError(
+                            "dEQP binary tests are not executed. This may caused by test crash.",
+                            device.getDeviceDescriptor(),
+                            TestErrorIdentifier.TEST_ABORTED);
+                }
+
+                String dumpFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + "-perf-dump.txt";
+                String dumpCommand = String.format("simpleperf dump %s > %s", perfFile, dumpFile);
+                device.executeShellCommand(dumpCommand);
+                String dumpContent = device.pullFileContents(dumpFile);
+
+                result.addAll(parseDump(dumpContent));
             }
-            String logContent = device.pullFileContents(logFile);
-            if (logContent == null || logContent.isEmpty()) {
-                throw new TargetSetupError(
-                        String.format("Fail to read simpleperf log file: %s", logFile),
-                        device.getDeviceDescriptor(),
-                        TestErrorIdentifier.TEST_ABORTED);
-            }
-
-            if (!checkTestLog(testFileContent, logContent)) {
-                throw new TargetSetupError(
-                        "dEQP binary tests are not executed. This may caused by test crash.",
-                        device.getDeviceDescriptor(),
-                        TestErrorIdentifier.TEST_ABORTED);
-            }
-
-            String dumpFile = DEVICE_DEQP_DIR + "/" + testName + "-perf-dump.txt";
-            String dumpCommand = String.format("simpleperf dump %s > %s", perfFile, dumpFile);
-            device.executeShellCommand(dumpCommand);
-            String dumpContent = device.pullFileContents(dumpFile);
-
-            result.addAll(parseDump(dumpContent));
         }
 
         return result;
@@ -429,24 +436,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             }
         }
         return executedTestCount == testCount;
-    }
-
-    /** Gets dEQP binary's test list file based on test name */
-    protected String getTestFileName(String testName) {
-        if (testName.startsWith("vk")) {
-            return "vk-incremental-deqp.txt";
-        } else {
-            return "gles3-incremental-deqp.txt";
-        }
-    }
-
-    /** Gets dEQP binary's name based on the test name. */
-    protected String getBinaryFileName(String testName) {
-        if (testName.endsWith("32")) {
-            return DEQP_BINARY_FILE_NAME_32;
-        } else {
-            return "deqp-binary64";
-        }
     }
 
     /** Gets the build fingerprint from target files. */
