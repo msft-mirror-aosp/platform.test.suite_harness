@@ -142,11 +142,17 @@ public class CertificationResultXml extends XmlSuiteResultFormatter {
     @Override
     public void addBuildInfoAttributes(XmlSerializer serializer, SuiteResultHolder holder)
             throws IllegalArgumentException, IllegalStateException, IOException {
+        HashMap<String, String> processedKeys = new HashMap<>();
+
         for (IBuildInfo build : holder.context.getBuildInfos()) {
             for (String key : build.getBuildAttributes().keySet()) {
                 if (key.startsWith(getAttributesPrefix())) {
                     String newKey = key.split(getAttributesPrefix())[1];
-                    serializer.attribute(NS, newKey, build.getBuildAttributes().get(key));
+                    // Check for duplicates before processing
+                    if (!processedKeys.containsKey(newKey)) {
+                        processedKeys.put(newKey, key);
+                        serializer.attribute(NS, newKey, build.getBuildAttributes().get(key));
+                    }
                 }
             }
         }
