@@ -153,18 +153,6 @@ public class IncrementalDeqpPreparerTest {
     }
 
     @Test
-    public void testGetTestFileName() {
-        assertEquals(mPreparer.getTestFileName("vk-32"), "vk-incremental-deqp.txt");
-        assertEquals(mPreparer.getTestFileName("gles-32"), "gles3-incremental-deqp.txt");
-    }
-
-    @Test
-    public void testGetBinaryFileName() {
-        assertEquals(mPreparer.getBinaryFileName("vk-32"), "deqp-binary32");
-        assertEquals(mPreparer.getBinaryFileName("vk-64"), "deqp-binary64");
-    }
-
-    @Test
     public void getBuildFingerPrint() throws IOException, TargetSetupError {
         // base_build_target-files.zip is a stripped down version of the target-files.zip generated
         // from the android build system, with a few added mocked target files for testing.
