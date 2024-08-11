@@ -19,11 +19,15 @@ package com.android.compatibility.common.tradefed.targetprep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.endsWith;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.BuildInfo;
 import com.android.tradefed.build.IBuildInfo;
+import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
@@ -52,11 +56,115 @@ public class IncrementalDeqpPreparerTest {
 
     private IncrementalDeqpPreparer mPreparer;
     private ITestDevice mMockDevice;
+    private OptionSetter mPreparerSetter = null;
 
     @Before
     public void setUp() throws Exception {
         mPreparer = new IncrementalDeqpPreparer();
         mMockDevice = mock(ITestDevice.class);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testVerifyIncrementalDeqp() throws Exception {
+        File resultDir = FileUtil.createTempDir("result");
+        try {
+            mPreparerSetter = new OptionSetter(mPreparer);
+            mPreparerSetter.setOptionValue(
+                    "incremental-deqp-preparer:run-mode", "DEVICE_APPLICATION");
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
+            File deviceInfoDir = new File(resultDir, "device-info-files");
+            deviceInfoDir.mkdir();
+            CompatibilityBuildHelper mMockBuildHelper =
+                    new CompatibilityBuildHelper(mMockBuildInfo) {
+                        @Override
+                        public File getResultDir() {
+                            return resultDir;
+                        }
+                    };
+            InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
+            InputStream logStream = getClass().getResourceAsStream("/testdata/log_1.qpa");
+            InputStream perfDumpStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
+            String testListContent = StreamUtil.getStringFromStream(testListStream);
+            String logContent = StreamUtil.getStringFromStream(logStream);
+            String perfDumpContent = StreamUtil.getStringFromStream(perfDumpStream);
+            when(mMockDevice.pullFileContents(matches(".*-deqp.*txt"))).thenReturn(testListContent);
+            when(mMockDevice.pullFileContents(endsWith(".qpa"))).thenReturn(logContent);
+            when(mMockDevice.pullFileContents(endsWith("-perf-dump.txt")))
+                    .thenReturn(perfDumpContent);
+
+            File incrementalDeqpBaselineReport =
+                    new File(
+                            deviceInfoDir,
+                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+            assertFalse(incrementalDeqpBaselineReport.exists());
+            mPreparer.verifyIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(
+                                    IncrementalDeqpPreparer
+                                            .INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME));
+            assertTrue(incrementalDeqpBaselineReport.exists());
+        } finally {
+            FileUtil.recursiveDelete(resultDir);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testRunIncrementalDeqp() throws Exception {
+        File resultDir = FileUtil.createTempDir("result");
+        InputStream zipStream =
+                getClass().getResourceAsStream("/testdata/base_build_target-files.zip");
+        File zipFile = FileUtil.createTempFile("targetFile", ".zip");
+        try {
+            FileUtil.writeToFile(zipStream, zipFile);
+            mPreparerSetter = new OptionSetter(mPreparer);
+            mPreparerSetter.setOptionValue(
+                    "incremental-deqp-preparer:base-build", zipFile.getAbsolutePath());
+            mPreparerSetter.setOptionValue(
+                    "incremental-deqp-preparer:current-build", zipFile.getAbsolutePath());
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
+            File deviceInfoDir = new File(resultDir, "device-info-files");
+            deviceInfoDir.mkdir();
+            CompatibilityBuildHelper mMockBuildHelper =
+                    new CompatibilityBuildHelper(mMockBuildInfo) {
+                        @Override
+                        public File getResultDir() {
+                            return resultDir;
+                        }
+                    };
+            InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
+            InputStream logStream = getClass().getResourceAsStream("/testdata/log_1.qpa");
+            InputStream perfDumpStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
+            String testListContent = StreamUtil.getStringFromStream(testListStream);
+            String logContent = StreamUtil.getStringFromStream(logStream);
+            String perfDumpContent = StreamUtil.getStringFromStream(perfDumpStream);
+            when(mMockDevice.pullFileContents(endsWith("-deqp.txt"))).thenReturn(testListContent);
+            when(mMockDevice.pullFileContents(endsWith(".qpa"))).thenReturn(logContent);
+            when(mMockDevice.pullFileContents(endsWith("-perf-dump.txt")))
+                    .thenReturn(perfDumpContent);
+
+            File incrementalDeqpReport =
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
+            assertFalse(incrementalDeqpReport.exists());
+            mPreparer.runIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(IncrementalDeqpPreparer.INCREMENTAL_DEQP_ATTRIBUTE_NAME));
+            assertTrue(incrementalDeqpReport.exists());
+        } finally {
+            FileUtil.recursiveDelete(resultDir);
+            FileUtil.deleteFile(zipFile);
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -70,7 +178,8 @@ public class IncrementalDeqpPreparerTest {
             mMockContext.addAllocatedDevice("device", mMockDevice);
             File deviceInfoDir = new File(resultDir, "device-info-files");
             deviceInfoDir.mkdir();
-            File report = new File(deviceInfoDir, IncrementalDeqpPreparer.REPORT_NAME);
+            File report =
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             report.createNewFile();
             CompatibilityBuildHelper mMockBuildHelper =
                     new CompatibilityBuildHelper(mMockBuildInfo) {
@@ -92,8 +201,8 @@ public class IncrementalDeqpPreparerTest {
         String content = StreamUtil.getStringFromStream(inputStream);
         Set<String> dependency = mPreparer.parseDump(content);
         Set<String> expect = new HashSet<>();
-        expect.add("file_2");
-        expect.add("file_3");
+        expect.add("/system/deqp_dependency_file_a.so");
+        expect.add("/vendor/deqp_dependency_file_b.so");
         assertEquals(dependency, expect);
     }
 
