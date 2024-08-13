@@ -29,7 +29,7 @@ record comm: type 3, misc 8192, size 64
 record mmap2: type 10, misc 8194, size 136
   pid 23365, tid 23365, addr 0x58b817b000, len 0x3228000
   pgoff 0x0, maj 253, min 9, ino 14709, ino_generation 2575019956
-  prot 1, flags 6146, filename file_2
+  prot 1, flags 6146, filename /system/deqp_dependency_file_a.so
   sample_id: pid 23365, tid 23365
   sample_id: time 595063921188552
   sample_id: id 23808
@@ -69,7 +69,7 @@ record mmap2: type 10, misc 8194, size 136
 record mmap2: type 10, misc 8194, size 136
   pid 23365, tid 23365, addr 0x58b817b000, len 0x3228000
   pgoff 0x0, maj 253, min 9, ino 14709, ino_generation 2575019956
-  prot 1, flags 6146, filename file_3
+  prot 1, flags 6146, filename /vendor/deqp_dependency_file_b.so
   sample_id: pid 23365, tid 23365
   sample_id: time 595063921188552
   sample_id: id 23808
