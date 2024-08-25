@@ -215,7 +215,7 @@ public class InteractiveResultReporter implements ITestInvocationListener {
     }
 
     /** Adds the name and abi attributes (if have) for the <Module> tag. */
-    static void addModuleTagAttributes(XmlSerializer serializer, String moduleNameWithAbi)
+    private static void addModuleTagAttributes(XmlSerializer serializer, String moduleNameWithAbi)
             throws IOException {
         String[] splitModuleAbis = moduleNameWithAbi.split("__");
         if (splitModuleAbis.length == 2) {
@@ -227,8 +227,12 @@ public class InteractiveResultReporter implements ITestInvocationListener {
     }
 
     /** Checks if the given {@link Path} is a screenshot file. */
+    @VisibleForTesting
     static boolean isScreenshotFile(Path filePath) {
-        return filePath.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".png");
+        String extSuffix = filePath.getFileName().toString().toLowerCase(Locale.ROOT);
+        return extSuffix.endsWith(".png")
+                || extSuffix.endsWith(".jpeg")
+                || extSuffix.endsWith(".jpg");
     }
 
     /** Parses a list of screenshot file names to add tags into the given {@code XmlSerializer}. */
