@@ -30,6 +30,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.tradefed.build.DeviceBuildInfo;
@@ -49,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -125,6 +127,14 @@ public final class InteractiveResultReporterTest {
         resultReporter.invocationEnded(1000);
 
         assertFalse(Files.exists(Paths.get(resultDir.getAbsolutePath(), SCREENSHOTS_DIR_NAME)));
+    }
+
+    @Test
+    public void isScreenshotFile_byFileExtension() {
+        assertTrue(InteractiveResultReporter.isScreenshotFile(Path.of("tmp/screenshot_1.png")));
+        assertTrue(InteractiveResultReporter.isScreenshotFile(Path.of("screenshot_2.jpeg")));
+        assertTrue(InteractiveResultReporter.isScreenshotFile(Path.of("../screenshot_3.jpg")));
+        assertFalse(InteractiveResultReporter.isScreenshotFile(Path.of("screenshot_4")));
     }
 
     @Test
