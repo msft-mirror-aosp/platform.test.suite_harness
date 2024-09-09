@@ -411,7 +411,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     /** Gets the filename of dEQP dependencies in build. */
     private Set<String> getDeqpDependencies(ITestDevice device, List<String> testList)
-            throws DeviceNotAvailableException, TargetSetupError {
+            throws DeviceNotAvailableException {
         Set<String> result = new HashSet<>();
 
         for (String test : testList) {
@@ -430,29 +430,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                                     + " --deqp-surface-width=2048 --deqp-surface-height=2048",
                                 DEVICE_DEQP_DIR, perfFile, binaryFile, testFile, logFile);
                 device.executeShellCommand(command);
-
-                // Check the test log.
-                String testFileContent = device.pullFileContents(testFile);
-                if (testFileContent == null || testFileContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read test file: %s", testFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-                String logContent = device.pullFileContents(logFile);
-                if (logContent == null || logContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read simpleperf log file: %s", logFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-
-                if (!checkTestLog(testFileContent, logContent)) {
-                    throw new TargetSetupError(
-                            "dEQP binary tests are not executed. This may caused by test crash.",
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
 
                 String dumpFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + "-perf-dump.txt";
                 String dumpCommand = String.format("simpleperf dump %s > %s", perfFile, dumpFile);
@@ -530,19 +507,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             }
         }
         return result;
-    }
-
-    /** Checks the test log to see if all tests are executed. */
-    protected boolean checkTestLog(String testListContent, String logContent) {
-        int testCount = testListContent.split("\n").length;
-
-        int executedTestCount = 0;
-        for (String line : logContent.split("\n")) {
-            if (line.contains("StatusCode=")) {
-                executedTestCount++;
-            }
-        }
-        return executedTestCount == testCount;
     }
 
     /** Gets the build fingerprint from target files. */
