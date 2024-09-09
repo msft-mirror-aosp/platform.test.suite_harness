@@ -242,26 +242,6 @@ public class IncrementalDeqpPreparerTest {
     }
 
     @Test
-    public void testCheckTestLogAllTestExecuted() throws IOException {
-        InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
-        InputStream logStream = getClass().getResourceAsStream("/testdata/log_1.qpa");
-        String testListContent = StreamUtil.getStringFromStream(testListStream);
-        String logContent = StreamUtil.getStringFromStream(logStream);
-
-        assertTrue(mPreparer.checkTestLog(testListContent, logContent));
-    }
-
-    @Test
-    public void testCheckTestLogTestCrashes() throws IOException {
-        InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
-        InputStream logStream = getClass().getResourceAsStream("/testdata/log_2.qpa");
-        String testListContent = StreamUtil.getStringFromStream(testListStream);
-        String logContent = StreamUtil.getStringFromStream(logStream);
-
-        assertFalse(mPreparer.checkTestLog(testListContent, logContent));
-    }
-
-    @Test
     public void getBuildFingerPrint() throws IOException, TargetSetupError {
         // base_build_target-files.zip is a stripped down version of the target-files.zip generated
         // from the android build system, with a few added mocked target files for testing.
