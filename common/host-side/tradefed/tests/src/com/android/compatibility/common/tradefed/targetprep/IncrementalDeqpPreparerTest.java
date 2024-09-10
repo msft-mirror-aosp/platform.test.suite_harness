@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.endsWith;
-import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -85,16 +84,11 @@ public class IncrementalDeqpPreparerTest {
                             return resultDir;
                         }
                     };
-            InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
-            InputStream logStream = getClass().getResourceAsStream("/testdata/log_1.qpa");
             InputStream perfDumpStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
-            String testListContent = StreamUtil.getStringFromStream(testListStream);
-            String logContent = StreamUtil.getStringFromStream(logStream);
-            String perfDumpContent = StreamUtil.getStringFromStream(perfDumpStream);
-            when(mMockDevice.pullFileContents(matches(".*-deqp.*txt"))).thenReturn(testListContent);
-            when(mMockDevice.pullFileContents(endsWith(".qpa"))).thenReturn(logContent);
-            when(mMockDevice.pullFileContents(endsWith("-perf-dump.txt")))
-                    .thenReturn(perfDumpContent);
+            File dumpFile = FileUtil.createTempFile("parseDump", "perf-dump.txt");
+            FileUtil.writeToFile(perfDumpStream, dumpFile);
+            when(mMockDevice.pullFile(endsWith("-perf-dump.txt")))
+                    .thenReturn(dumpFile, null, null, null, null, null);
 
             File incrementalDeqpBaselineReport =
                     new File(
@@ -141,16 +135,11 @@ public class IncrementalDeqpPreparerTest {
                             return resultDir;
                         }
                     };
-            InputStream testListStream = getClass().getResourceAsStream("/testdata/test_list.txt");
-            InputStream logStream = getClass().getResourceAsStream("/testdata/log_1.qpa");
             InputStream perfDumpStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
-            String testListContent = StreamUtil.getStringFromStream(testListStream);
-            String logContent = StreamUtil.getStringFromStream(logStream);
-            String perfDumpContent = StreamUtil.getStringFromStream(perfDumpStream);
-            when(mMockDevice.pullFileContents(endsWith("-deqp.txt"))).thenReturn(testListContent);
-            when(mMockDevice.pullFileContents(endsWith(".qpa"))).thenReturn(logContent);
-            when(mMockDevice.pullFileContents(endsWith("-perf-dump.txt")))
-                    .thenReturn(perfDumpContent);
+            File dumpFile = FileUtil.createTempFile("parseDump", "perf-dump.txt");
+            FileUtil.writeToFile(perfDumpStream, dumpFile);
+            when(mMockDevice.pullFile(endsWith("-perf-dump.txt")))
+                    .thenReturn(dumpFile, null, null, null);
 
             File incrementalDeqpReport =
                     new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
@@ -196,14 +185,19 @@ public class IncrementalDeqpPreparerTest {
     }
 
     @Test
-    public void testParseDump() throws IOException {
+    public void testParseDump() throws Exception {
         InputStream inputStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
-        String content = StreamUtil.getStringFromStream(inputStream);
-        Set<String> dependency = mPreparer.parseDump(content);
-        Set<String> expect = new HashSet<>();
-        expect.add("/system/deqp_dependency_file_a.so");
-        expect.add("/vendor/deqp_dependency_file_b.so");
-        assertEquals(dependency, expect);
+        File dumpFile = FileUtil.createTempFile("parseDump", ".txt");
+        try {
+            FileUtil.writeToFile(inputStream, dumpFile);
+            Set<String> dependency = mPreparer.parseDump(dumpFile);
+            Set<String> expect = new HashSet<>();
+            expect.add("/system/deqp_dependency_file_a.so");
+            expect.add("/vendor/deqp_dependency_file_b.so");
+            assertEquals(dependency, expect);
+        } finally {
+            FileUtil.deleteFile(dumpFile);
+        }
     }
 
     @Test
