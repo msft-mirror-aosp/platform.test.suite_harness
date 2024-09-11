@@ -19,8 +19,12 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.build.IDeviceBuildInfo;
 import com.android.tradefed.build.IFolderBuildInfo;
 import com.android.tradefed.build.VersionedFile;
+import com.android.tradefed.invoker.logger.InvocationMetricLogger;
+import com.android.tradefed.invoker.logger.InvocationMetricLogger.InvocationMetricKey;
+import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.IAbi;
 import com.android.tradefed.util.FileUtil;
+import com.android.tradefed.util.SearchArtifactUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -336,11 +340,25 @@ public class CompatibilityBuildHelper {
      * @throws FileNotFoundException if the test file cannot be found
      */
     public File getTestFile(String filename, IAbi abi) throws FileNotFoundException {
+        File testFile = null;
+        try {
+            testFile = SearchArtifactUtil.searchFile(filename, false, abi);
+        } catch (Exception e) {
+            // TODO: handle error when migration is complete.
+            CLog.e(e);
+        }
+        if (testFile != null && testFile.isFile()) {
+            return testFile;
+        } else {
+            // Silently report not found and fall back to old logic.
+            InvocationMetricLogger.addInvocationMetrics(
+                    InvocationMetricKey.SEARCH_ARTIFACT_FAILURE_COUNT, 1);
+        }
+
         File testsDir = getTestsDir();
 
         // The file may be in a subdirectory so do a more thorough search
         // if it did not exist.
-        File testFile = null;
         try {
             testFile = FileUtil.findFile(filename, abi, testsDir);
             if (testFile != null) {
@@ -360,12 +378,17 @@ public class CompatibilityBuildHelper {
                 }
             }
         } catch (IOException e) {
+            // if old logic fails too, do not report search artifact failure
+            InvocationMetricLogger.addInvocationMetrics(
+                    InvocationMetricKey.SEARCH_ARTIFACT_FAILURE_COUNT, -1);
             throw new FileNotFoundException(
                     String.format(
                             "Failure in finding compatibility test file %s due to %s",
                             filename, e));
         }
-
+        // if old logic fails too, do not report search artifact failure
+        InvocationMetricLogger.addInvocationMetrics(
+                InvocationMetricKey.SEARCH_ARTIFACT_FAILURE_COUNT, -1);
         throw new FileNotFoundException(String.format(
                 "Compatibility test file %s does not exist", filename));
     }
