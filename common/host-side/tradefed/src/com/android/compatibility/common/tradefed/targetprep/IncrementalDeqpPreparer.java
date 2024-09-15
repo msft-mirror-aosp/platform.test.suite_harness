@@ -36,8 +36,10 @@ import com.android.tradefed.util.StreamUtil;
 
 import com.google.common.collect.Sets;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -411,7 +413,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     /** Gets the filename of dEQP dependencies in build. */
     private Set<String> getDeqpDependencies(ITestDevice device, List<String> testList)
-            throws DeviceNotAvailableException, TargetSetupError {
+            throws TargetSetupError, DeviceNotAvailableException {
         Set<String> result = new HashSet<>();
 
         for (String test : testList) {
@@ -431,35 +433,18 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                                 DEVICE_DEQP_DIR, perfFile, binaryFile, testFile, logFile);
                 device.executeShellCommand(command);
 
-                // Check the test log.
-                String testFileContent = device.pullFileContents(testFile);
-                if (testFileContent == null || testFileContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read test file: %s", testFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-                String logContent = device.pullFileContents(logFile);
-                if (logContent == null || logContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read simpleperf log file: %s", logFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-
-                if (!checkTestLog(testFileContent, logContent)) {
-                    throw new TargetSetupError(
-                            "dEQP binary tests are not executed. This may caused by test crash.",
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-
                 String dumpFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + "-perf-dump.txt";
                 String dumpCommand = String.format("simpleperf dump %s > %s", perfFile, dumpFile);
                 device.executeShellCommand(dumpCommand);
-                String dumpContent = device.pullFileContents(dumpFile);
 
-                result.addAll(parseDump(dumpContent));
+                File localDumpFile = device.pullFile(dumpFile);
+                try {
+                    result.addAll(parseDump(localDumpFile));
+                } finally {
+                    if (localDumpFile != null) {
+                        localDumpFile.delete();
+                    }
+                }
             }
         }
 
@@ -501,48 +486,50 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Parses the dump file and gets list of dependencies. */
-    protected Set<String> parseDump(String dumpContent) {
+    protected Set<String> parseDump(File localDumpFile) throws TargetSetupError {
         boolean binaryExecuted = false;
         boolean correctMmap = false;
         Set<String> result = new HashSet<>();
-        for (String line : dumpContent.split("\n")) {
-            if (!binaryExecuted) {
-                // dEQP binary has first been executed.
-                Pattern pattern = Pattern.compile(" comm .*deqp-binary");
-                if (pattern.matcher(line).find()) {
-                    binaryExecuted = true;
-                }
-            } else {
-                // New perf event
-                if (!line.startsWith(" ")) {
-                    // Ignore mmap with misc 1, they are not related to deqp binary
-                    correctMmap = line.startsWith("record mmap") && !line.contains("misc 1");
-                }
+        if (localDumpFile == null) {
+            return result;
+        }
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(localDumpFile));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                if (!binaryExecuted) {
+                    // dEQP binary has first been executed.
+                    Pattern pattern = Pattern.compile(" comm .*deqp-binary");
+                    if (pattern.matcher(line).find()) {
+                        binaryExecuted = true;
+                    }
+                } else {
+                    // New perf event
+                    if (!line.startsWith(" ")) {
+                        // Ignore mmap with misc 1, they are not related to deqp binary
+                        correctMmap = line.startsWith("record mmap") && !line.contains("misc 1");
+                    }
 
-                // We have reached the filename for a valid perf event, add to the dependency map if
-                // it isn't in the exclusion pattern
-                if (line.contains("filename") && correctMmap) {
-                    String dependency = line.substring(line.indexOf("filename") + 9).trim();
-                    if (!EXCLUDE_DEQP_PATTERN.matcher(dependency).find()) {
-                        result.add(dependency);
+                    // We have reached the filename for a valid perf event, add to the dependency
+                    // map if it isn't in the exclusion pattern
+                    if (line.contains("filename") && correctMmap) {
+                        String dependency = line.substring(line.indexOf("filename") + 9).trim();
+                        if (!EXCLUDE_DEQP_PATTERN.matcher(dependency).find()) {
+                            result.add(dependency);
+                        }
                     }
                 }
             }
+        } catch (IOException e) {
+            throw new TargetSetupError(
+                    String.format("Could not parse file: %s", localDumpFile.getAbsoluteFile()),
+                    e,
+                    TestErrorIdentifier.TEST_ABORTED);
+        } finally {
+            StreamUtil.close(br);
         }
         return result;
-    }
-
-    /** Checks the test log to see if all tests are executed. */
-    protected boolean checkTestLog(String testListContent, String logContent) {
-        int testCount = testListContent.split("\n").length;
-
-        int executedTestCount = 0;
-        for (String line : logContent.split("\n")) {
-            if (line.contains("StatusCode=")) {
-                executedTestCount++;
-            }
-        }
-        return executedTestCount == testCount;
     }
 
     /** Gets the build fingerprint from target files. */
