@@ -90,6 +90,9 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + "for the builds fails.")
     private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
 
+    /** Whether the current build is qualified for incremental dEQP. */
+    private static boolean mIncrementalDeqpQualified = true;
+
     private enum RunMode {
         // Initial application for a device to verify that the feature can capture all the
         // dependencies by the representative dEQP tests.
@@ -195,6 +198,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
                 if (jsonFile.exists()) {
                     CLog.i("Another shard has already checked dEQP baseline dependencies.");
+                    // Add an attribute to the shard's build info.
+                    addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
                     return;
                 }
             } catch (FileNotFoundException e) {
@@ -224,12 +229,10 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 store.addListResult(
                         MISSING_DEPENDENCY_ATTRIBUTE,
                         missingDependencies.stream().sorted().collect(Collectors.toList()));
-                // Add an attribute to all shard's build info.
-                for (IBuildInfo bi : context.getBuildInfos()) {
-                    bi.addBuildAttribute(INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME, "");
-                }
                 store.endGroup(); // Module
                 store.endArray();
+                // Add an attribute to the shard's build info.
+                addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
             } catch (IOException e) {
                 throw new TargetSetupError(
                         "Failed to collect dependencies",
@@ -269,6 +272,10 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_REPORT_NAME);
                 if (jsonFile.exists()) {
                     CLog.i("Another shard has already checked dEQP dependencies.");
+                    if (mIncrementalDeqpQualified) {
+                        // Add an attribute to the shard's build info.
+                        addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
+                    }
                     return;
                 }
             } catch (FileNotFoundException e) {
@@ -304,7 +311,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         EXTRA_DEPENDENCY_ATTRIBUTE,
                         extraDependencies.stream().sorted().collect(Collectors.toList()));
                 store.startArray(DEPENDENCY_CHANGES_ATTRIBUTE);
-                boolean noChange = true;
                 Map<String, String> currentBuildHashMap =
                         getTargetFileHash(dependencies, mCurrentBuild);
                 Map<String, String> baseBuildHashMap = getTargetFileHash(dependencies, mBaseBuild);
@@ -312,7 +318,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 for (String dependency : dependencies) {
                     if (!baseBuildHashMap.containsKey(dependency)
                             && currentBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -324,7 +330,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         store.endGroup();
                     } else if (!currentBuildHashMap.containsKey(dependency)
                             && baseBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -336,7 +342,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         store.endGroup();
                     } else if (!currentBuildHashMap.containsKey(dependency)
                             && !baseBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -348,7 +354,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     } else if (!currentBuildHashMap
                             .get(dependency)
                             .equals(baseBuildHashMap.get(dependency))) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -363,14 +369,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     }
                 }
                 store.endArray(); // dEQP changes
-                if (noChange) {
-                    // Add an attribute to all shard's build info.
-                    for (IBuildInfo bi : context.getBuildInfos()) {
-                        bi.addBuildAttribute(INCREMENTAL_DEQP_ATTRIBUTE_NAME, "");
-                    }
-                }
                 store.endGroup(); // Module
                 store.endArray();
+                if (mIncrementalDeqpQualified) {
+                    // Add an attribute to the shard's build info.
+                    addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
+                }
             } catch (IOException e) {
                 throw new TargetSetupError(
                         "Failed to compare the builds",
@@ -551,5 +555,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     TestErrorIdentifier.TEST_ABORTED);
         }
         return fingerprint;
+    }
+
+    /** Adds a build attribute to all the {@link IBuildInfo} tracked for the invocation. */
+    private static void addBuildAttribute(IInvocationContext context, String buildAttributeName) {
+        for (IBuildInfo bi : context.getBuildInfos()) {
+            bi.addBuildAttribute(buildAttributeName, "");
+        }
     }
 }
