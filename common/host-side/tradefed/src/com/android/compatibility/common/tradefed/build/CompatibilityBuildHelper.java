@@ -347,7 +347,7 @@ public class CompatibilityBuildHelper {
             // TODO: handle error when migration is complete.
             CLog.e(e);
         }
-        if (testFile != null && testFile.isFile()) {
+        if (testFile != null && testFile.exists()) {
             return testFile;
         } else {
             // Silently report not found and fall back to old logic.
