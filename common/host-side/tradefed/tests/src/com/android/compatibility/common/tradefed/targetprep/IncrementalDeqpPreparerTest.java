@@ -110,6 +110,47 @@ public class IncrementalDeqpPreparerTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
+    public void testVerifyIncrementalDeqp_skipPreparerWhenReportExists() throws Exception {
+        File resultDir = FileUtil.createTempDir("result");
+        InputStream reportStream =
+                getClass()
+                        .getResourceAsStream(
+                                "/testdata/IncrementalCtsBaselineDeviceInfo.deviceinfo.json");
+        try {
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
+            File deviceInfoDir = new File(resultDir, "device-info-files");
+            deviceInfoDir.mkdir();
+            File report =
+                    new File(
+                            deviceInfoDir,
+                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+            report.createNewFile();
+            FileUtil.writeToFile(reportStream, report);
+            CompatibilityBuildHelper mMockBuildHelper =
+                    new CompatibilityBuildHelper(mMockBuildInfo) {
+                        @Override
+                        public File getResultDir() {
+                            return resultDir;
+                        }
+                    };
+
+            mPreparer.verifyIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(
+                                    IncrementalDeqpPreparer
+                                            .INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME));
+        } finally {
+            FileUtil.recursiveDelete(resultDir);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
     public void testRunIncrementalDeqp() throws Exception {
         File resultDir = FileUtil.createTempDir("result");
         InputStream zipStream =
@@ -158,8 +199,11 @@ public class IncrementalDeqpPreparerTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void testSkipPreparerWhenReportExists() throws Exception {
+    public void testRunIncrementalDeqp_skipPreparerWhenReportExists() throws Exception {
         File resultDir = FileUtil.createTempDir("result");
+        InputStream reportStream =
+                getClass()
+                        .getResourceAsStream("/testdata/IncrementalCtsDeviceInfo.deviceinfo.json");
         try {
             IBuildInfo mMockBuildInfo = new BuildInfo();
             IInvocationContext mMockContext = new InvocationContext();
@@ -170,6 +214,7 @@ public class IncrementalDeqpPreparerTest {
             File report =
                     new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             report.createNewFile();
+            FileUtil.writeToFile(reportStream, report);
             CompatibilityBuildHelper mMockBuildHelper =
                     new CompatibilityBuildHelper(mMockBuildInfo) {
                         @Override
@@ -179,6 +224,10 @@ public class IncrementalDeqpPreparerTest {
                     };
 
             mPreparer.runIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(IncrementalDeqpPreparer.INCREMENTAL_DEQP_ATTRIBUTE_NAME));
         } finally {
             FileUtil.recursiveDelete(resultDir);
         }
