@@ -22,6 +22,7 @@ import com.android.tradefed.testtype.suite.SuiteModuleLoader;
 import com.android.tradefed.testtype.suite.SuiteTestFilter;
 import com.android.tradefed.util.AbiUtils;
 
+import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,12 +45,11 @@ public class CompatibilitySuiteModuleLoader extends SuiteModuleLoader {
         super(includeFilters,excludeFilters,testArgs,moduleArgs);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void addFiltersToTest(
             IRemoteTest test,
+            File moduleDir,
             IAbi abi,
             String name,
             Map<String, LinkedHashSet<SuiteTestFilter>> includeFilters,
@@ -60,6 +60,6 @@ public class CompatibilitySuiteModuleLoader extends SuiteModuleLoader {
             throw new IllegalArgumentException(String.format(
                     "Test in module %s must implement ITestFilterReceiver.", moduleId));
         }
-        super.addFiltersToTest(test,abi,name,includeFilters,excludeFilters);
+        super.addFiltersToTest(test, moduleDir, abi, name, includeFilters, excludeFilters);
     }
 }
