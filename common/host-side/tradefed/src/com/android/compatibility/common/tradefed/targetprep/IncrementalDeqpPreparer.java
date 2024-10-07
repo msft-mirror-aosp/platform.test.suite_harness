@@ -36,8 +36,10 @@ import com.android.tradefed.util.StreamUtil;
 
 import com.google.common.collect.Sets;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -87,6 +89,9 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     "The fallback strategy to apply if the incremental dEQP qualification testing "
                             + "for the builds fails.")
     private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
+
+    /** Whether the current build is qualified for incremental dEQP. */
+    private static boolean mIncrementalDeqpQualified = true;
 
     private enum RunMode {
         // Initial application for a device to verify that the feature can capture all the
@@ -193,6 +198,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
                 if (jsonFile.exists()) {
                     CLog.i("Another shard has already checked dEQP baseline dependencies.");
+                    // Add an attribute to the shard's build info.
+                    addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
                     return;
                 }
             } catch (FileNotFoundException e) {
@@ -222,12 +229,10 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 store.addListResult(
                         MISSING_DEPENDENCY_ATTRIBUTE,
                         missingDependencies.stream().sorted().collect(Collectors.toList()));
-                // Add an attribute to all shard's build info.
-                for (IBuildInfo bi : context.getBuildInfos()) {
-                    bi.addBuildAttribute(INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME, "");
-                }
                 store.endGroup(); // Module
                 store.endArray();
+                // Add an attribute to the shard's build info.
+                addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
             } catch (IOException e) {
                 throw new TargetSetupError(
                         "Failed to collect dependencies",
@@ -267,6 +272,10 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_REPORT_NAME);
                 if (jsonFile.exists()) {
                     CLog.i("Another shard has already checked dEQP dependencies.");
+                    if (mIncrementalDeqpQualified) {
+                        // Add an attribute to the shard's build info.
+                        addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
+                    }
                     return;
                 }
             } catch (FileNotFoundException e) {
@@ -302,7 +311,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         EXTRA_DEPENDENCY_ATTRIBUTE,
                         extraDependencies.stream().sorted().collect(Collectors.toList()));
                 store.startArray(DEPENDENCY_CHANGES_ATTRIBUTE);
-                boolean noChange = true;
                 Map<String, String> currentBuildHashMap =
                         getTargetFileHash(dependencies, mCurrentBuild);
                 Map<String, String> baseBuildHashMap = getTargetFileHash(dependencies, mBaseBuild);
@@ -310,7 +318,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 for (String dependency : dependencies) {
                     if (!baseBuildHashMap.containsKey(dependency)
                             && currentBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -322,7 +330,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         store.endGroup();
                     } else if (!currentBuildHashMap.containsKey(dependency)
                             && baseBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -334,7 +342,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         store.endGroup();
                     } else if (!currentBuildHashMap.containsKey(dependency)
                             && !baseBuildHashMap.containsKey(dependency)) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -346,7 +354,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     } else if (!currentBuildHashMap
                             .get(dependency)
                             .equals(baseBuildHashMap.get(dependency))) {
-                        noChange = false;
+                        mIncrementalDeqpQualified = false;
                         store.startGroup();
                         store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
                         store.addResult(
@@ -361,14 +369,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     }
                 }
                 store.endArray(); // dEQP changes
-                if (noChange) {
-                    // Add an attribute to all shard's build info.
-                    for (IBuildInfo bi : context.getBuildInfos()) {
-                        bi.addBuildAttribute(INCREMENTAL_DEQP_ATTRIBUTE_NAME, "");
-                    }
-                }
                 store.endGroup(); // Module
                 store.endArray();
+                if (mIncrementalDeqpQualified) {
+                    // Add an attribute to the shard's build info.
+                    addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
+                }
             } catch (IOException e) {
                 throw new TargetSetupError(
                         "Failed to compare the builds",
@@ -411,7 +417,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
 
     /** Gets the filename of dEQP dependencies in build. */
     private Set<String> getDeqpDependencies(ITestDevice device, List<String> testList)
-            throws DeviceNotAvailableException, TargetSetupError {
+            throws TargetSetupError, DeviceNotAvailableException {
         Set<String> result = new HashSet<>();
 
         for (String test : testList) {
@@ -431,35 +437,18 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                                 DEVICE_DEQP_DIR, perfFile, binaryFile, testFile, logFile);
                 device.executeShellCommand(command);
 
-                // Check the test log.
-                String testFileContent = device.pullFileContents(testFile);
-                if (testFileContent == null || testFileContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read test file: %s", testFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-                String logContent = device.pullFileContents(logFile);
-                if (logContent == null || logContent.isEmpty()) {
-                    throw new TargetSetupError(
-                            String.format("Fail to read simpleperf log file: %s", logFile),
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-
-                if (!checkTestLog(testFileContent, logContent)) {
-                    throw new TargetSetupError(
-                            "dEQP binary tests are not executed. This may caused by test crash.",
-                            device.getDeviceDescriptor(),
-                            TestErrorIdentifier.TEST_ABORTED);
-                }
-
                 String dumpFile = DEVICE_DEQP_DIR + "/" + fileNamePrefix + "-perf-dump.txt";
                 String dumpCommand = String.format("simpleperf dump %s > %s", perfFile, dumpFile);
                 device.executeShellCommand(dumpCommand);
-                String dumpContent = device.pullFileContents(dumpFile);
 
-                result.addAll(parseDump(dumpContent));
+                File localDumpFile = device.pullFile(dumpFile);
+                try {
+                    result.addAll(parseDump(localDumpFile));
+                } finally {
+                    if (localDumpFile != null) {
+                        localDumpFile.delete();
+                    }
+                }
             }
         }
 
@@ -501,48 +490,50 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     }
 
     /** Parses the dump file and gets list of dependencies. */
-    protected Set<String> parseDump(String dumpContent) {
+    protected Set<String> parseDump(File localDumpFile) throws TargetSetupError {
         boolean binaryExecuted = false;
         boolean correctMmap = false;
         Set<String> result = new HashSet<>();
-        for (String line : dumpContent.split("\n")) {
-            if (!binaryExecuted) {
-                // dEQP binary has first been executed.
-                Pattern pattern = Pattern.compile(" comm .*deqp-binary");
-                if (pattern.matcher(line).find()) {
-                    binaryExecuted = true;
-                }
-            } else {
-                // New perf event
-                if (!line.startsWith(" ")) {
-                    // Ignore mmap with misc 1, they are not related to deqp binary
-                    correctMmap = line.startsWith("record mmap") && !line.contains("misc 1");
-                }
+        if (localDumpFile == null) {
+            return result;
+        }
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(localDumpFile));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                if (!binaryExecuted) {
+                    // dEQP binary has first been executed.
+                    Pattern pattern = Pattern.compile(" comm .*deqp-binary");
+                    if (pattern.matcher(line).find()) {
+                        binaryExecuted = true;
+                    }
+                } else {
+                    // New perf event
+                    if (!line.startsWith(" ")) {
+                        // Ignore mmap with misc 1, they are not related to deqp binary
+                        correctMmap = line.startsWith("record mmap") && !line.contains("misc 1");
+                    }
 
-                // We have reached the filename for a valid perf event, add to the dependency map if
-                // it isn't in the exclusion pattern
-                if (line.contains("filename") && correctMmap) {
-                    String dependency = line.substring(line.indexOf("filename") + 9).trim();
-                    if (!EXCLUDE_DEQP_PATTERN.matcher(dependency).find()) {
-                        result.add(dependency);
+                    // We have reached the filename for a valid perf event, add to the dependency
+                    // map if it isn't in the exclusion pattern
+                    if (line.contains("filename") && correctMmap) {
+                        String dependency = line.substring(line.indexOf("filename") + 9).trim();
+                        if (!EXCLUDE_DEQP_PATTERN.matcher(dependency).find()) {
+                            result.add(dependency);
+                        }
                     }
                 }
             }
+        } catch (IOException e) {
+            throw new TargetSetupError(
+                    String.format("Could not parse file: %s", localDumpFile.getAbsoluteFile()),
+                    e,
+                    TestErrorIdentifier.TEST_ABORTED);
+        } finally {
+            StreamUtil.close(br);
         }
         return result;
-    }
-
-    /** Checks the test log to see if all tests are executed. */
-    protected boolean checkTestLog(String testListContent, String logContent) {
-        int testCount = testListContent.split("\n").length;
-
-        int executedTestCount = 0;
-        for (String line : logContent.split("\n")) {
-            if (line.contains("StatusCode=")) {
-                executedTestCount++;
-            }
-        }
-        return executedTestCount == testCount;
     }
 
     /** Gets the build fingerprint from target files. */
@@ -564,5 +555,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                     TestErrorIdentifier.TEST_ABORTED);
         }
         return fingerprint;
+    }
+
+    /** Adds a build attribute to all the {@link IBuildInfo} tracked for the invocation. */
+    private static void addBuildAttribute(IInvocationContext context, String buildAttributeName) {
+        for (IBuildInfo bi : context.getBuildInfos()) {
+            bi.addBuildAttribute(buildAttributeName, "");
+        }
     }
 }
