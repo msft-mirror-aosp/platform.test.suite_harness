@@ -342,7 +342,7 @@ public class CompatibilityBuildHelper {
     public File getTestFile(String filename, IAbi abi) throws FileNotFoundException {
         File testFile = null;
         try {
-            testFile = SearchArtifactUtil.searchFile(filename, abi);
+            testFile = SearchArtifactUtil.searchFile(filename, false, abi);
         } catch (Exception e) {
             // TODO: handle error when migration is complete.
             CLog.e(e);
