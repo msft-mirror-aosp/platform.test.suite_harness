@@ -100,7 +100,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         // Application for a build to make it eligible as the trusted build for incremental dEQP.
         TRUSTED_BUILD_APPLICATION,
         // Running incremental dEQP for build approvals after the device is allowlisted.
-        BUILD_APPROVAL;
+        BUILD_APPROVAL
     }
 
     private enum FallbackStrategy {
@@ -108,7 +108,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         RUN_FULL_DEQP,
         // Aborts if an exception is thrown in the preparer. Otherwise, runs full dEQP tests due to
         // dependency modifications.
-        ABORT_IF_ANY_EXCEPTION;
+        ABORT_IF_ANY_EXCEPTION
     }
 
     private static final String MODULE_NAME = "CtsDeqpTestCases";
@@ -128,7 +128,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String LOG_FILE_EXTENSION = ".qpa";
     private static final String BASE_BUILD_FINGERPRINT_ATTRIBUTE = "base_build_fingerprint";
     private static final String CURRENT_BUILD_FINGERPRINT_ATTRIBUTE = "current_build_fingerprint";
-    private static final String MODULE_ATTRIBUTE = "module";
+    private static final String MODULES_ATTRIBUTE = "modules";
     private static final String MODULE_NAME_ATTRIBUTE = "module_name";
     private static final String FINGERPRINT = "ro.build.fingerprint";
     private static final String BASELINE_DEPENDENCY_ATTRIBUTE = "baseline_deps";
@@ -285,8 +285,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         Set<String> missingDependencies =
                 Sets.difference(baselineDependencies, representativeDependencies);
 
-        store.addResult(BASE_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
-        store.startArray(MODULE_ATTRIBUTE);
+        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
+        store.startArray(MODULES_ATTRIBUTE);
         store.startGroup(); // Module
         store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
         store.addListResult(
@@ -312,8 +312,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             throws TargetSetupError, DeviceNotAvailableException, IOException {
         Set<String> dependencies = getDeqpDependencies(device, REPRESENTATIVE_DEQP_TEST_LIST);
 
-        store.addResult(BASE_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
-        store.startArray(MODULE_ATTRIBUTE);
+        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
+        store.startArray(MODULES_ATTRIBUTE);
         store.startGroup(); // Module
         store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
         store.addListResult(
@@ -345,7 +345,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         store.addResult(
                 CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, getBuildFingerPrint(mCurrentBuild, device));
 
-        store.startArray(MODULE_ATTRIBUTE);
+        store.startArray(MODULES_ATTRIBUTE);
         store.startGroup(); // Module
         store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
         store.addListResult(
@@ -519,7 +519,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(localDumpFile));
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 if (!binaryExecuted) {
                     // dEQP binary has first been executed.
