@@ -1,6 +1,6 @@
 {
-  "base_build_fingerprint": "google\/panther\/panther:VanillaIceCream\/AP3A.240412.003\/11709678:userdebug\/dev-keys",
-  "module": [
+  "current_build_fingerprint": "google\/panther\/panther:VanillaIceCream\/AP3A.240412.003\/11709678:userdebug\/dev-keys",
+  "modules": [
     {
       "module_name": "CtsDeqpTestCases",
       "baseline_deps": [

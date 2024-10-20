@@ -1,0 +1,15 @@
+{
+  "current_build_fingerprint": "google\/panther\/panther:15\/AP3A.240905.008\/12168330:user\/release-keys",
+  "modules": [
+    {
+      "module_name": "CtsDeqpTestCases",
+      "deps": [
+        "\/system\/lib\/android.hardware.media.c2@1.0.so",
+        "\/system\/lib\/android.hardware.media.omx@1.0.so",
+        "\/system\/lib\/android.hardware.media@1.0.so",
+        "\/system\/lib\/android.hardware.memtrack-V1-ndk.so",
+        "\/system\/lib\/android.hardware.memtrack@1.0.so"
+      ]
+    }
+  ]
+}
