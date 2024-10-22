@@ -1,4 +1,5 @@
 {
+  "run_mode": "BUILD_APPROVAL_APPLICATION",
   "base_build_fingerprint": "google\/panther\/panther:15\/AP3A.240905.008\/12168330:user\/release-keys",
   "current_build_fingerprint": "google\/panther\/panther:15\/AP3A.240905.008\/12168330:user\/release-keys",
   "module": [
