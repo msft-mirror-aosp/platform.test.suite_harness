@@ -91,14 +91,12 @@ public class IncrementalDeqpPreparerTest {
                     .thenReturn(dumpFile, null, null, null, null, null);
 
             File incrementalDeqpBaselineReport =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             assertFalse(incrementalDeqpBaselineReport.exists());
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.DEVICE_APPLICATION,
                     () -> mPreparer.skipForBaseline(mMockContext),
                     (store) -> mPreparer.processForBaseline(mMockContext, mMockDevice, store));
             assertTrue(
@@ -129,9 +127,7 @@ public class IncrementalDeqpPreparerTest {
             File deviceInfoDir = new File(resultDir, "device-info-files");
             deviceInfoDir.mkdir();
             File report =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             report.createNewFile();
             FileUtil.writeToFile(reportStream, report);
             CompatibilityBuildHelper mMockBuildHelper =
@@ -145,7 +141,7 @@ public class IncrementalDeqpPreparerTest {
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.DEVICE_APPLICATION,
                     () -> mPreparer.skipForBaseline(mMockContext),
                     (store) -> mPreparer.processForBaseline(mMockContext, mMockDevice, store));
             assertTrue(
@@ -187,14 +183,12 @@ public class IncrementalDeqpPreparerTest {
                     .thenReturn(dumpFile, null, null, null);
 
             File incrementalDeqpTrustedBuildReport =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             assertFalse(incrementalDeqpTrustedBuildReport.exists());
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.TRUSTED_BUILD_APPLICATION,
                     () -> mPreparer.skipForTrustedBuild(mMockContext),
                     (store) -> mPreparer.processForTrustedBuild(mMockContext, mMockDevice, store));
             assertTrue(
@@ -226,9 +220,7 @@ public class IncrementalDeqpPreparerTest {
             File deviceInfoDir = new File(resultDir, "device-info-files");
             deviceInfoDir.mkdir();
             File report =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             report.createNewFile();
             FileUtil.writeToFile(reportStream, report);
             CompatibilityBuildHelper mMockBuildHelper =
@@ -242,7 +234,7 @@ public class IncrementalDeqpPreparerTest {
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.TRUSTED_BUILD_APPLICATION,
                     () -> mPreparer.skipForTrustedBuild(mMockContext),
                     (store) -> mPreparer.processForTrustedBuild(mMockContext, mMockDevice, store));
             assertTrue(
@@ -295,7 +287,7 @@ public class IncrementalDeqpPreparerTest {
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.BUILD_APPROVAL_APPLICATION,
                     () -> mPreparer.skipForLeveragedBuild(mMockContext),
                     (store) ->
                             mPreparer.processForLeveragedBuild(mMockContext, mMockDevice, store));
@@ -340,7 +332,7 @@ public class IncrementalDeqpPreparerTest {
             mPreparer.runIncrementalDeqp(
                     mMockDevice,
                     mMockBuildHelper,
-                    IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME,
+                    IncrementalDeqpPreparer.RunMode.BUILD_APPROVAL_APPLICATION,
                     () -> mPreparer.skipForLeveragedBuild(mMockContext),
                     (store) ->
                             mPreparer.processForLeveragedBuild(mMockContext, mMockDevice, store));
