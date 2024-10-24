@@ -81,7 +81,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private File mExtraDependency = null;
 
     @Option(name = "run-mode", description = "The run mode for incremental dEQP.")
-    private RunMode mRunMode = RunMode.BUILD_APPROVAL;
+    private RunMode mRunMode = RunMode.BUILD_APPROVAL_APPLICATION;
 
     @Option(
             name = "fallback-strategy",
@@ -93,14 +93,14 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     /** Whether the current build is qualified for incremental dEQP. */
     private static boolean mIncrementalDeqpQualified = true;
 
-    private enum RunMode {
+    public enum RunMode {
         // Initial application for a device to verify that the feature can capture all the
         // dependencies by the representative dEQP tests.
         DEVICE_APPLICATION,
         // Application for a build to make it eligible as the trusted build for incremental dEQP.
         TRUSTED_BUILD_APPLICATION,
         // Running incremental dEQP for build approvals after the device is allowlisted.
-        BUILD_APPROVAL;
+        BUILD_APPROVAL_APPLICATION
     }
 
     private enum FallbackStrategy {
@@ -108,7 +108,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         RUN_FULL_DEQP,
         // Aborts if an exception is thrown in the preparer. Otherwise, runs full dEQP tests due to
         // dependency modifications.
-        ABORT_IF_ANY_EXCEPTION;
+        ABORT_IF_ANY_EXCEPTION
     }
 
     private static final String MODULE_NAME = "CtsDeqpTestCases";
@@ -126,12 +126,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String DEQP_CASE_LIST_FILE_EXTENSION = ".txt";
     private static final String PERF_FILE_EXTENSION = ".data";
     private static final String LOG_FILE_EXTENSION = ".qpa";
+    private static final String RUN_MODE_ATTRIBUTE = "run_mode";
     private static final String BASE_BUILD_FINGERPRINT_ATTRIBUTE = "base_build_fingerprint";
     private static final String CURRENT_BUILD_FINGERPRINT_ATTRIBUTE = "current_build_fingerprint";
     private static final String MODULE_ATTRIBUTE = "module";
     private static final String MODULE_NAME_ATTRIBUTE = "module_name";
     private static final String FINGERPRINT = "ro.build.fingerprint";
-    private static final String BASELINE_DEPENDENCY_ATTRIBUTE = "baseline_deps";
     private static final String MISSING_DEPENDENCY_ATTRIBUTE = "missing_deps";
     private static final String DEPENDENCY_ATTRIBUTE = "deps";
     private static final String EXTRA_DEPENDENCY_ATTRIBUTE = "extra_deps";
@@ -157,10 +157,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     public static final String INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME =
             "incremental-deqp-trusted-build";
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
-    public static final String INCREMENTAL_DEQP_BASELINE_REPORT_NAME =
-            "IncrementalCtsBaselineDeviceInfo.deviceinfo.json";
-    public static final String INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME =
-            "IncrementalCtsTrustedBuildDeviceInfo.deviceinfo.json";
     public static final String INCREMENTAL_DEQP_REPORT_NAME =
             "IncrementalCtsDeviceInfo.deviceinfo.json";
 
@@ -189,21 +185,21 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 runIncrementalDeqp(
                         device,
                         buildHelper,
-                        INCREMENTAL_DEQP_BASELINE_REPORT_NAME,
+                        mRunMode,
                         () -> skipForBaseline(context),
                         (store) -> processForBaseline(context, device, store));
             } else if (RunMode.TRUSTED_BUILD_APPLICATION.equals(mRunMode)) {
                 runIncrementalDeqp(
                         device,
                         buildHelper,
-                        INCREMENTAL_DEQP_TRUSTED_BUILD_REPORT_NAME,
+                        mRunMode,
                         () -> skipForTrustedBuild(context),
                         (store) -> processForTrustedBuild(context, device, store));
             } else {
                 runIncrementalDeqp(
                         device,
                         buildHelper,
-                        INCREMENTAL_DEQP_REPORT_NAME,
+                        RunMode.BUILD_APPROVAL_APPLICATION,
                         () -> skipForLeveragedBuild(context),
                         (store) -> processForLeveragedBuild(context, device, store));
             }
@@ -224,7 +220,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     protected void runIncrementalDeqp(
             ITestDevice device,
             CompatibilityBuildHelper buildHelper,
-            String fileName,
+            RunMode runMode,
             SkipFunction skipFunction,
             ProcessFunction processFunction)
             throws TargetSetupError {
@@ -234,7 +230,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             try {
                 File deviceInfoDir =
                         new File(buildHelper.getResultDir(), DeviceInfo.RESULT_DIR_NAME);
-                jsonFile = new File(deviceInfoDir, fileName);
+                jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_REPORT_NAME);
                 if (jsonFile.exists()) {
                     skipFunction.skip();
                     return;
@@ -249,6 +245,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             // Identify and write dependencies to device info report.
             try (HostInfoStore store = new HostInfoStore(jsonFile)) {
                 store.open();
+                store.addResult(RUN_MODE_ATTRIBUTE, runMode.name());
+
                 processFunction.process(store);
             } catch (IOException e) {
                 throw new TargetSetupError(
@@ -285,12 +283,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         Set<String> missingDependencies =
                 Sets.difference(baselineDependencies, representativeDependencies);
 
-        store.addResult(BASE_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
+        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
         store.startArray(MODULE_ATTRIBUTE);
         store.startGroup(); // Module
         store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
         store.addListResult(
-                BASELINE_DEPENDENCY_ATTRIBUTE,
+                DEPENDENCY_ATTRIBUTE,
                 baselineDependencies.stream().sorted().collect(Collectors.toList()));
         store.addListResult(
                 MISSING_DEPENDENCY_ATTRIBUTE,
@@ -312,7 +310,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             throws TargetSetupError, DeviceNotAvailableException, IOException {
         Set<String> dependencies = getDeqpDependencies(device, REPRESENTATIVE_DEQP_TEST_LIST);
 
-        store.addResult(BASE_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
+        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
         store.startArray(MODULE_ATTRIBUTE);
         store.startGroup(); // Module
         store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
@@ -519,7 +517,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new FileReader(localDumpFile));
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 if (!binaryExecuted) {
                     // dEQP binary has first been executed.
