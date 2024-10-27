@@ -1,5 +1,6 @@
 {
-  "base_build_fingerprint": "google\/panther\/panther:15\/AP3A.240905.008\/12168330:user\/release-keys",
+  "run_mode": "TRUSTED_BUILD_APPLICATION",
+  "current_build_fingerprint": "google\/panther\/panther:15\/AP3A.240905.008\/12168330:user\/release-keys",
   "module": [
     {
       "module_name": "CtsDeqpTestCases",
