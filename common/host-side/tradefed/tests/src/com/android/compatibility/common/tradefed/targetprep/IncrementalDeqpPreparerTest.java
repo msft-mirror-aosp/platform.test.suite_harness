@@ -91,11 +91,14 @@ public class IncrementalDeqpPreparerTest {
                     .thenReturn(dumpFile, null, null, null, null, null);
 
             File incrementalDeqpBaselineReport =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             assertFalse(incrementalDeqpBaselineReport.exists());
-            mPreparer.verifyIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.DEVICE_APPLICATION,
+                    () -> mPreparer.skipForBaseline(mMockContext),
+                    (store) -> mPreparer.processForBaseline(mMockContext, mMockDevice, store));
             assertTrue(
                     mMockBuildInfo
                             .getBuildAttributes()
@@ -124,9 +127,7 @@ public class IncrementalDeqpPreparerTest {
             File deviceInfoDir = new File(resultDir, "device-info-files");
             deviceInfoDir.mkdir();
             File report =
-                    new File(
-                            deviceInfoDir,
-                            IncrementalDeqpPreparer.INCREMENTAL_DEQP_BASELINE_REPORT_NAME);
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             report.createNewFile();
             FileUtil.writeToFile(reportStream, report);
             CompatibilityBuildHelper mMockBuildHelper =
@@ -137,7 +138,12 @@ public class IncrementalDeqpPreparerTest {
                         }
                     };
 
-            mPreparer.verifyIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.DEVICE_APPLICATION,
+                    () -> mPreparer.skipForBaseline(mMockContext),
+                    (store) -> mPreparer.processForBaseline(mMockContext, mMockDevice, store));
             assertTrue(
                     mMockBuildInfo
                             .getBuildAttributes()
@@ -151,7 +157,100 @@ public class IncrementalDeqpPreparerTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void testRunIncrementalDeqp() throws Exception {
+    public void testRunIncrementalDeqpForTrustedBuild() throws Exception {
+        File resultDir = FileUtil.createTempDir("result");
+        try {
+            mPreparerSetter = new OptionSetter(mPreparer);
+            mPreparerSetter.setOptionValue(
+                    "incremental-deqp-preparer:run-mode", "TRUSTED_BUILD_APPLICATION");
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
+            File deviceInfoDir = new File(resultDir, "device-info-files");
+            deviceInfoDir.mkdir();
+            CompatibilityBuildHelper mMockBuildHelper =
+                    new CompatibilityBuildHelper(mMockBuildInfo) {
+                        @Override
+                        public File getResultDir() {
+                            return resultDir;
+                        }
+                    };
+            InputStream perfDumpStream = getClass().getResourceAsStream("/testdata/perf-dump.txt");
+            File dumpFile = FileUtil.createTempFile("parseDump", "perf-dump.txt");
+            FileUtil.writeToFile(perfDumpStream, dumpFile);
+            when(mMockDevice.pullFile(endsWith("-perf-dump.txt")))
+                    .thenReturn(dumpFile, null, null, null);
+
+            File incrementalDeqpTrustedBuildReport =
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
+            assertFalse(incrementalDeqpTrustedBuildReport.exists());
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.TRUSTED_BUILD_APPLICATION,
+                    () -> mPreparer.skipForTrustedBuild(mMockContext),
+                    (store) -> mPreparer.processForTrustedBuild(mMockContext, mMockDevice, store));
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(
+                                    IncrementalDeqpPreparer
+                                            .INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME));
+            assertTrue(incrementalDeqpTrustedBuildReport.exists());
+        } finally {
+            FileUtil.recursiveDelete(resultDir);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testRunIncrementalDeqpForTrustedBuild_skipPreparerWhenReportExists()
+            throws Exception {
+        File resultDir = FileUtil.createTempDir("result");
+        InputStream reportStream =
+                getClass()
+                        .getResourceAsStream(
+                                "/testdata/IncrementalCtsTrustedBuildDeviceInfo.deviceinfo.json");
+        try {
+            IBuildInfo mMockBuildInfo = new BuildInfo();
+            IInvocationContext mMockContext = new InvocationContext();
+            mMockContext.addDeviceBuildInfo("build", mMockBuildInfo);
+            mMockContext.addAllocatedDevice("device", mMockDevice);
+            File deviceInfoDir = new File(resultDir, "device-info-files");
+            deviceInfoDir.mkdir();
+            File report =
+                    new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
+            report.createNewFile();
+            FileUtil.writeToFile(reportStream, report);
+            CompatibilityBuildHelper mMockBuildHelper =
+                    new CompatibilityBuildHelper(mMockBuildInfo) {
+                        @Override
+                        public File getResultDir() {
+                            return resultDir;
+                        }
+                    };
+
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.TRUSTED_BUILD_APPLICATION,
+                    () -> mPreparer.skipForTrustedBuild(mMockContext),
+                    (store) -> mPreparer.processForTrustedBuild(mMockContext, mMockDevice, store));
+            assertTrue(
+                    mMockBuildInfo
+                            .getBuildAttributes()
+                            .containsKey(
+                                    IncrementalDeqpPreparer
+                                            .INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME));
+        } finally {
+            FileUtil.recursiveDelete(resultDir);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testRunIncrementalDeqpForLeveragedBuild() throws Exception {
         File resultDir = FileUtil.createTempDir("result");
         InputStream zipStream =
                 getClass().getResourceAsStream("/testdata/base_build_target-files.zip");
@@ -185,7 +284,13 @@ public class IncrementalDeqpPreparerTest {
             File incrementalDeqpReport =
                     new File(deviceInfoDir, IncrementalDeqpPreparer.INCREMENTAL_DEQP_REPORT_NAME);
             assertFalse(incrementalDeqpReport.exists());
-            mPreparer.runIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.BUILD_APPROVAL_APPLICATION,
+                    () -> mPreparer.skipForLeveragedBuild(mMockContext),
+                    (store) ->
+                            mPreparer.processForLeveragedBuild(mMockContext, mMockDevice, store));
             assertTrue(
                     mMockBuildInfo
                             .getBuildAttributes()
@@ -199,7 +304,8 @@ public class IncrementalDeqpPreparerTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void testRunIncrementalDeqp_skipPreparerWhenReportExists() throws Exception {
+    public void testRunIncrementalDeqpForLeveragedBuild_skipPreparerWhenReportExists()
+            throws Exception {
         File resultDir = FileUtil.createTempDir("result");
         InputStream reportStream =
                 getClass()
@@ -223,7 +329,13 @@ public class IncrementalDeqpPreparerTest {
                         }
                     };
 
-            mPreparer.runIncrementalDeqp(mMockContext, mMockDevice, mMockBuildHelper);
+            mPreparer.runIncrementalDeqp(
+                    mMockDevice,
+                    mMockBuildHelper,
+                    IncrementalDeqpPreparer.RunMode.BUILD_APPROVAL_APPLICATION,
+                    () -> mPreparer.skipForLeveragedBuild(mMockContext),
+                    (store) ->
+                            mPreparer.processForLeveragedBuild(mMockContext, mMockDevice, store));
             assertTrue(
                     mMockBuildInfo
                             .getBuildAttributes()
