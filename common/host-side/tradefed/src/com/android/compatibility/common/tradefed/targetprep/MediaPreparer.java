@@ -61,6 +61,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -176,6 +178,21 @@ public class MediaPreparer extends BaseTargetPreparer
             new Resolution(1920, 1080)
     };
 
+    /*
+     * We place a file with this name in the device directories after we've pushed the
+     * test assets to the device. The presence of this files indicates that the assets
+     * were pushed in their entirety. This provides a stronger answer to the question
+     * "are all of these test assets on the device".
+     */
+
+    private static final String SENTINEL = ".download-completed";
+
+    /*
+     * the host-side file that we push to the device as a sentinel. This is populated
+     * with information about what was downloaded and when.
+     */
+    private File localSentinel;
+
     /** {@inheritDoc} */
     @Override
     public Set<ExternalDependency> getDependencies() {
@@ -243,19 +260,33 @@ public class MediaPreparer extends BaseTargetPreparer
     protected boolean mediaFilesExistOnDevice(ITestDevice device)
             throws DeviceNotAvailableException {
         if (mPushAll) {
-            return device.doesFileExist(mBaseDeviceModuleDir, mUserId);
+            // ModuleDir already has a trailing separator
+            String sentinelPath = mBaseDeviceModuleDir + SENTINEL;
+            boolean exists = device.doesFileExist(sentinelPath, mUserId);
+            CLog.i("sentinel " + sentinelPath + (exists ? " exists" : " is missing"));
+            return exists;
         }
+
         for (Resolution resolution : RESOLUTIONS) {
             if (resolution.width > mMaxRes.width) {
                 break; // no need to check for resolutions greater than this
             }
+
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath, mUserId)
-                    || !device.doesFileExist(deviceFullFilePath, mUserId)) {
+            String deviceShortSentinelPath = deviceShortFilePath + File.separator + SENTINEL;
+            String deviceFullSentinelPath = deviceFullFilePath + File.separator + SENTINEL;
+            if (!device.doesFileExist(deviceShortSentinelPath, mUserId)) {
+                CLog.i("Missing Sentinel file " + deviceShortSentinelPath);
                 return false;
             }
+            if (!device.doesFileExist(deviceFullSentinelPath, mUserId)) {
+                CLog.i("Missing Sentinel file " + deviceFullSentinelPath);
+                return false;
+            }
+            CLog.i("Sentinels present for resolution: " + resolution.toString());
         }
+        CLog.i("Sentinel files present");
         return true;
     }
 
@@ -480,31 +511,45 @@ public class MediaPreparer extends BaseTargetPreparer
             }
             String deviceShortFilePath = mBaseDeviceShortDir + resolution.toString();
             String deviceFullFilePath = mBaseDeviceFullDir + resolution.toString();
-            if (!device.doesFileExist(deviceShortFilePath, mUserId)
-                    || !device.doesFileExist(deviceFullFilePath, mUserId)) {
-                CLog.i("Copying files of resolution %s to device", resolution.toString());
+            String deviceShortSentinelPath = deviceShortFilePath + File.separator + SENTINEL;
+            String deviceFullSentinelPath = deviceFullFilePath + File.separator + SENTINEL;
+
+            // deal with missing short assets
+            if (!device.doesFileExist(deviceShortSentinelPath, mUserId)) {
+                CLog.i("Copying short files of resolution %s to device", resolution.toString());
                 String localShortDirName = "bbb_short/" + resolution.toString();
-                String localFullDirName = "bbb_full/" + resolution.toString();
                 File localShortDir = new File(mLocalMediaPath, localShortDirName);
+
+                device.pushDir(localShortDir, deviceShortFilePath, mUserId);
+                device.pushFile(localSentinel, deviceShortSentinelPath, mUserId);
+                CLog.i("Placed sentinel on device at " + deviceShortSentinelPath);
+            }
+
+            // deal with missing full assets
+            if (!device.doesFileExist(deviceFullSentinelPath, mUserId)) {
+                CLog.i("Copying full files of resolution %s to device", resolution.toString());
+                String localFullDirName = "bbb_full/" + resolution.toString();
                 File localFullDir = new File(mLocalMediaPath, localFullDirName);
-                // push short directory of given resolution, if not present on device
-                if (!device.doesFileExist(deviceShortFilePath, mUserId)) {
-                    device.pushDir(localShortDir, deviceShortFilePath, mUserId);
-                }
-                // push full directory of given resolution, if not present on device
-                if (!device.doesFileExist(deviceFullFilePath, mUserId)) {
-                    device.pushDir(localFullDir, deviceFullFilePath, mUserId);
-                }
+
+                device.pushDir(localFullDir, deviceFullFilePath, mUserId);
+                device.pushFile(localSentinel, deviceFullSentinelPath, mUserId);
+                CLog.i("Placed sentinel on device at " + deviceFullSentinelPath);
             }
         }
     }
 
     // copy everything from the host directory to the device
     protected void copyAll(ITestDevice device) throws DeviceNotAvailableException {
-        if (!device.doesFileExist(mBaseDeviceModuleDir, mUserId)) {
-            CLog.i("Copying files to device");
-            device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir, mUserId);
+        String deviceSentinelPath = mBaseDeviceModuleDir + SENTINEL;
+        if (device.doesFileExist(deviceSentinelPath, mUserId)) {
+            CLog.i("device has " + deviceSentinelPath + " indicating all files are downloaded");
+            return;
         }
+        CLog.i("Copying files to device directory " + mBaseDeviceModuleDir);
+        device.pushDir(new File(mLocalMediaPath), mBaseDeviceModuleDir, mUserId);
+
+        device.pushFile(localSentinel, deviceSentinelPath, mUserId);
+        CLog.i("Placed sentinel on device at " + deviceSentinelPath);
     }
 
     // Initialize directory strings where media files live on device
@@ -539,22 +584,49 @@ public class MediaPreparer extends BaseTargetPreparer
                 setMaxRes(testInfo); // max resolution only applies to video files
             }
             if (mediaFilesExistOnDevice(device)) {
-                // if files already on device, do nothing
                 CLog.i("Media files found on the device");
                 return;
             }
         }
 
-        if (mLocalMediaPath == null) {
-            // Option 'local-media-path' has not been defined
-            // Get directory to store media files on this host
-            File mediaFolder = downloadMediaToHost(device, buildInfo);
-            // set mLocalMediaPath to extraction location of media files
-            updateLocalMediaPath(device, mediaFolder);
-        }
-        CLog.i("Media files located on host at: " + mLocalMediaPath);
-        if (!mMediaDownloadOnly) {
-            copyMediaFiles(device);
+        try {
+            // set up the host-side sentinel file that we copy when we've finished installing
+            // Put some useful triaging and diagnostic information in the file
+            FileWriter myWriter = null;
+            try {
+                localSentinel = File.createTempFile("download-sentinel", null);
+
+                myWriter = new FileWriter(localSentinel, /*append*/ false);
+                myWriter.write("Asset Download Completion Sentinel\n");
+                {
+                    final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss a, z";
+                    Calendar cal = Calendar.getInstance();
+                    SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+                    myWriter.write("Downloaded at: " + sdf.format(cal.getTime()) + "\n");
+                }
+                myWriter.write("Pushed to device path: " + mBaseDeviceModuleDir + "\n");
+            } catch (IOException e) {
+                // we'll write an empty sentinel
+                CLog.w("error creating the local sentinel file, device installation may fail");
+            } finally {
+                StreamUtil.close(myWriter);
+            }
+
+            if (mLocalMediaPath == null) {
+                // Option 'local-media-path' has not been defined
+                // Get directory to store media files on this host
+                File mediaFolder = downloadMediaToHost(device, buildInfo);
+                // set mLocalMediaPath to extraction location of media files
+                updateLocalMediaPath(device, mediaFolder);
+            }
+            CLog.i("Media files located on host at: " + mLocalMediaPath);
+            if (!mMediaDownloadOnly) {
+                copyMediaFiles(device);
+            }
+        } finally {
+            // some cleanup on the host side
+            FileUtil.deleteFile(localSentinel);
+            localSentinel = null;
         }
     }
 
