@@ -34,15 +34,12 @@ import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.util.FileUtil;
 import com.android.tradefed.util.StreamUtil;
 
-import com.google.common.collect.Sets;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,21 +48,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /** Collects the dEQP dependencies and compares the builds. */
 @OptionClass(alias = "incremental-deqp-preparer")
 public class IncrementalDeqpPreparer extends BaseTargetPreparer {
-
-    @Option(
-            name = "base-build",
-            description =
-                    "Absolute file path to a target file of the base build. Required for "
-                            + "incremental dEQP.")
-    private File mBaseBuild = null;
-
     @Option(
             name = "current-build",
             description =
@@ -73,15 +61,8 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + " incremental dEQP.")
     private File mCurrentBuild = null;
 
-    @Option(
-            name = "extra-dependency",
-            description =
-                    "Absolute file path to a text file that includes extra dEQP test "
-                            + "dependencies. Optional for incremental dEQP.")
-    private File mExtraDependency = null;
-
     @Option(name = "run-mode", description = "The run mode for incremental dEQP.")
-    private RunMode mRunMode = RunMode.BUILD_APPROVAL_APPLICATION;
+    private RunMode mRunMode = RunMode.LIGHTWEIGHT_RUN;
 
     @Option(
             name = "fallback-strategy",
@@ -90,17 +71,11 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                             + "for the builds fails.")
     private FallbackStrategy mFallbackStrategy = FallbackStrategy.ABORT_IF_ANY_EXCEPTION;
 
-    /** Whether the current build is qualified for incremental dEQP. */
-    private static boolean mIncrementalDeqpQualified = true;
-
     public enum RunMode {
-        // Initial application for a device to verify that the feature can capture all the
-        // dependencies by the representative dEQP tests.
-        DEVICE_APPLICATION,
-        // Application for a build to make it eligible as the trusted build for incremental dEQP.
-        TRUSTED_BUILD_APPLICATION,
-        // Running incremental dEQP for build approvals after the device is allowlisted.
-        BUILD_APPROVAL_APPLICATION
+        // Collects the dependencies information for the build via the full dEQP tests.
+        FULL_RUN,
+        // Collects the dependencies information for the build via the representative dEQP tests.
+        LIGHTWEIGHT_RUN
     }
 
     private enum FallbackStrategy {
@@ -127,27 +102,13 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String PERF_FILE_EXTENSION = ".data";
     private static final String LOG_FILE_EXTENSION = ".qpa";
     private static final String RUN_MODE_ATTRIBUTE = "run_mode";
-    private static final String BASE_BUILD_FINGERPRINT_ATTRIBUTE = "base_build_fingerprint";
-    private static final String CURRENT_BUILD_FINGERPRINT_ATTRIBUTE = "current_build_fingerprint";
     private static final String MODULE_ATTRIBUTE = "module";
     private static final String MODULE_NAME_ATTRIBUTE = "module_name";
     private static final String FINGERPRINT = "ro.build.fingerprint";
     private static final String MISSING_DEPENDENCY_ATTRIBUTE = "missing_deps";
-    private static final String DEPENDENCY_ATTRIBUTE = "deps";
-    private static final String EXTRA_DEPENDENCY_ATTRIBUTE = "extra_deps";
-    private static final String DEPENDENCY_CHANGES_ATTRIBUTE = "deps_changes";
+    private static final String DEPENDENCY_DETAILS_ATTRIBUTE = "deps_details";
     private static final String DEPENDENCY_NAME_ATTRIBUTE = "dep_name";
-    private static final String DEPENDENCY_DETAIL_ATTRIBUTE = "detail";
-    private static final String DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE = "base_build_hash";
-    private static final String DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE = "current_build_hash";
-    private static final String NULL_BUILD_HASH = "0";
-
-    private static final String DEPENDENCY_DETAIL_MISSING_IN_CURRENT = "MISSING_IN_CURRENT_BUILD";
-    private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE = "MISSING_IN_BASE_BUILD";
-    private static final String DEPENDENCY_DETAIL_MISSING_IN_BASE_AND_CURRENT =
-            "MISSING_IN_BASE_AND_CURRENT_BUILDS";
-    private static final String DEPENDENCY_DETAIL_DIFFERENT_HASH =
-            "BASE_AND_CURRENT_BUILD_DIFFERENT_HASH";
+    private static final String DEPENDENCY_FILE_HASH_ATTRIBUTE = "file_hash";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
             Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0|^/mali csf)");
@@ -160,19 +121,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     public static final String INCREMENTAL_DEQP_REPORT_NAME =
             "IncrementalCtsDeviceInfo.deviceinfo.json";
 
-    /** The interface to skip incremental dEQP if another shard already did it. */
-    @FunctionalInterface
-    interface SkipFunction {
-        void skip();
-    }
-
-    /** The interface to collect dependencies and store them into a {@link HostInfoStore}. */
-    @FunctionalInterface
-    interface ProcessFunction {
-        void process(HostInfoStore store)
-                throws TargetSetupError, DeviceNotAvailableException, IOException;
-    }
-
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
@@ -181,28 +129,7 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
             CompatibilityBuildHelper buildHelper =
                     new CompatibilityBuildHelper(testInfo.getBuildInfo());
             IInvocationContext context = testInfo.getContext();
-            if (RunMode.DEVICE_APPLICATION.equals(mRunMode)) {
-                runIncrementalDeqp(
-                        device,
-                        buildHelper,
-                        mRunMode,
-                        () -> skipForBaseline(context),
-                        (store) -> processForBaseline(context, device, store));
-            } else if (RunMode.TRUSTED_BUILD_APPLICATION.equals(mRunMode)) {
-                runIncrementalDeqp(
-                        device,
-                        buildHelper,
-                        mRunMode,
-                        () -> skipForTrustedBuild(context),
-                        (store) -> processForTrustedBuild(context, device, store));
-            } else {
-                runIncrementalDeqp(
-                        device,
-                        buildHelper,
-                        RunMode.BUILD_APPROVAL_APPLICATION,
-                        () -> skipForLeveragedBuild(context),
-                        (store) -> processForLeveragedBuild(context, device, store));
-            }
+            runIncrementalDeqp(context, device, buildHelper, mRunMode);
         } catch (Exception e) {
             if (mFallbackStrategy == FallbackStrategy.ABORT_IF_ANY_EXCEPTION) {
                 // Rethrows the exception to abort the task.
@@ -218,12 +145,11 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
      * <p>Synchronize this method so that multiple shards won't run it multiple times.
      */
     protected void runIncrementalDeqp(
+            IInvocationContext context,
             ITestDevice device,
             CompatibilityBuildHelper buildHelper,
-            RunMode runMode,
-            SkipFunction skipFunction,
-            ProcessFunction processFunction)
-            throws TargetSetupError {
+            RunMode runMode)
+            throws TargetSetupError, DeviceNotAvailableException {
         // Make sure synchronization is on the class not the object.
         synchronized (IncrementalDeqpPreparer.class) {
             File jsonFile;
@@ -232,7 +158,9 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         new File(buildHelper.getResultDir(), DeviceInfo.RESULT_DIR_NAME);
                 jsonFile = new File(deviceInfoDir, INCREMENTAL_DEQP_REPORT_NAME);
                 if (jsonFile.exists()) {
-                    skipFunction.skip();
+                    CLog.i("Another shard has already checked dEQP dependencies.");
+                    // Add an attribute to the shard's build info.
+                    addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
                     return;
                 }
             } catch (FileNotFoundException e) {
@@ -241,13 +169,35 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                         device.getDeviceDescriptor(),
                         TestErrorIdentifier.TEST_ABORTED);
             }
+            validateBuildFingerprint(mCurrentBuild, device);
+
+            List<String> deqpTestList =
+                    RunMode.FULL_RUN.equals(mRunMode)
+                            ? BASELINE_DEQP_TEST_LIST
+                            : REPRESENTATIVE_DEQP_TEST_LIST;
+            Set<String> dependencies = getDeqpDependencies(device, deqpTestList);
 
             // Identify and write dependencies to device info report.
             try (HostInfoStore store = new HostInfoStore(jsonFile)) {
                 store.open();
                 store.addResult(RUN_MODE_ATTRIBUTE, runMode.name());
-
-                processFunction.process(store);
+                store.startArray(MODULE_ATTRIBUTE);
+                store.startGroup(); // Module
+                store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
+                store.startArray(DEPENDENCY_DETAILS_ATTRIBUTE);
+                Map<String, String> currentBuildHashMap =
+                        getTargetFileHash(dependencies, mCurrentBuild);
+                for (String dependency : dependencies) {
+                    store.startGroup();
+                    store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
+                    store.addResult(
+                            DEPENDENCY_FILE_HASH_ATTRIBUTE, currentBuildHashMap.get(dependency));
+                    store.endGroup();
+                }
+                store.endArray(); // dEQP details
+                store.endGroup(); // Module
+                store.endArray();
+                addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
             } catch (IOException e) {
                 throw new TargetSetupError(
                         "Failed to collect dependencies",
@@ -266,170 +216,6 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
                 }
             }
         }
-    }
-
-    protected void skipForBaseline(IInvocationContext context) {
-        CLog.i("Another shard has already checked dEQP baseline dependencies.");
-        // Add an attribute to the shard's build info.
-        addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
-    }
-
-    protected void processForBaseline(
-            IInvocationContext context, ITestDevice device, HostInfoStore store)
-            throws TargetSetupError, DeviceNotAvailableException, IOException {
-        Set<String> baselineDependencies = getDeqpDependencies(device, BASELINE_DEQP_TEST_LIST);
-        Set<String> representativeDependencies =
-                getDeqpDependencies(device, REPRESENTATIVE_DEQP_TEST_LIST);
-        Set<String> missingDependencies =
-                Sets.difference(baselineDependencies, representativeDependencies);
-
-        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
-        store.startArray(MODULE_ATTRIBUTE);
-        store.startGroup(); // Module
-        store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
-        store.addListResult(
-                DEPENDENCY_ATTRIBUTE,
-                baselineDependencies.stream().sorted().collect(Collectors.toList()));
-        store.addListResult(
-                MISSING_DEPENDENCY_ATTRIBUTE,
-                missingDependencies.stream().sorted().collect(Collectors.toList()));
-        store.endGroup(); // Module
-        store.endArray();
-        // Add an attribute to the shard's build info.
-        addBuildAttribute(context, INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME);
-    }
-
-    protected void skipForTrustedBuild(IInvocationContext context) {
-        CLog.i("Another shard has already collected dEQP dependencies for the build.");
-        // Add an attribute to the shard's build info.
-        addBuildAttribute(context, INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME);
-    }
-
-    protected void processForTrustedBuild(
-            IInvocationContext context, ITestDevice device, HostInfoStore store)
-            throws TargetSetupError, DeviceNotAvailableException, IOException {
-        Set<String> dependencies = getDeqpDependencies(device, REPRESENTATIVE_DEQP_TEST_LIST);
-
-        store.addResult(CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, device.getProperty(FINGERPRINT));
-        store.startArray(MODULE_ATTRIBUTE);
-        store.startGroup(); // Module
-        store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
-        store.addListResult(
-                DEPENDENCY_ATTRIBUTE, dependencies.stream().sorted().collect(Collectors.toList()));
-        store.endGroup(); // Module
-        store.endArray();
-        // Add an attribute to the shard's build info.
-        addBuildAttribute(context, INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME);
-    }
-
-    protected void skipForLeveragedBuild(IInvocationContext context) {
-        CLog.i("Another shard has already checked dEQP dependencies.");
-        if (mIncrementalDeqpQualified) {
-            // Add an attribute to the shard's build info.
-            addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
-        }
-    }
-
-    protected void processForLeveragedBuild(
-            IInvocationContext context, ITestDevice device, HostInfoStore store)
-            throws TargetSetupError, DeviceNotAvailableException, IOException {
-        Set<String> simpleperfDependencies =
-                getDeqpDependencies(device, REPRESENTATIVE_DEQP_TEST_LIST);
-        Set<String> extraDependencies = parseExtraDependency(device);
-        Set<String> dependencies = new HashSet<>(simpleperfDependencies);
-        dependencies.addAll(extraDependencies);
-
-        store.addResult(BASE_BUILD_FINGERPRINT_ATTRIBUTE, getBuildFingerPrint(mBaseBuild, device));
-        store.addResult(
-                CURRENT_BUILD_FINGERPRINT_ATTRIBUTE, getBuildFingerPrint(mCurrentBuild, device));
-
-        store.startArray(MODULE_ATTRIBUTE);
-        store.startGroup(); // Module
-        store.addResult(MODULE_NAME_ATTRIBUTE, MODULE_NAME);
-        store.addListResult(
-                DEPENDENCY_ATTRIBUTE,
-                simpleperfDependencies.stream().sorted().collect(Collectors.toList()));
-        store.addListResult(
-                EXTRA_DEPENDENCY_ATTRIBUTE,
-                extraDependencies.stream().sorted().collect(Collectors.toList()));
-        store.startArray(DEPENDENCY_CHANGES_ATTRIBUTE);
-        Map<String, String> currentBuildHashMap = getTargetFileHash(dependencies, mCurrentBuild);
-        Map<String, String> baseBuildHashMap = getTargetFileHash(dependencies, mBaseBuild);
-
-        for (String dependency : dependencies) {
-            if (!baseBuildHashMap.containsKey(dependency)
-                    && currentBuildHashMap.containsKey(dependency)) {
-                mIncrementalDeqpQualified = false;
-                store.startGroup();
-                store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
-                store.addResult(DEPENDENCY_DETAIL_ATTRIBUTE, DEPENDENCY_DETAIL_MISSING_IN_BASE);
-                store.addResult(DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE, NULL_BUILD_HASH);
-                store.addResult(
-                        DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE,
-                        currentBuildHashMap.get(dependency));
-                store.endGroup();
-            } else if (!currentBuildHashMap.containsKey(dependency)
-                    && baseBuildHashMap.containsKey(dependency)) {
-                mIncrementalDeqpQualified = false;
-                store.startGroup();
-                store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
-                store.addResult(DEPENDENCY_DETAIL_ATTRIBUTE, DEPENDENCY_DETAIL_MISSING_IN_CURRENT);
-                store.addResult(
-                        DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE, baseBuildHashMap.get(dependency));
-                store.addResult(DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE, NULL_BUILD_HASH);
-                store.endGroup();
-            } else if (!currentBuildHashMap.containsKey(dependency)
-                    && !baseBuildHashMap.containsKey(dependency)) {
-                mIncrementalDeqpQualified = false;
-                store.startGroup();
-                store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
-                store.addResult(
-                        DEPENDENCY_DETAIL_ATTRIBUTE, DEPENDENCY_DETAIL_MISSING_IN_BASE_AND_CURRENT);
-                store.addResult(DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE, NULL_BUILD_HASH);
-                store.addResult(DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE, NULL_BUILD_HASH);
-                store.endGroup();
-            } else if (!currentBuildHashMap
-                    .get(dependency)
-                    .equals(baseBuildHashMap.get(dependency))) {
-                mIncrementalDeqpQualified = false;
-                store.startGroup();
-                store.addResult(DEPENDENCY_NAME_ATTRIBUTE, dependency);
-                store.addResult(DEPENDENCY_DETAIL_ATTRIBUTE, DEPENDENCY_DETAIL_DIFFERENT_HASH);
-                store.addResult(
-                        DEPENDENCY_BASE_BUILD_HASH_ATTRIBUTE, baseBuildHashMap.get(dependency));
-                store.addResult(
-                        DEPENDENCY_CURRENT_BUILD_HASH_ATTRIBUTE,
-                        currentBuildHashMap.get(dependency));
-                store.endGroup();
-            }
-        }
-        store.endArray(); // dEQP changes
-        store.endGroup(); // Module
-        store.endArray();
-        if (mIncrementalDeqpQualified) {
-            // Add an attribute to the shard's build info.
-            addBuildAttribute(context, INCREMENTAL_DEQP_ATTRIBUTE_NAME);
-        }
-    }
-
-    /** Parses the extra dependency file and get dependencies. */
-    private Set<String> parseExtraDependency(ITestDevice device) throws TargetSetupError {
-        Set<String> result = new HashSet<>();
-        if (mExtraDependency == null) {
-            return result;
-        }
-        try {
-            for (String line : Files.readAllLines(mExtraDependency.toPath())) {
-                result.add(line.trim());
-            }
-        } catch (IOException e) {
-            throw new TargetSetupError(
-                    "Failed to parse extra dependencies file.",
-                    e,
-                    device.getDeviceDescriptor(),
-                    TestErrorIdentifier.TEST_ABORTED);
-        }
-        return result;
     }
 
     /** Gets the filename of dEQP dependencies in build. */
@@ -553,25 +339,34 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
         return result;
     }
 
-    /** Gets the build fingerprint from target files. */
-    protected String getBuildFingerPrint(File targetFile, ITestDevice device)
+    /** Validates if the build fingerprint matches on both the target file and the device. */
+    protected void validateBuildFingerprint(File targetFile, ITestDevice device)
             throws TargetSetupError {
-        String fingerprint;
+        String deviceFingerprint;
+        String targetFileFingerprint;
         try {
+            deviceFingerprint = device.getProperty(FINGERPRINT);
             ZipFile zipFile = new ZipFile(targetFile);
             ZipEntry entry = zipFile.getEntry("SYSTEM/build.prop");
             InputStream is = zipFile.getInputStream(entry);
             Properties prop = new Properties();
             prop.load(is);
-            fingerprint = prop.getProperty("ro.system.build.fingerprint");
-        } catch (IOException e) {
+            targetFileFingerprint = prop.getProperty("ro.system.build.fingerprint");
+        } catch (IOException | DeviceNotAvailableException e) {
             throw new TargetSetupError(
                     String.format("Fail to get fingerprint from: %s", targetFile.getName()),
                     e,
                     device.getDeviceDescriptor(),
                     TestErrorIdentifier.TEST_ABORTED);
         }
-        return fingerprint;
+        if (deviceFingerprint == null || !deviceFingerprint.equals(targetFileFingerprint)) {
+            throw new TargetSetupError(
+                    String.format(
+                            "Fingerprint on the target file %s doesn't match the one %s on the"
+                                    + " device",
+                            targetFileFingerprint, deviceFingerprint),
+                    TestErrorIdentifier.TEST_ABORTED);
+        }
     }
 
     /** Adds a build attribute to all the {@link IBuildInfo} tracked for the invocation. */
