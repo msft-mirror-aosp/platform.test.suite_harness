@@ -1,0 +1,42 @@
+{
+  "run_mode": "LIGHTWEIGHT_RUN",
+  "module": [
+    {
+      "module_name": "CtsDeqpTestCases",
+      "deps_details": [
+        {
+          "dep_name": "\/system\/lib64\/libmedia_helper.so",
+          "file_hash": "9c14151911ea6a64b795799885c66eb5"
+        },
+        {
+          "dep_name": "\/vendor\/lib64\/libdmabufheap.so",
+          "file_hash": "132dc8947db65da997716de0a3edd670"
+        },
+        {
+          "dep_name": "\/system\/lib64\/android.hardware.cas@1.0.so",
+          "file_hash": "c41b577815320f9ad3944d96c53b6dbe"
+        },
+        {
+          "dep_name": "\/system\/lib\/libion.so",
+          "file_hash": "92846cd4db2124f1d597a3fedf109df7"
+        },
+        {
+          "dep_name": "\/system\/lib64\/libtracing_perfetto.so",
+          "file_hash": "6d879b6ca866f1cec5acb2c8373b9e71"
+        },
+        {
+          "dep_name": "\/system\/lib64\/libc++.so",
+          "file_hash": "ce7f5940bb1f2b8083cb1e0ade97bea4"
+        },
+        {
+          "dep_name": "\/system\/lib64\/libETC1.so",
+          "file_hash": "8f9f7a2029fe58cac82ee4fade9e7df5"
+        },
+        {
+          "dep_name": "\/system\/lib64\/audiopolicy-types-aidl-cpp.so",
+          "file_hash": "36af8be478dbcf95f15d5b0171d3b483"
+        }
+      ]
+    }
+  ]
+}
