@@ -55,6 +55,8 @@ public class MediaPreparerTest {
     private static final String RUN_TESTS_AS_USER_KEY = "RUN_TESTS_AS_USER";
     private static final int TEST_USER_ID = 99;
 
+    private static final String SENTINEL = ".download-completed";
+
     private MediaPreparer mMediaPreparer;
     private DeviceBuildInfo mMockBuildInfo;
     private ITestDevice mMockDevice;
@@ -150,6 +152,7 @@ public class MediaPreparerTest {
                     resolution.toString());
             String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
                     resolution.toString());
+            // RBE these are the things I have to fix up.
             when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
@@ -165,10 +168,15 @@ public class MediaPreparerTest {
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
         for (MediaPreparer.Resolution resolution : MediaPreparer.RESOLUTIONS) {
-            String shortFile = String.format("%s%s", mMediaPreparer.mBaseDeviceShortDir,
-                    resolution.toString());
-            String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
-                    resolution.toString());
+            // Preparer uses sentinel files in directories, not the directories themselves
+            String shortFile =
+                    String.format(
+                            "%s%s/%s",
+                            mMediaPreparer.mBaseDeviceShortDir, resolution.toString(), SENTINEL);
+            String fullFile =
+                    String.format(
+                            "%s%s/%s",
+                            mMediaPreparer.mBaseDeviceFullDir, resolution.toString(), SENTINEL);
             when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
@@ -176,10 +184,27 @@ public class MediaPreparerTest {
     }
 
     @Test
+    public void testMediaFilesExistOnDeviceFalseWithPushAllInterrupted() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
+        // Preparer uses sentinel files in directories, not the directories themselves
+        // directory, but not the sentinel
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+                .thenReturn(true);
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
+                .thenReturn(false);
+
+        assertFalse(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
+    }
+
+    @Test
     public void testMediaFilesExistOnDeviceTrueWithPushAll() throws Exception {
         mOptionSetter.setOptionValue("push-all", "true");
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+        // Preparer uses sentinel files in directories, not the directories themselves
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(true);
 
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
@@ -189,7 +214,8 @@ public class MediaPreparerTest {
     public void testMediaFilesExistOnDeviceFalse() throws Exception {
         mMediaPreparer.mMaxRes = MediaPreparer.RESOLUTIONS[1];
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
-        String firstFileChecked = "/sdcard/test/bbb_short/176x144";
+        // Preparer uses sentinel files in directories, not the directories themselves
+        String firstFileChecked = "/sdcard/test/bbb_short/176x144/" + SENTINEL;
         when(mMockDevice.doesFileExist(firstFileChecked, TEST_USER_ID)).thenReturn(false);
 
         assertFalse(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
@@ -199,7 +225,9 @@ public class MediaPreparerTest {
     public void testMediaFilesExistOnDevice_differentUserId() throws Exception {
         mOptionSetter.setOptionValue("push-all", "true");
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+        // Preparer uses sentinel files in directories, not the directories themselves
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(true);
 
         assertTrue(mMediaPreparer.mediaFilesExistOnDevice(mMockDevice));
@@ -215,7 +243,9 @@ public class MediaPreparerTest {
         mOptionSetter.setOptionValue("push-all", "true");
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/android-cts-media/";
         int newTestUserId = TEST_USER_ID + 1;
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, newTestUserId))
+        // Preparer uses sentinel files in directories, not the directories themselves
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, newTestUserId))
                 .thenReturn(true);
 
         // The file exists for newTestUserId, not for TEST_USER_ID.
@@ -242,11 +272,13 @@ public class MediaPreparerTest {
         mMediaPreparer.mBaseDeviceModuleDir = "/sdcard/test/unittest/";
         mMediaPreparer.mBaseDeviceShortDir = "/sdcard/test/bbb_short/";
         mMediaPreparer.mBaseDeviceFullDir = "/sdcard/test/bbb_full/";
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceModuleDir, TEST_USER_ID))
+        // Preparer uses sentinel files in directories, not the directories themselves
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(true);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, TEST_USER_ID))
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(false);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, TEST_USER_ID))
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
