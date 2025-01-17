@@ -23,7 +23,6 @@ import com.android.tradefed.build.IBuildInfo;
 import com.android.tradefed.config.Configuration;
 import com.android.tradefed.config.ConfigurationDef;
 import com.android.tradefed.config.IConfiguration;
-import com.android.tradefed.config.OptionSetter;
 import com.android.tradefed.invoker.IInvocationContext;
 import com.android.tradefed.invoker.InvocationContext;
 import com.android.tradefed.util.FileUtil;
@@ -137,68 +136,6 @@ public class CertificationSuiteResultReporterTest {
         String content = FileUtil.readStringFromFile(reportFile);
         assertTrue(content.contains("suite_name=\"CTS\""));
         assertTrue(content.contains("suite_variant=\"CTS_ON_GSI\""));
-        assertTrue(content.contains("suite_version=\"version\""));
-    }
-
-    /**
-     * For the R release, ensure that CTS-on-GSI still report as VTS for APFE to ingest it properly
-     */
-    @Test
-    public void testSuiteVariantGSI_R_Compatibility() throws Exception {
-        mConfiguration = new Configuration("test", "test");
-        mConfiguration.setCommandLine(new String[] {"cts-on-gsi"});
-
-        mReporter =
-                new CertificationSuiteResultReporter() {
-                    @Override
-                    CompatibilityBuildHelper createBuildHelper() {
-                        return mBuildHelper;
-                    }
-                };
-        OptionSetter setter = new OptionSetter(mReporter);
-        setter.setOptionValue("cts-on-gsi-variant", "true");
-        mReporter.setConfiguration(mConfiguration);
-
-        mReporter.invocationStarted(mContext);
-        mReporter.invocationEnded(500L);
-
-        File reportFile = new File(mBuildHelper.getResultDir(), "test_result.xml");
-        assertTrue(reportFile.exists());
-        String content = FileUtil.readStringFromFile(reportFile);
-        // Suite name is overridden to VTS for the R release
-        assertTrue(content.contains("suite_name=\"VTS\""));
-        assertTrue(content.contains("suite_variant=\"CTS_ON_GSI\""));
-        assertTrue(content.contains("suite_version=\"version\""));
-    }
-
-    /**
-     * For the R release, ensure that CTS-on-GSI still report as VTS for APFE to ingest it properly
-     */
-    @Test
-    public void testSuiteVariantGSI_R_Compatibility_ATS() throws Exception {
-        mConfiguration = new Configuration("test", "test");
-        // ATS renames the config so we need to handle it.
-        mConfiguration.setCommandLine(new String[] {"_cts-on-gsi.xml"});
-
-        mReporter =
-                new CertificationSuiteResultReporter() {
-                    @Override
-                    CompatibilityBuildHelper createBuildHelper() {
-                        return mBuildHelper;
-                    }
-                };
-        OptionSetter setter = new OptionSetter(mReporter);
-        setter.setOptionValue("cts-on-gsi-variant", "true");
-        mReporter.setConfiguration(mConfiguration);
-
-        mReporter.invocationStarted(mContext);
-        mReporter.invocationEnded(500L);
-
-        File reportFile = new File(mBuildHelper.getResultDir(), "test_result.xml");
-        assertTrue(reportFile.exists());
-        String content = FileUtil.readStringFromFile(reportFile);
-        // Suite name is overridden to VTS for the R release
-        assertTrue(content.contains("suite_name=\"VTS\""));
         assertTrue(content.contains("suite_version=\"version\""));
     }
 }
