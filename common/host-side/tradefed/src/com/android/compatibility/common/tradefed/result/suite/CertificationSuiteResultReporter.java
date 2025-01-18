@@ -19,7 +19,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.compatibility.common.tradefed.build.CompatibilityBuildHelper;
 import com.android.compatibility.common.util.DeviceInfo;
 import com.android.tradefed.build.IBuildInfo;
-import com.android.tradefed.cluster.SubprocessConfigBuilder;
 import com.android.tradefed.config.IConfiguration;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.config.OptionClass;
@@ -324,7 +323,7 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     @Override
     public IFormatterGenerator createFormatter() {
         return new CertificationResultXml(
-                createSuiteName(mBuildHelper.getSuiteName()),
+                mBuildHelper.getSuiteName(),
                 mBuildHelper.getSuiteVersion(),
                 createSuiteVariant(),
                 mBuildHelper.getSuitePlan(),
@@ -500,20 +499,6 @@ public class CertificationSuiteResultReporter extends XmlFormattedGeneratorRepor
     private void createChecksum(File resultDir, Collection<TestRunResult> results,
             String buildFingerprint) {
         CertificationChecksumHelper.tryCreateChecksum(resultDir, results, buildFingerprint);
-    }
-
-    private String createSuiteName(String originalSuiteName) {
-        if (mCtsOnGsiVariant) {
-            String commandLine = getConfiguration().getCommandLine();
-            // SubprocessConfigBuilder is added to support ATS current way of running things.
-            // It won't be needed after the R release.
-            if (commandLine.startsWith("cts-on-gsi")
-                    || commandLine.startsWith(
-                            SubprocessConfigBuilder.createConfigName("cts-on-gsi"))) {
-                return "VTS";
-            }
-        }
-        return originalSuiteName;
     }
 
     private String createSuiteVariant() {
