@@ -152,7 +152,6 @@ public class MediaPreparerTest {
                     resolution.toString());
             String fullFile = String.format("%s%s", mMediaPreparer.mBaseDeviceFullDir,
                     resolution.toString());
-            // RBE these are the things I have to fix up.
             when(mMockDevice.doesFileExist(shortFile, TEST_USER_ID)).thenReturn(true);
             when(mMockDevice.doesFileExist(fullFile, TEST_USER_ID)).thenReturn(true);
         }
@@ -276,9 +275,30 @@ public class MediaPreparerTest {
         when(mMockDevice.doesFileExist(
                         mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
                 .thenReturn(true);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir + SENTINEL, TEST_USER_ID))
+        // and these directories should no longer be created.
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceShortDir, TEST_USER_ID))
                 .thenReturn(false);
-        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir + SENTINEL, TEST_USER_ID))
+        when(mMockDevice.doesFileExist(mMediaPreparer.mBaseDeviceFullDir, TEST_USER_ID))
+                .thenReturn(false);
+
+        mMediaPreparer.copyMediaFiles(mMockDevice);
+    }
+
+    @Test
+    public void testPushAllMediaFolderFullPath() throws Exception {
+        mOptionSetter.setOptionValue("push-all", "true");
+        mOptionSetter.setOptionValue("media-folder-name", "/data/local/tmp/FullPathtest");
+        mMediaPreparer.mBaseDeviceModuleDir = "/data/local/tmp/FullPathtest/";
+        mMediaPreparer.mBaseDeviceShortDir = "/data/local/tmp/bbb_short/";
+        mMediaPreparer.mBaseDeviceFullDir = "/data/local/tmp/bbb_full/";
+        // Preparer uses sentinel files in directories, not the directories themselves
+        when(mMockDevice.doesFileExist(
+                        mMediaPreparer.mBaseDeviceModuleDir + SENTINEL, TEST_USER_ID))
+                .thenReturn(true);
+        // ensure we didn't land anything under the standard test directory
+        when(mMockDevice.doesFileExist("/sdcard/test/data/local/tmp/FullPathtest", TEST_USER_ID))
+                .thenReturn(false);
+        when(mMockDevice.doesFileExist("/sdcard/test/FullPathtest", TEST_USER_ID))
                 .thenReturn(false);
 
         mMediaPreparer.copyMediaFiles(mMockDevice);
