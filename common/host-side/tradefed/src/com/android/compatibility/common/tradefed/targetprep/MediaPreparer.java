@@ -112,12 +112,15 @@ public class MediaPreparer extends BaseTargetPreparer
             " is the test suite.")
     private String mDynamicConfigModule = "cts";
 
-    @Option(name = "media-folder-name",
-            description = "The name of local directory into which media" +
-            " files will be downloaded, if option 'local-media-path' is not" +
-            " provided. This directory will live inside the temp directory." +
-            " If option 'push-all' is set, this is also the subdirectory name on device" +
-            " where media files are pushed to")
+    @Option(
+            name = "media-folder-name",
+            description =
+                    "This serves two purposes. When option 'push-all' is set, this specifies the"
+                        + " on-device directory where media files are pushed; if the path does not"
+                        + " begin with /, it is a subdirectory inside the /sdcard/test directory."
+                        + " When 'local-media-path' is not specified, this names a subdirectory"
+                        + " within the hosts's temp directory where the media files will be"
+                        + " downloaded before being sent to the device.")
     private String mMediaFolderName = MEDIA_FOLDER_NAME;
 
     @Option(name = "use-legacy-folder-structure",
@@ -369,6 +372,7 @@ public class MediaPreparer extends BaseTargetPreparer
             // Retrieve default directory for storing media files
             File mediaFolder = getMediaDir();
 
+            CLog.i("host downloads to: " + mediaFolder);
             // manage caching the content on the host side
             //
             if (mediaFolder.exists() && mediaFolder.list().length > 0) {
@@ -554,6 +558,19 @@ public class MediaPreparer extends BaseTargetPreparer
 
     // Initialize directory strings where media files live on device
     protected void setMountPoint(ITestDevice device) {
+
+        if (mMediaFolderName.startsWith("/")) {
+            // test has a specific location for these files.
+            // Primarily for GTest use, where the user identity is managed differently.
+            mBaseDeviceModuleDir = String.format("%s/", mMediaFolderName);
+            // regardless of mUseLegacyFolderStructure
+            mBaseDeviceShortDir = String.format("%s/bbb_short/", mMediaFolderName);
+            mBaseDeviceFullDir = String.format("%s/bbb_full/", mMediaFolderName);
+            return;
+        }
+
+        // Let the harness decide where the assets should go
+        // Best for larger sets of assets, and for CTS testing.
         String mountPoint = device.getMountPoint(IDevice.MNT_EXTERNAL_STORAGE);
         mBaseDeviceModuleDir = String.format("%s/test/%s/", mountPoint, mMediaFolderName);
         if (mUseLegacyFolderStructure) {
@@ -570,6 +587,7 @@ public class MediaPreparer extends BaseTargetPreparer
     @Override
     public void setUp(TestInformation testInfo)
             throws TargetSetupError, BuildError, DeviceNotAvailableException {
+
         ITestDevice device = testInfo.getDevice();
         IBuildInfo buildInfo = testInfo.getBuildInfo();
         mUserId = getRunTestsAsUser(testInfo);
@@ -590,6 +608,16 @@ public class MediaPreparer extends BaseTargetPreparer
         }
 
         try {
+
+            if (mLocalMediaPath == null) {
+                // Option 'local-media-path' has not been defined
+                // Get directory to store media files on this host
+                File mediaFolder = downloadMediaToHost(device, buildInfo);
+                // set mLocalMediaPath to extraction location of media files
+                updateLocalMediaPath(device, mediaFolder);
+            }
+            CLog.i("Media files located on host at: " + mLocalMediaPath);
+
             // set up the host-side sentinel file that we copy when we've finished installing
             // Put some useful triaging and diagnostic information in the file
             FileWriter myWriter = null;
@@ -604,6 +632,7 @@ public class MediaPreparer extends BaseTargetPreparer
                     SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
                     myWriter.write("Downloaded at: " + sdf.format(cal.getTime()) + "\n");
                 }
+                myWriter.write("Cached on host   path: " + mLocalMediaPath + "\n");
                 myWriter.write("Pushed to device path: " + mBaseDeviceModuleDir + "\n");
             } catch (IOException e) {
                 // we'll write an empty sentinel
@@ -612,14 +641,6 @@ public class MediaPreparer extends BaseTargetPreparer
                 StreamUtil.close(myWriter);
             }
 
-            if (mLocalMediaPath == null) {
-                // Option 'local-media-path' has not been defined
-                // Get directory to store media files on this host
-                File mediaFolder = downloadMediaToHost(device, buildInfo);
-                // set mLocalMediaPath to extraction location of media files
-                updateLocalMediaPath(device, mediaFolder);
-            }
-            CLog.i("Media files located on host at: " + mLocalMediaPath);
             if (!mMediaDownloadOnly) {
                 copyMediaFiles(device);
             }
