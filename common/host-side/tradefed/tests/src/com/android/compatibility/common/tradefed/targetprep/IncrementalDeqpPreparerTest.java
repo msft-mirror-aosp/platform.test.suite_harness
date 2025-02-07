@@ -55,7 +55,7 @@ import java.util.Set;
 public class IncrementalDeqpPreparerTest {
     private static final String DEVICE_FINGERPRINT =
             "generic/aosp_cf_x86_64_phone/vsoc_x86_64:S/AOSP"
-                    + ".MASTER/7363308:userdebug/test-keys";
+                    + ".MASTER/7363321:userdebug/test-keys";
 
     private IncrementalDeqpPreparer mPreparer;
     private ITestDevice mMockDevice;
