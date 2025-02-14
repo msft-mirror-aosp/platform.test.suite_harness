@@ -105,18 +105,12 @@ public class IncrementalDeqpPreparer extends BaseTargetPreparer {
     private static final String MODULE_ATTRIBUTE = "module";
     private static final String MODULE_NAME_ATTRIBUTE = "module_name";
     private static final String FINGERPRINT = "ro.build.fingerprint";
-    private static final String MISSING_DEPENDENCY_ATTRIBUTE = "missing_deps";
     private static final String DEPENDENCY_DETAILS_ATTRIBUTE = "deps_details";
     private static final String DEPENDENCY_NAME_ATTRIBUTE = "dep_name";
     private static final String DEPENDENCY_FILE_HASH_ATTRIBUTE = "file_hash";
 
     private static final Pattern EXCLUDE_DEQP_PATTERN =
             Pattern.compile("(^/data/|^/apex/|^\\[vdso" + "\\]|^/dmabuf|^/kgsl-3d0|^/mali csf)");
-
-    public static final String INCREMENTAL_DEQP_BASELINE_ATTRIBUTE_NAME =
-            "incremental-deqp-baseline";
-    public static final String INCREMENTAL_DEQP_TRUSTED_BUILD_ATTRIBUTE_NAME =
-            "incremental-deqp-trusted-build";
     public static final String INCREMENTAL_DEQP_ATTRIBUTE_NAME = "incremental-deqp";
     public static final String INCREMENTAL_DEQP_REPORT_NAME =
             "IncrementalCtsDeviceInfo.deviceinfo.json";
